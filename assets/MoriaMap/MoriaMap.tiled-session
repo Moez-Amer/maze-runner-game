@@ -1,0 +1,110 @@
+{
+    "activeFile": "newmap.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "DynamicEnemy.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 0.5,
+            "scaleInEditor": 1
+        },
+        "Enemy.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 0.75,
+            "scaleInEditor": 0.5
+        },
+        "MoriaSprite.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Orc.tsx": {
+            "scaleInDock": 3,
+            "scaleInEditor": 1
+        },
+        "Player.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1.5
+        },
+        "Wizard.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "balrog.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 0.125,
+            "scaleInEditor": 0.33
+        },
+        "decorations.tsx": {
+            "scaleInDock": 1.5,
+            "scaleInEditor": 1
+        },
+        "latest.tmx": {
+            "scale": 0.5,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 649,
+                "y": 525
+            }
+        },
+        "mainch.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "mainchar.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "moria2.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 0.33,
+            "scaleInEditor": 0.33
+        },
+        "new.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 3,
+            "scaleInEditor": 1
+        },
+        "newmap.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 465.99999999999994,
+                "y": 268.66666666666663
+            }
+        },
+        "walking.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "C:/Users/moezb/Documents/fopws2526projectfop-oopsitcompiles/assets/Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/IDLE",
+    "openFiles": [
+        "MoriaSprite.tsx",
+        "newmap.tmx",
+        "DynamicEnemy.tsx",
+        "mainchar.tsx",
+        "walking.tsx"
+    ],
+    "project": "",
+    "recentFiles": [
+        "DynamicEnemy.tsx",
+        "walking.tsx",
+        "MoriaSprite.tsx",
+        "mainchar.tsx",
+        "newmap.tmx",
+        "latest.tmx",
+        "moria2.tsx",
+        "mainch.tsx",
+        "Wizard.tsx",
+        "Enemy.tsx",
+        "Orc.tsx",
+        "Player.tsx"
+    ],
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
