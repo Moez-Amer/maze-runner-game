@@ -24,13 +24,17 @@ public class Player extends MovableGameObject {
     
     private boolean isDamaged;
     private float damageTimer;
+    private float fallingTimer;
     private static final float DAMAGE_FLASH_DURATION = 1.0f;
     private static final float INVULNERABILITY_TIME = 1.5f;
+    private static final float FALLING_DURATION = .5f;
     private float invulnerabilityTimer;
     
     private Animation<TextureRegion> idleDownAnim, idleUpAnim, idleLeftAnim, idleRightAnim;
     private Animation<TextureRegion> runDownAnim, runUpAnim, runLeftAnim, runRightAnim;
-    
+
+    private boolean isFalling;
+    private float respawnX, respawnY;
     /**
      * Constructs a new Player at the given position.
      * 
@@ -48,6 +52,7 @@ public class Player extends MovableGameObject {
         this.hasKey = false;
         this.isRunning = false;
         this.isDamaged = false;
+        this.isFalling = false;
         this.invulnerabilityTimer = 0f;
         
         setMapData(mapData, tileSize);
@@ -101,7 +106,7 @@ public class Player extends MovableGameObject {
         runLeftAnim.setPlayMode(Animation.PlayMode.LOOP);
         runRightAnim.setPlayMode(Animation.PlayMode.LOOP);
         
-        facing = Direction.DOWN;
+        facing = Direction.RIGHT;
         currentAnimation = idleDownAnim;
     }
     
@@ -125,7 +130,17 @@ public class Player extends MovableGameObject {
         if (invulnerabilityTimer > 0) {
             invulnerabilityTimer -= delta;
         }
-        
+
+        if(isFalling){
+            fallingTimer += delta;
+            if(fallingTimer >= FALLING_DURATION) {
+                this.x = respawnX;
+                this.y = respawnY;
+                isFalling = false;
+                fallingTimer = 0f;
+            }
+            return;
+        }
         handleInput(delta);
     }
     
@@ -173,6 +188,16 @@ public class Player extends MovableGameObject {
      * @param moving Whether the player is currently moving
      */
     private void updateAnimation(boolean moving) {
+        if (isFalling) {
+            switch (facing) {
+                case UP: currentAnimation = idleUpAnim; break;
+                case DOWN: currentAnimation = idleDownAnim; break;
+                case LEFT: currentAnimation = idleLeftAnim; break;
+                case RIGHT: currentAnimation = idleRightAnim; break;
+            }
+            return;
+        }
+
         if (moving) {
             switch (facing) {
                 case UP: currentAnimation = runUpAnim; break;
@@ -197,17 +222,58 @@ public class Player extends MovableGameObject {
      */
     @Override
     public void render(SpriteBatch batch) {
-        if (isDamaged && ((int)(damageTimer * 10) % 2 == 0)) {
-            batch.setColor(1, 0, 0, 1);
-        } else {
-            batch.setColor(Color.WHITE);
-        }
-        
         if (currentAnimation != null) {
-            TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTime, true);
-            batch.draw(currentFrame, x, y, 96, 96);
+            TextureRegion currentFrame;
+            if (isFalling) {
+                currentFrame = currentAnimation.getKeyFrame(0, false);
+            } else {
+                currentFrame = currentAnimation.getKeyFrame(stateTime, true);
+            }
+            //  Color (RGB)
+            // Start with White (1, 1, 1)
+            float r = 1f;
+            float g = 1f;
+            float b = 1f;
+
+            // If damaged, remove Green and Blue to make it RED (1, 0, 0)
+            if (isDamaged && ((int)(damageTimer * 10) % 2 == 0)) {
+                g = 0f;
+                b = 0f;
+            }
+
+            // Transparency (Alpha) and Size
+            float alpha = 1.0f;
+            float drawWidth = 96f;
+            float drawHeight = 80f;
+            float drawX = this.x;
+            float drawY = this.y;
+
+            if (isFalling) {
+                float progress = Math.min(fallingTimer / FALLING_DURATION, 1.0f);
+
+                // Calculate Fade (Alpha 1.0 -> 0.0)
+                alpha = 1.0f - progress;
+
+                // Calculate Shrink (Scale 1.0 -> 0.0)
+                float currentScale = 1.0f - progress;
+                float scaledWidth = drawWidth * currentScale;
+                float scaledHeight = drawHeight * currentScale;
+
+                // Center the sprite
+                drawX += (drawWidth - scaledWidth) / 2f;
+                drawY += (drawHeight - scaledHeight) / 2f;
+
+                drawWidth = scaledWidth;
+                drawHeight = scaledHeight;
+
+            }
+
+            batch.setColor(r, g, b, alpha);
+
+            batch.draw(currentFrame, drawX, drawY, drawWidth, drawHeight);
         }
-        
+
+        // Always reset to standard White for the rest of the game
         batch.setColor(Color.WHITE);
     }
     
@@ -234,6 +300,22 @@ public class Player extends MovableGameObject {
             damageTimer = 0f;
             invulnerabilityTimer = INVULNERABILITY_TIME;
         }
+    }
+    /**
+     * Triggers the falling sequence.
+     * * Logic:
+     * - Sets isFalling flag to disable input
+     * - Stores respawn coordinates for use after animation ends
+     * * @param respawnX Target X coordinate after fall
+     * @param respawnY Target Y coordinate after fall
+     */
+    public void fallIntoHole(float respawnX, float respawnY) {
+        if(isFalling == true)return; // to not fall twice
+        isFalling= true;
+        fallingTimer=0f;
+
+        this.respawnX = respawnX;
+        this.respawnY = respawnY;
     }
     
     /**

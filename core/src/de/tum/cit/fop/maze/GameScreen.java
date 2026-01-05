@@ -13,7 +13,11 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import java.util.ArrayList;
 import java.util.Properties;
+
+import static de.tum.cit.fop.maze.TiledToPropertiesConverter.*;
+
 
 /**
  * The GameScreen class is responsible for rendering the gameplay screen.
@@ -33,15 +37,18 @@ public class GameScreen implements Screen {
     private int[][] mapData;
     private int mapWidth;
     private int mapHeight;
-    private static final int TILE_SIZE = 16;
+    public static final int TILE_SIZE = 16;
 
-    // Player
     private Player player;
 
     // Debug visualization
     private ShapeRenderer shapeRenderer;
     private boolean showCollisionBoxes = false;
-
+    //traps
+    private ArrayList<DeathPitTrap> deathPitTraps ;
+    private ArrayList<KnifesTrap>  knifesTraps;
+    private float delay;
+    private Entry entry;
     /**
      * Constructor for GameScreen. Sets up the camera and font.
      *
@@ -51,12 +58,13 @@ public class GameScreen implements Screen {
         this.game = game;
 
         // Load the Tiled map for rendering
-        tiledMap = new TmxMapLoader().load("MoriaMap/newmap.tmx");
+        tiledMap = new TmxMapLoader().load("MoriaMap/newmap1.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         
         // Hide the Player layer from Tiled map (we render our own player)
         if (tiledMap.getLayers().get("Player") != null) {
             tiledMap.getLayers().get("Player").setVisible(false);
+            tiledMap.getLayers().get("Knifes").setVisible(false);
         }
 
         // Get map dimensions from the Tiled map
@@ -81,10 +89,22 @@ public class GameScreen implements Screen {
         // Load game logic map from properties file (for collisions)
         loadMapLogic("maps/level-1.properties");
 
+        findEntry();
         // Create player at entry point (around 3,3 based on map)
-        player = new Player(3 * TILE_SIZE, 3 * TILE_SIZE, TILE_SIZE, mapData);
+        player = new Player(entry.getX(), entry.getY(), TILE_SIZE, mapData);
+        findDeathPits_KnifesTraps();
     }
 
+    /**
+     * Parsing helper for collision data.
+     *
+     * Logic:
+     * - Reads a .properties file containing grid coordinates and types
+     * - Determines map dimensions by scanning for max X/Y keys
+     * - Populates the mapData[][] array for logical collision checks
+     *
+     * @param filePath Path to the internal .properties file
+     */
     private void loadMapLogic(String filePath) {
         try {
             Properties props = new Properties();
@@ -116,7 +136,6 @@ public class GameScreen implements Screen {
                     mapData[x][y] = type;
                 }
             }
-
             System.out.println("Map logic loaded: " + logicWidth + "x" + logicHeight);
 
         } catch (Exception e) {
@@ -124,6 +143,51 @@ public class GameScreen implements Screen {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Traps initialization scanner.
+     *
+     * Logic:
+     * - Iterates through the entire mapData grid
+     * - Instantiates DeathPitTrap or KnifesTrap objects where map types match
+     * - Calculates unique startup delays for KnifesTraps based on (x+y) to create wave patterns
+     */
+    private void findDeathPits_KnifesTraps() {
+        deathPitTraps = new ArrayList<>();
+        knifesTraps = new ArrayList<>();
+        for(int x = 0; x < mapWidth; x++){
+            for(int y = 0; y < mapHeight; y++){
+                if(mapData[x][y] == TYPE_DEATHTRAP){
+                    deathPitTraps.add(new DeathPitTrap(x*TILE_SIZE,y*TILE_SIZE,TILE_SIZE,TILE_SIZE,player,entry));
+                } else if (mapData[x][y] == TYPE_KNIFE_TRAP) {
+                    //  X and Y coordinate to calculate a unique delay for specific tile so each one play in different time
+                     delay = (x + y) * 0.1f;
+                        knifesTraps.add(new KnifesTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, delay));
+                }
+            }
+        }
+    }
+    /**
+     * Spawn point locator.
+     *
+     * Logic:
+     * - Scans grid for TYPE_ENTRY
+     * - Returns the first found Entry object adjusted for tile centering
+     * - Used to set initial player position and respawn target
+     *
+     * @return Entry object with coordinate data, or null if not found
+     */
+    private Entry findEntry() {
+        for (int x = 0; x < mapWidth; x++) {
+            for (int y = 0; y < mapHeight; y++) {
+                if (mapData[x][y] == TYPE_ENTRY) {
+                    return this.entry = new Entry(x * TILE_SIZE, y * TILE_SIZE);
+                }
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public void render(float delta) {
@@ -143,6 +207,14 @@ public class GameScreen implements Screen {
         // Update player (handles input, movement, animation)
         player.update(delta);
 
+        // loop through the pitTraps to update themselves
+        for (DeathPitTrap pitTrap : deathPitTraps) {
+            pitTrap.update();
+        }
+        // loop through the knifeTraps to update themselves
+        for(KnifesTrap knifeTrap  : knifesTraps ){
+            knifeTrap.update(delta);
+        }
         // Center camera on player with elevated 3/4 view offset
         camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
         camera.update();
@@ -151,9 +223,14 @@ public class GameScreen implements Screen {
         mapRenderer.setView(camera);
         mapRenderer.render();
 
-        // Draw player on top
+        // Draw traps then the player on them
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
         game.getSpriteBatch().begin();
+        // Draw traps
+        for (KnifesTrap trap : knifesTraps) {
+            trap.render(game.getSpriteBatch());
+        }
+        // Draw the player
         player.render(game.getSpriteBatch());
         game.getSpriteBatch().end();
 
@@ -272,5 +349,5 @@ public class GameScreen implements Screen {
         if (mapRenderer != null) mapRenderer.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
     }
-    
+
 }
