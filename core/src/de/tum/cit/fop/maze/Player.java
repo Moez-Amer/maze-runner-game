@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+
+import static de.tum.cit.fop.maze.GameScreen.TILE_SIZE;
 
 /**
  * Represents the player character in the maze game.
@@ -16,6 +19,8 @@ public class Player extends MovableGameObject {
     
     private static final float WALK_SPEED = 80f;
     private static final float RUN_SPEED = 150f;
+    private  float swordSize ;
+    private int attackCombo ;
     private boolean isRunning;
     
     private int lives;
@@ -30,7 +35,9 @@ public class Player extends MovableGameObject {
     private static final float SPEED_BOOST_MULTIPLIER = 1.5f;
     private static final float POWER_BOOST_MULTIPLIER = 2.0f;
     
+    private boolean isMoving;
     private boolean isDamaged;
+    private boolean isAttacking;
     private float damageTimer;
     private float fallingTimer;
     private static final float DAMAGE_FLASH_DURATION = 1.0f;
@@ -40,6 +47,8 @@ public class Player extends MovableGameObject {
     
     private Animation<TextureRegion> idleDownAnim, idleUpAnim, idleLeftAnim, idleRightAnim;
     private Animation<TextureRegion> runDownAnim, runUpAnim, runLeftAnim, runRightAnim;
+    private Animation<TextureRegion> attackDownAnim1, attackLeftAnim1, attackRightAnim1, attackUpAnim1;
+    private Animation<TextureRegion> attackDownAnim2, attackLeftAnim2, attackRightAnim2, attackUpAnim2;
 
     private boolean isFalling;
     private float respawnX, respawnY;
@@ -62,13 +71,13 @@ public class Player extends MovableGameObject {
         this.isRunning = false;
         this.isDamaged = false;
         this.isFalling = false;
+        this.isAttacking = false;
         this.invulnerabilityTimer = 0f;
-        this.speedBoostTimer = 0f;
-        this.powerBoostTimer = 0f;
         this.speedBoostTimer = 0f;
         this.powerBoostTimer = 0f;
         this.shieldTimer = 0f;
         
+        this.attackCombo=1;
         setMapData(mapData, tileSize);
         setCollisionBox(16, 16, 40, 20);
         loadAnimations();
@@ -90,7 +99,19 @@ public class Player extends MovableGameObject {
         Texture runUp = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/RUN/run_up.png"));
         Texture runLeft = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/RUN/run_left.png"));
         Texture runRight = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/RUN/run_right.png"));
-        
+
+        Texture attackDown1 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 1/attack1_down.png"));
+        Texture attackLeft1 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 1/attack1_left.png"));
+        Texture attackRight1 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 1/attack1_right.png"));
+        Texture attackUp1 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 1/attack1_up.png"));
+
+        Texture attackDown2 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 2/attack2_down.png"));
+        Texture attackLeft2 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 2/attack2_left.png"));
+        Texture attackRight2 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 2/attack2_right.png"));
+        Texture attackUp2 = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/ATTACK 2/attack2_up.png"));
+
+
+
         TextureRegion[][] idleDownFrames = TextureRegion.split(idleDown, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] idleUpFrames = TextureRegion.split(idleUp, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] idleLeftFrames = TextureRegion.split(idleLeft, FRAME_WIDTH, FRAME_HEIGHT);
@@ -100,7 +121,19 @@ public class Player extends MovableGameObject {
         TextureRegion[][] runUpFrames = TextureRegion.split(runUp, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] runLeftFrames = TextureRegion.split(runLeft, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] runRightFrames = TextureRegion.split(runRight, FRAME_WIDTH, FRAME_HEIGHT);
-        
+
+
+        TextureRegion[][] attackDownFrames1 = TextureRegion.split(attackDown1, FRAME_WIDTH, FRAME_HEIGHT);
+        TextureRegion[][] attackLeftFrames1 = TextureRegion.split(attackLeft1, FRAME_WIDTH, FRAME_HEIGHT);
+        TextureRegion[][] attackRightFrames1 = TextureRegion.split(attackRight1, FRAME_WIDTH, FRAME_HEIGHT);
+        TextureRegion[][] attackUpFrames1 = TextureRegion.split(attackUp1, FRAME_WIDTH, FRAME_HEIGHT);
+
+        TextureRegion[][] attackDownFrames2 = TextureRegion.split(attackDown2, FRAME_WIDTH, FRAME_HEIGHT);
+        TextureRegion[][] attackLeftFrames2 = TextureRegion.split(attackLeft2, FRAME_WIDTH, FRAME_HEIGHT);
+        TextureRegion[][] attackRightFrames2 = TextureRegion.split(attackRight2, FRAME_WIDTH, FRAME_HEIGHT);
+        TextureRegion[][] attackUpFrames2 = TextureRegion.split(attackUp2, FRAME_WIDTH, FRAME_HEIGHT);
+
+
         idleDownAnim = new Animation<>(0.2f, idleDownFrames[0]);
         idleUpAnim = new Animation<>(0.2f, idleUpFrames[0]);
         idleLeftAnim = new Animation<>(0.2f, idleLeftFrames[0]);
@@ -110,16 +143,37 @@ public class Player extends MovableGameObject {
         runUpAnim = new Animation<>(0.1f, runUpFrames[0]);
         runLeftAnim = new Animation<>(0.1f, runLeftFrames[0]);
         runRightAnim = new Animation<>(0.1f, runRightFrames[0]);
-        
+
+        attackDownAnim1 =new Animation<>(0.1f, attackDownFrames1[0]);
+        attackLeftAnim1 =new Animation<>(0.1f, attackLeftFrames1[0]);
+        attackRightAnim1 = new Animation<>(0.1f, attackRightFrames1[0]);
+        attackUpAnim1    =new Animation<>(0.1f, attackUpFrames1[0]);
+
+        attackDownAnim2 =new Animation<>(0.1f, attackDownFrames2[0]);
+        attackLeftAnim2 =new Animation<>(0.1f, attackLeftFrames2[0]);
+        attackRightAnim2 = new Animation<>(0.1f, attackRightFrames2[0]);
+        attackUpAnim2    =new Animation<>(0.1f, attackUpFrames2[0]);
+
         idleDownAnim.setPlayMode(Animation.PlayMode.LOOP);
         idleUpAnim.setPlayMode(Animation.PlayMode.LOOP);
         idleLeftAnim.setPlayMode(Animation.PlayMode.LOOP);
         idleRightAnim.setPlayMode(Animation.PlayMode.LOOP);
+
         runDownAnim.setPlayMode(Animation.PlayMode.LOOP);
         runUpAnim.setPlayMode(Animation.PlayMode.LOOP);
         runLeftAnim.setPlayMode(Animation.PlayMode.LOOP);
         runRightAnim.setPlayMode(Animation.PlayMode.LOOP);
-        
+
+        attackDownAnim1.setPlayMode(Animation.PlayMode.NORMAL);
+        attackUpAnim1.setPlayMode(Animation.PlayMode.NORMAL);
+        attackRightAnim1.setPlayMode(Animation.PlayMode.NORMAL);
+        attackLeftAnim1.setPlayMode(Animation.PlayMode.NORMAL);
+
+        attackDownAnim2.setPlayMode(Animation.PlayMode.NORMAL);
+        attackUpAnim2.setPlayMode(Animation.PlayMode.NORMAL);
+        attackRightAnim2.setPlayMode(Animation.PlayMode.NORMAL);
+        attackLeftAnim2.setPlayMode(Animation.PlayMode.NORMAL);
+
         facing = Direction.RIGHT;
         currentAnimation = idleDownAnim;
     }
@@ -132,7 +186,10 @@ public class Player extends MovableGameObject {
     @Override
     public void update(float delta) {
         super.update(delta);
-        
+
+        //Fix frozen walking
+        stateTime += delta;
+
         if (isDamaged) {
             damageTimer += delta;
             if (damageTimer >= DAMAGE_FLASH_DURATION) {
@@ -167,7 +224,18 @@ public class Player extends MovableGameObject {
             }
             return;
         }
-        handleInput(delta);
+
+        if(isAttacking){
+            if(currentAnimation.isAnimationFinished(stateTime)){
+                isAttacking = false;
+            }
+        }
+        isMoving = false;
+        // We only process keys if we aren't busy attacking
+        if (!isAttacking) {
+            isMoving = handleInput(delta);
+        }
+        updateAnimation(isMoving);
     }
     
     /**
@@ -175,38 +243,62 @@ public class Player extends MovableGameObject {
      * 
      * @param delta Time elapsed since last frame
      */
-    private void handleInput(float delta) {
-        isRunning = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || 
+    private boolean handleInput(float delta) {
+
+        //  Attack Check
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
+            isAttacking = true;
+            stateTime = 0f;
+            speed = 0;
+            if (attackCombo == 1) {
+                attackCombo = 2; // Next time, do Attack 2
+            } else {
+                attackCombo = 1; // Next time, go back to Attack 1
+            }
+            return false; // Not moving when the player is attacking
+        }
+
+
+        isRunning = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ||
                     Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
         float baseSpeed = isRunning ? RUN_SPEED : WALK_SPEED;
         speed = speedBoostTimer > 0 ? baseSpeed * SPEED_BOOST_MULTIPLIER : baseSpeed;
+
+        // check movement keys
+        boolean isUp    = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
+        boolean isDown  = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
+        boolean isLeft  = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
+        boolean isRight = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+
+        if (!isUp && !isDown && !isLeft && !isRight) {
+            return false;
+        }
+        //speed = isRunning ? RUN_SPEED : WALK_SPEED;
         
-        boolean moving = false;
         Direction moveDirection = null;
         
-        if (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP)) {
+        if (isUp) {
             moveDirection = Direction.UP;
             facing = Direction.UP;
-            moving = true;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+        } else if (isDown) {
             moveDirection = Direction.DOWN;
             facing = Direction.DOWN;
-            moving = true;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+
+        } else if (isLeft) {
             moveDirection = Direction.LEFT;
             facing = Direction.LEFT;
-            moving = true;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+
+        } else if (isRight) {
             moveDirection = Direction.RIGHT;
             facing = Direction.RIGHT;
-            moving = true;
+
         }
         
-        if (moving && moveDirection != null) {
+        if ( moveDirection != null) {
             move(delta, moveDirection);
         }
         
-        updateAnimation(moving);
+       return true;
     }
     
     /**
@@ -221,6 +313,24 @@ public class Player extends MovableGameObject {
                 case DOWN: currentAnimation = idleDownAnim; break;
                 case LEFT: currentAnimation = idleLeftAnim; break;
                 case RIGHT: currentAnimation = idleRightAnim; break;
+            }
+            return;
+        }
+        if(isAttacking){
+            if(attackCombo==1){
+            switch(facing) {
+                case UP: currentAnimation = attackUpAnim1; break;
+                case DOWN: currentAnimation= attackDownAnim1; break;
+                case LEFT: currentAnimation= attackLeftAnim1;break;
+                case RIGHT:currentAnimation= attackRightAnim1; break;
+            }
+            }else {
+                switch(facing) {
+                    case UP: currentAnimation = attackUpAnim2; break;
+                    case DOWN: currentAnimation= attackDownAnim2; break;
+                    case LEFT: currentAnimation= attackLeftAnim2;break;
+                    case RIGHT:currentAnimation= attackRightAnim2; break;
+                }
             }
             return;
         }
@@ -254,7 +364,7 @@ public class Player extends MovableGameObject {
             if (isFalling) {
                 currentFrame = currentAnimation.getKeyFrame(0, false);
             } else {
-                currentFrame = currentAnimation.getKeyFrame(stateTime, true);
+                currentFrame = currentAnimation.getKeyFrame(stateTime);
             }
             //  Color (RGB)
             // Start with White (1, 1, 1)
@@ -346,6 +456,59 @@ public class Player extends MovableGameObject {
         float feetX = x + (96 - feetWidth) / 2f;
         float feetY = y + 20;
         return new float[]{feetX, feetY, feetWidth, feetHeight};
+    }
+    /**
+     * Attack hitbox calculator.
+     *
+     * Logic:
+     * - Uses the player's feet collision box as a stable anchor point (ignoring sprite padding)
+     * - Calculates dimensions (width/height) based on facing direction
+     *  3x2 box when the attack is up and down and 2x2 box attack when it is left and right
+     * @return Rectangle representing the active sword swing area for collision checks
+     */
+    public Rectangle getSwordHitBox() {
+
+        float[] feetBox = getFeetCollisionBox();
+        float feetX = feetBox[0];
+        float feetY = feetBox[1];
+        float feetW = feetBox[2];
+        float feetH = feetBox[3];
+        float feetCenterX = feetX + (feetW / 2);
+        float feetCenterY = feetY + (feetH / 2);
+
+        float startX = 0;
+        float startY = 0;
+        float width = 0;
+        float height = 0;
+
+        switch(facing) {
+            case UP:
+                width = 3 * tileSize;
+                height = 2 * tileSize;
+                startX = feetCenterX - (width / 2);
+                startY = feetY + feetH;
+                break;
+
+            case DOWN:
+                width = 3 * tileSize;
+                height = 2 * tileSize;
+                startX = feetCenterX - (width / 2);
+                startY = feetY - height;
+                break;
+            case LEFT:
+                width = 2 * tileSize;
+                height = 2 * tileSize;
+                startX = feetX - width;
+                startY = feetCenterY - (height / 4);
+                break;
+            case RIGHT:
+                width = 2 * tileSize;
+                height = 2 * tileSize;
+                startX = feetX + feetW;
+                startY = feetCenterY - (height / 4);
+                break;
+        }
+        return new Rectangle(startX, startY, width, height);
     }
     
     /**
@@ -480,4 +643,6 @@ public class Player extends MovableGameObject {
     public int getMaxLives() { return maxLives; }
     public boolean hasKey() { return hasKey; }
     public boolean isRunning() { return isRunning; }
+    public boolean isMoving() {return isMoving;}
+    public boolean isAttacking() {return isAttacking;}
 }

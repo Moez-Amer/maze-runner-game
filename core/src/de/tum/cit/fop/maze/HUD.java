@@ -2,6 +2,7 @@ package de.tum.cit.fop.maze;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -17,6 +18,7 @@ public class HUD {
     private TextureRegion heartTexture;
     private TextureRegion heartBgTexture;
     private TextureRegion keyTexture;
+    private Texture keyTextureFile;  // Keep reference for disposal
     private BitmapFont font;
     private BitmapFont boldFont;
     
@@ -39,7 +41,10 @@ public class HUD {
         
         heartTexture = atlas.findRegion("heart");
         heartBgTexture = atlas.findRegion("heart-bg");
-        keyTexture = atlas.findRegion("xp");
+        
+        // Load key from standalone PNG file (same as collectibles)
+        keyTextureFile = new Texture(Gdx.files.internal("Key.png"));
+        keyTexture = new TextureRegion(keyTextureFile);
     }
     
     /**
@@ -150,5 +155,8 @@ public class HUD {
      */
     public void dispose() {
         // Atlas is managed by game, don't dispose here
+        if (keyTextureFile != null) {
+            keyTextureFile.dispose();
+        }
     }
 }

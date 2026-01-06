@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
@@ -98,7 +99,7 @@ public class GameScreen implements Screen {
         loadMapLogic("maps/level-1.properties");
 
         findEntry();
-        // Create player at entry point (around 3,3 based on map)
+        // Create player at entry point
         player = new Player(entry.getX(), entry.getY(), TILE_SIZE, mapData);
         findDeathPits_KnifesTraps();
         
@@ -550,6 +551,15 @@ public class GameScreen implements Screen {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(0, 1, 1, 0.4f);
         shapeRenderer.rect(feetX, feetY, feetW, feetH);
+
+        // Sword Attack Box
+        if (player.isAttacking()) {
+            shapeRenderer.setColor(1, 0, 0, 0.5f);
+            // attack dimensions
+            Rectangle sword = player.getSwordHitBox();
+            shapeRenderer.rect(sword.x, sword.y, sword.width, sword.height);
+        }
+
         shapeRenderer.end();
 
         // Draw outlines
