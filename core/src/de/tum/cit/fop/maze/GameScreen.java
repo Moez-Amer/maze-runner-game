@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -14,6 +15,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Properties;
 
 import static de.tum.cit.fop.maze.TiledToPropertiesConverter.*;
@@ -49,6 +51,12 @@ public class GameScreen implements Screen {
     private ArrayList<KnifesTrap>  knifesTraps;
     private float delay;
     private Entry entry;
+    
+    // Collectibles and HUD
+    private ArrayList<Collectibles> collectibles;
+    private HUD hud;
+    private TextureAtlas uiAtlas;
+    private OrthographicCamera hudCamera;
     /**
      * Constructor for GameScreen. Sets up the camera and font.
      *
@@ -93,6 +101,20 @@ public class GameScreen implements Screen {
         // Create player at entry point (around 3,3 based on map)
         player = new Player(entry.getX(), entry.getY(), TILE_SIZE, mapData);
         findDeathPits_KnifesTraps();
+        
+        // Load UI atlas for collectibles and HUD
+        uiAtlas = new TextureAtlas(Gdx.files.internal("craft/craftacular-ui.atlas"));
+        Collectibles.loadTextures(uiAtlas);
+        
+        // Create HUD
+        BitmapFont regularFont = game.getSkin().getFont("font");
+        BitmapFont boldFont = game.getSkin().getFont("bold");
+        hud = new HUD(uiAtlas, regularFont, boldFont);
+        hudCamera = new OrthographicCamera();
+        hudCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        
+        // Spawn collectibles from map data
+        spawnCollectibles();
     }
 
     /**
@@ -188,6 +210,217 @@ public class GameScreen implements Screen {
         return null;
     }
 
+    /**
+     * Spawns collectibles randomly on the map.
+     * Distributes 3 of each type, ensuring same-type items are not too close together.
+     */
+    private void spawnCollectibles() {
+        collectibles = new ArrayList<>();
+        
+        // Use mapData dimensions (from properties file), not tiledMap dimensions
+        int dataWidth = mapData.length;
+        int dataHeight = mapData[0].length;
+        
+        // Collect all safe walkable positions (only PATH tiles, excluding dangerous areas)
+        ArrayList<int[]> walkablePositions = new ArrayList<>();
+        for (int x = 0; x < dataWidth; x++) {
+            for (int y = 0; y < dataHeight; y++) {
+                int tileType = mapData[x][y];
+                
+                // Only spawn on PATH tiles (type 1) - explicitly exclude everything else
+                if (tileType != TYPE_PATH) {
+                    continue;
+                }
+                
+                // Additional safety: check ALL 8 neighboring tiles (including diagonals)
+                // This prevents spawning at edges near pits, walls, or dangerous areas
+                boolean safeLocation = true;
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        if (dx == 0 && dy == 0) continue; // Skip the center tile
+                        
+                        int nx = x + dx;
+                        int ny = y + dy;
+                        
+                        // Check bounds - if at edge of map, not safe
+                        if (nx < 0 || nx >= dataWidth || ny < 0 || ny >= dataHeight) {
+                            safeLocation = false;
+                            break;
+                        }
+                        
+                        int neighborType = mapData[nx][ny];
+                        // Neighbor must be PATH, ENTRY, or EXIT (safe ground types)
+                        // Explicitly reject: 0 (wall), 3 (death trap), 4 (knife trap), etc.
+                        if (neighborType != TYPE_PATH && neighborType != TYPE_ENTRY && neighborType != TYPE_EXIT) {
+                            safeLocation = false;
+                            break;
+                        }
+                    }
+                    if (!safeLocation) break;
+                }
+                
+                if (safeLocation) {
+                    walkablePositions.add(new int[]{x, y});
+                }
+            }
+        }
+        
+        System.out.println("Found " + walkablePositions.size() + " safe spawn positions");
+        
+        if (walkablePositions.isEmpty()) {
+            System.err.println("No safe walkable positions found for collectibles!");
+            return;
+        }
+        
+        int collectibleSize = TILE_SIZE + 8;
+        float minDistanceBetweenSameType = 10.0f; // Minimum 10 tiles apart
+        java.util.Random random = new java.util.Random();
+        
+        // Spawn 3 of each collectible type (5 types = 15 total)
+        spawnCollectibleType(Collectibles.CollectibleType.KEY, 3, 50, 
+                           collectibleSize, collectibleSize, 
+                           walkablePositions, minDistanceBetweenSameType, random);
+        
+        spawnCollectibleType(Collectibles.CollectibleType.HEALTH, 3, 10, 
+                           collectibleSize, collectibleSize, 
+                           walkablePositions, minDistanceBetweenSameType, random);
+        
+        spawnCollectibleType(Collectibles.CollectibleType.SPEED_BOOSTER, 3, 20, 
+                           collectibleSize, collectibleSize, 
+                           walkablePositions, minDistanceBetweenSameType, random);
+        
+        spawnCollectibleType(Collectibles.CollectibleType.POWER_BOOSTER, 3, 20, 
+                           collectibleSize, collectibleSize, 
+                           walkablePositions, minDistanceBetweenSameType, random);
+        
+        spawnCollectibleType(Collectibles.CollectibleType.SHIELD, 3, 30, 
+                           collectibleSize, collectibleSize, 
+                           walkablePositions, minDistanceBetweenSameType, random);
+        
+        System.out.println("Spawned " + collectibles.size() + " collectibles randomly across the map");
+    }
+    
+    /**
+     * Spawns a specific type of collectible multiple times, ensuring minimum distance.
+     * 
+     * @param type The type of collectible to spawn
+     * @param count How many to spawn
+     * @param points Point value
+     * @param width Render width
+     * @param height Render height
+     * @param walkablePositions List of valid spawn positions
+     * @param minDistance Minimum distance between same-type items
+     * @param random Random number generator
+     */
+    private void spawnCollectibleType(Collectibles.CollectibleType type, int count, int points,
+                                     float width, float height,
+                                     ArrayList<int[]> walkablePositions, 
+                                     float minDistance, java.util.Random random) {
+        ArrayList<int[]> spawnedPositions = new ArrayList<>();
+        int attempts = 0;
+        int maxAttempts = 100;
+        
+        while (spawnedPositions.size() < count && attempts < maxAttempts) {
+            attempts++;
+            
+            // Pick random walkable position
+            int[] pos = walkablePositions.get(random.nextInt(walkablePositions.size()));
+            int x = pos[0];
+            int y = pos[1];
+            
+            // Check distance from previously spawned items of this type
+            boolean tooClose = false;
+            for (int[] spawnedPos : spawnedPositions) {
+                float dx = x - spawnedPos[0];
+                float dy = y - spawnedPos[1];
+                float distance = (float) Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < minDistance) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            
+            if (!tooClose) {
+                // Spawn the collectible
+                collectibles.add(new Collectibles(
+                    x * TILE_SIZE, y * TILE_SIZE,
+                    width, height,
+                    points,
+                    type
+                ));
+                spawnedPositions.add(new int[]{x, y});
+                System.out.println("Spawned " + type + " at (" + x + ", " + y + ")");
+            }
+        }
+        
+        if (spawnedPositions.size() < count) {
+            System.err.println("Warning: Only spawned " + spawnedPositions.size() + " of " + count + " " + type + " collectibles");
+        }
+    }
+    
+    /**
+     * Updates collectibles and checks for player collisions.
+     * 
+     * @param delta Time elapsed since last frame
+     */
+    private void updateCollectibles(float delta) {
+        float[] playerBox = player.getFeetCollisionBox();
+        float px = playerBox[0], py = playerBox[1], pw = playerBox[2], ph = playerBox[3];
+        
+        Iterator<Collectibles> iterator = collectibles.iterator();
+        while (iterator.hasNext()) {
+            Collectibles collectible = iterator.next();
+            
+            if (collectible.isCollected()) {
+                iterator.remove();
+                continue;
+            }
+            
+            collectible.update(delta);
+            
+            // Rectangle overlap collision check
+            float cx = collectible.getX(), cy = collectible.getY();
+            float cw = collectible.getWidth(), ch = collectible.getHeight();
+            
+            if (px < cx + cw && px + pw > cx && py < cy + ch && py + ph > cy) {
+                handleCollectiblePickup(collectible);
+                iterator.remove();
+            }
+        }
+    }
+    
+    /**
+     * Handles the effects of collecting a collectible.
+     * 
+     * @param collectible The collectible that was picked up
+     */
+    private void handleCollectiblePickup(Collectibles collectible) {
+        collectible.collect();
+        
+        switch (collectible.getType()) {
+            case HEALTH:
+                player.addLife();
+                break;
+                
+            case SPEED_BOOSTER:
+                player.applySpeedBoost(5.0f);
+                break;
+                
+            case POWER_BOOSTER:
+                player.applyPowerBoost(5.0f);
+                break;
+                
+            case SHIELD:
+                player.applyShield(8.0f);
+                break;
+                
+            case KEY:
+                player.collectKey();
+                break;
+        }
+    }
+
 
     @Override
     public void render(float delta) {
@@ -215,6 +448,10 @@ public class GameScreen implements Screen {
         for(KnifesTrap knifeTrap  : knifesTraps ){
             knifeTrap.update(delta);
         }
+        
+        // Update collectibles and check collisions
+        updateCollectibles(delta);
+        
         // Center camera on player with elevated 3/4 view offset
         camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
         camera.update();
@@ -230,8 +467,19 @@ public class GameScreen implements Screen {
         for (KnifesTrap trap : knifesTraps) {
             trap.render(game.getSpriteBatch());
         }
+        // Draw collectibles
+        for (Collectibles collectible : collectibles) {
+            collectible.render(game.getSpriteBatch());
+        }
         // Draw the player
         player.render(game.getSpriteBatch());
+        game.getSpriteBatch().end();
+        
+        // Render HUD (screen coordinates, not world coordinates)
+        hudCamera.update();
+        game.getSpriteBatch().setProjectionMatrix(hudCamera.combined);
+        game.getSpriteBatch().begin();
+        hud.render(game.getSpriteBatch(), player);
         game.getSpriteBatch().end();
 
         // Draw collision debug visualization
@@ -325,6 +573,7 @@ public class GameScreen implements Screen {
         int tileWidth = tiledMap.getProperties().get("tilewidth", Integer.class);
         int tileHeight = tiledMap.getProperties().get("tileheight", Integer.class);
         camera.setToOrtho(false, tileWidth * 30, tileHeight * 18);
+        hudCamera.setToOrtho(false, width, height);
     }
 
     @Override
@@ -348,6 +597,8 @@ public class GameScreen implements Screen {
         if (tiledMap != null) tiledMap.dispose();
         if (mapRenderer != null) mapRenderer.dispose();
         if (shapeRenderer != null) shapeRenderer.dispose();
+        if (uiAtlas != null) uiAtlas.dispose();
+        if (hud != null) hud.dispose();
     }
 
 }

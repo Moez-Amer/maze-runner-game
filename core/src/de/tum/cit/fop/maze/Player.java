@@ -22,6 +22,14 @@ public class Player extends MovableGameObject {
     private int maxLives;
     private boolean hasKey;
     
+    private float speedBoostTimer;
+    private float powerBoostTimer;
+    private float shieldTimer;
+    private static final float BOOST_DURATION = 5.0f;
+    private static final float SHIELD_DURATION = 8.0f;
+    private static final float SPEED_BOOST_MULTIPLIER = 1.5f;
+    private static final float POWER_BOOST_MULTIPLIER = 2.0f;
+    
     private boolean isDamaged;
     private float damageTimer;
     private float fallingTimer;
@@ -35,6 +43,7 @@ public class Player extends MovableGameObject {
 
     private boolean isFalling;
     private float respawnX, respawnY;
+    
     /**
      * Constructs a new Player at the given position.
      * 
@@ -54,6 +63,11 @@ public class Player extends MovableGameObject {
         this.isDamaged = false;
         this.isFalling = false;
         this.invulnerabilityTimer = 0f;
+        this.speedBoostTimer = 0f;
+        this.powerBoostTimer = 0f;
+        this.speedBoostTimer = 0f;
+        this.powerBoostTimer = 0f;
+        this.shieldTimer = 0f;
         
         setMapData(mapData, tileSize);
         setCollisionBox(16, 16, 40, 20);
@@ -130,6 +144,18 @@ public class Player extends MovableGameObject {
         if (invulnerabilityTimer > 0) {
             invulnerabilityTimer -= delta;
         }
+        
+        if (speedBoostTimer > 0) {
+            speedBoostTimer -= delta;
+        }
+        
+        if (powerBoostTimer > 0) {
+            powerBoostTimer -= delta;
+        }
+        
+        if (shieldTimer > 0) {
+            shieldTimer -= delta;
+        }
 
         if(isFalling){
             fallingTimer += delta;
@@ -152,7 +178,8 @@ public class Player extends MovableGameObject {
     private void handleInput(float delta) {
         isRunning = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || 
                     Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
-        speed = isRunning ? RUN_SPEED : WALK_SPEED;
+        float baseSpeed = isRunning ? RUN_SPEED : WALK_SPEED;
+        speed = speedBoostTimer > 0 ? baseSpeed * SPEED_BOOST_MULTIPLIER : baseSpeed;
         
         boolean moving = false;
         Direction moveDirection = null;
@@ -269,6 +296,37 @@ public class Player extends MovableGameObject {
             }
 
             batch.setColor(r, g, b, alpha);
+            
+            // Draw aura effects for active boosts (behind the player)
+            if (powerBoostTimer > 0 && !isDamaged) {
+                // Bright red aura for power boost - multi-layer pulsing glow
+                float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 6);
+                // Outer glow layer
+                batch.setColor(1f, 0f, 0f, pulse * 0.4f);
+                batch.draw(currentFrame, drawX - 8, drawY - 8, drawWidth + 16, drawHeight + 16);
+                // Middle glow layer
+                batch.setColor(1f, 0.1f, 0.1f, pulse * 0.6f);
+                batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
+                // Inner bright layer
+                batch.setColor(1f, 0.3f, 0.2f, pulse * 0.8f);
+                batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
+                batch.setColor(r, g, b, alpha);
+            }
+            
+            if (speedBoostTimer > 0) {
+                // Bright blue aura for speed boost - multi-layer pulsing glow
+                float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 8);
+                // Outer glow layer
+                batch.setColor(0f, 0.5f, 1f, pulse * 0.4f);
+                batch.draw(currentFrame, drawX - 8, drawY - 8, drawWidth + 16, drawHeight + 16);
+                // Middle glow layer
+                batch.setColor(0.2f, 0.6f, 1f, pulse * 0.6f);
+                batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
+                // Inner bright layer
+                batch.setColor(0.4f, 0.8f, 1f, pulse * 0.8f);
+                batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
+                batch.setColor(r, g, b, alpha);
+            }
 
             batch.draw(currentFrame, drawX, drawY, drawWidth, drawHeight);
         }
@@ -294,11 +352,13 @@ public class Player extends MovableGameObject {
      * Makes the player take damage and lose a life.
      */
     public void takeDamage() {
-        if (invulnerabilityTimer <= 0) {
+        if (invulnerabilityTimer <= 0 && shieldTimer <= 0) {
             lives--;
             isDamaged = true;
             damageTimer = 0f;
             invulnerabilityTimer = INVULNERABILITY_TIME;
+        } else if (shieldTimer > 0) {
+            System.out.println("Shield blocked damage!");
         }
     }
     /**
@@ -350,6 +410,70 @@ public class Player extends MovableGameObject {
      */
     public boolean isInvulnerable() {
         return invulnerabilityTimer > 0;
+    }
+    
+    /**
+     * Applies a speed boost for the specified duration.
+     * 
+     * @param duration Duration of boost in seconds
+     */
+    public void applySpeedBoost(float duration) {
+        this.speedBoostTimer = duration;
+    }
+    
+    /**
+     * Applies a power boost for the specified duration.
+     * 
+     * @param duration Duration of boost in seconds
+     */
+    public void applyPowerBoost(float duration) {
+        this.powerBoostTimer = duration;
+    }
+    
+    /**
+     * Applies shield protection for the specified duration.
+     * 
+     * @param duration Duration of shield in seconds
+     */
+    public void applyShield(float duration) {
+        this.shieldTimer = duration;
+        System.out.println("Shield activated for " + duration + " seconds!");
+    }
+    
+    /**
+     * Checks if speed boost is currently active.
+     * 
+     * @return true if speed boost is active
+     */
+    public boolean hasSpeedBoost() {
+        return speedBoostTimer > 0;
+    }
+    
+    /**
+     * Checks if power boost is currently active.
+     * 
+     * @return true if power boost is active
+     */
+    public boolean hasPowerBoost() {
+        return powerBoostTimer > 0;
+    }
+    
+    /**
+     * Checks if shield protection is currently active.
+     * 
+     * @return true if shield is active
+     */
+    public boolean hasShield() {
+        return shieldTimer > 0;
+    }
+    
+    /**
+     * Gets the damage multiplier based on active boosts.
+     * 
+     * @return Damage multiplier
+     */
+    public float getDamageMultiplier() {
+        return powerBoostTimer > 0 ? POWER_BOOST_MULTIPLIER : 1.0f;
     }
     
     public int getLives() { return lives; }
