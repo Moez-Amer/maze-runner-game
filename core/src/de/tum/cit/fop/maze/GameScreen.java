@@ -67,15 +67,18 @@ public class GameScreen implements Screen {
         this.game = game;
 
         // Load the Tiled map for rendering
-        tiledMap = new TmxMapLoader().load("MoriaMap/newmap1.tmx");
+        tiledMap = new TmxMapLoader().load("MoriaMap/newmap2.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
         
         // Hide the Player layer from Tiled map (we render our own player)
         if (tiledMap.getLayers().get("Player") != null) {
             tiledMap.getLayers().get("Player").setVisible(false);
+
+            tiledMap.getLayers().get("Enemy").setVisible(false);
+        }
+        if (tiledMap.getLayers().get("Knifes") != null) {
             tiledMap.getLayers().get("Knifes").setVisible(false);
         }
-
         // Get map dimensions from the Tiled map
         mapWidth = tiledMap.getProperties().get("width", Integer.class);
         mapHeight = tiledMap.getProperties().get("height", Integer.class);
@@ -96,7 +99,7 @@ public class GameScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
 
         // Load game logic map from properties file (for collisions)
-        loadMapLogic("maps/level-1.properties");
+        loadMapLogic("maps/level-5.properties");
 
         findEntry();
         // Create player at entry point
@@ -184,7 +187,7 @@ public class GameScreen implements Screen {
                     deathPitTraps.add(new DeathPitTrap(x*TILE_SIZE,y*TILE_SIZE,TILE_SIZE,TILE_SIZE,player,entry));
                 } else if (mapData[x][y] == TYPE_KNIFE_TRAP) {
                     //  X and Y coordinate to calculate a unique delay for specific tile so each one play in different time
-                     delay = (x + y) * 0.1f;
+                     delay = (x + y) * 0.05f;
                         knifesTraps.add(new KnifesTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, delay));
                 }
             }
