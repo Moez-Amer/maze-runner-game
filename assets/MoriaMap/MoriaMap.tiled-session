@@ -1,8 +1,9 @@
 {
-    "activeFile": "newmap.tmx",
+    "activeFile": "newmap2.tmx",
     "expandedProjectPaths": [
         "."
     ],
+    "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
         "DynamicEnemy.tsx": {
             "dynamicWrapping": false,
@@ -71,12 +72,20 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 465.99999999999994,
-                "y": 268.66666666666663
+                "x": 691.3333333333333,
+                "y": 179.33333333333326
+            }
+        },
+        "newmap2.tmx": {
+            "scale": 0.33,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 683.3333333333335,
+                "y": 786.3636363636363
             }
         },
         "walking.tsx": {
-            "scaleInDock": 1,
+            "scaleInDock": 2,
             "scaleInEditor": 1
         }
     },
@@ -84,24 +93,24 @@
     "openFiles": [
         "MoriaSprite.tsx",
         "newmap.tmx",
-        "DynamicEnemy.tsx",
         "mainchar.tsx",
-        "walking.tsx"
+        "decorations.tsx",
+        "newmap2.tmx"
     ],
     "project": "",
     "recentFiles": [
+        "MoriaSprite.tsx",
+        "newmap.tmx",
+        "mainchar.tsx",
+        "decorations.tsx",
+        "newmap2.tmx",
         "DynamicEnemy.tsx",
         "walking.tsx",
-        "MoriaSprite.tsx",
-        "mainchar.tsx",
-        "newmap.tmx",
         "latest.tmx",
         "moria2.tsx",
         "mainch.tsx",
         "Wizard.tsx",
-        "Enemy.tsx",
-        "Orc.tsx",
-        "Player.tsx"
+        "Enemy.tsx"
     ],
     "tileset.tileSize": {
         "height": 16,
