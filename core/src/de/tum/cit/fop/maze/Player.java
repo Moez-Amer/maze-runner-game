@@ -19,6 +19,7 @@ public class Player extends MovableGameObject {
     
     private static final float WALK_SPEED = 80f;
     private static final float RUN_SPEED = 150f;
+    private float shieldSoundTimer = 0;
     private  float swordSize ;
     private int attackCombo ;
     private boolean isRunning;
@@ -214,6 +215,10 @@ public class Player extends MovableGameObject {
             shieldTimer -= delta;
         }
 
+        if (shieldSoundTimer > 0) {
+            shieldSoundTimer -= delta;
+        }
+
         if(isFalling){
             fallingTimer += delta;
             if(fallingTimer >= FALLING_DURATION) {
@@ -248,6 +253,8 @@ public class Player extends MovableGameObject {
         //  Attack Check
         if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
             isAttacking = true;
+            // Play the sound when player is attacking
+            AudioManager.playAttackSound();
             stateTime = 0f;
             speed = 0;
             if (attackCombo == 1) {
@@ -518,10 +525,17 @@ public class Player extends MovableGameObject {
         if (invulnerabilityTimer <= 0 && shieldTimer <= 0) {
             lives--;
             isDamaged = true;
+            // Play the standard hit sound effect
+            AudioManager.playHitSound();
             damageTimer = 0f;
             invulnerabilityTimer = INVULNERABILITY_TIME;
         } else if (shieldTimer > 0) {
             System.out.println("Shield blocked damage!");
+            // Play the hit sound with shield protected effect
+            if (shieldSoundTimer <= 0) {
+                AudioManager.playHitWithShieldSound();
+                shieldSoundTimer = 0.5f;
+            }
         }
     }
     /**

@@ -116,6 +116,9 @@ public class GameScreen implements Screen {
         
         // Spawn collectibles from map data
         spawnCollectibles();
+
+        // Load Audio
+        AudioManager.load();
     }
 
     /**
@@ -398,7 +401,14 @@ public class GameScreen implements Screen {
      */
     private void handleCollectiblePickup(Collectibles collectible) {
         collectible.collect();
-        
+
+        if (collectible.getType() == Collectibles.CollectibleType.KEY) {
+            // Play a more distinct sound for quest-critical items like keys
+            AudioManager.playPickupKeySound();} else {
+            // Play the standard pickup sound for general items
+            AudioManager.playPickupSound();
+        }
+
         switch (collectible.getType()) {
             case HEALTH:
                 player.addLife();
@@ -609,6 +619,7 @@ public class GameScreen implements Screen {
         if (shapeRenderer != null) shapeRenderer.dispose();
         if (uiAtlas != null) uiAtlas.dispose();
         if (hud != null) hud.dispose();
+        AudioManager.dispose();
     }
 
 }
