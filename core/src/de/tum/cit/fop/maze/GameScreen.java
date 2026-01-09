@@ -11,14 +11,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.TimeUtils;
 
 import java.util.Properties;
-
-/**
- * The GameScreen class is responsible for rendering the gameplay screen.
- * It handles the game logic and rendering of the game elements.
- */
 public class GameScreen implements Screen {
 
     private final MazeRunnerGame game;
@@ -35,8 +32,14 @@ public class GameScreen implements Screen {
     private int mapHeight;
     private static final int TILE_SIZE = 16;
 
+    //enemies
+    private Array<Enemy> enemies;
+
     // Player
     private Player player;
+
+    // Inside GameScreen.java constructor
+
 
     // Debug visualization
     private ShapeRenderer shapeRenderer;
@@ -49,6 +52,7 @@ public class GameScreen implements Screen {
      */
     public GameScreen(MazeRunnerGame game) {
         this.game = game;
+        this.enemies=new Array<>();
 
         // Load the Tiled map for rendering
         tiledMap = new TmxMapLoader().load("MoriaMap/newmap.tmx");
@@ -83,6 +87,39 @@ public class GameScreen implements Screen {
 
         // Create player at entry point (around 3,3 based on map)
         player = new Player(3 * TILE_SIZE, 3 * TILE_SIZE, TILE_SIZE, mapData);
+
+        //Create enemy
+        for (int j = 0; j < mapHeight; j++) {
+            for (int i = 0; i < mapWidth; i++) {
+                if (mapData[i][j] == 4){
+                    float centeredX= (i*TILE_SIZE)-100/2f+ TILE_SIZE/2;
+                    float centeredY= (j*TILE_SIZE)-20;
+                    Enemy enemy = new Enemy(centeredX,centeredY,TILE_SIZE,mapData, "Enemy_Assets/Undead executioner puppet/png/",100,100);
+                    this.enemies.add(enemy);
+                    for(int xOffSet = 0;xOffSet<2;xOffSet++){
+                        for(int yOffSet=0; yOffSet<4; yOffSet++){
+                            int checkX=i+xOffSet;
+                            int checkY=j+yOffSet;
+                            if (checkX<mapWidth&&checkY<mapHeight){
+                                mapData[checkX][checkY]=1;
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        if (tiledMap.getLayers().get("Enemy")!=null){
+            tiledMap.getLayers().get("Enemy").setVisible(true);
+        }
+        player.setEnemies(this.enemies);
+
+        for (Enemy enemy : enemies) {
+            enemy.setEnemies(this.enemies);
+            enemy.setPlayer(player);
+        }
+
+
     }
 
     private void loadMapLogic(String filePath) {
@@ -142,6 +179,9 @@ public class GameScreen implements Screen {
 
         // Update player (handles input, movement, animation)
         player.update(delta);
+        for (Enemy enemy : enemies){
+            enemy.update(delta);
+        }
 
         // Center camera on player with elevated 3/4 view offset
         camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
@@ -155,6 +195,13 @@ public class GameScreen implements Screen {
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
         game.getSpriteBatch().begin();
         player.render(game.getSpriteBatch());
+        if (tiledMap.getLayers().get("Enemy") != null) {
+            tiledMap.getLayers().get("Enemy").setVisible(false);
+        }
+        for (Enemy enemy : enemies){
+            enemy.render(game.getSpriteBatch());
+        }
+
         game.getSpriteBatch().end();
 
         // Draw collision debug visualization
@@ -208,6 +255,17 @@ public class GameScreen implements Screen {
         }
         shapeRenderer.end();
 
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for(Enemy enemy : enemies){
+            float[] feetBox = enemy.getFeetCollisionBox();
+            float feetX = feetBox[0];
+            float feetY = feetBox[1];
+            float feetW = feetBox[2];
+            float feetH = feetBox[3];
+            shapeRenderer.setColor(1,0,0,0.4f);
+            shapeRenderer.rect(feetX, feetY, feetW, feetH);
+        }
+        shapeRenderer.end();
         // Get the collision box from the player
         float[] feetBox = player.getFeetCollisionBox();
         float feetX = feetBox[0];

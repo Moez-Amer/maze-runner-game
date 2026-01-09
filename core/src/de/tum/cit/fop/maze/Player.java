@@ -7,11 +7,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-
-/**
- * Represents the player character in the maze game.
- * Handles player-specific logic: lives, keys, input, damage effects.
- */
 public class Player extends MovableGameObject {
     
     private static final float WALK_SPEED = 80f;
@@ -30,15 +25,6 @@ public class Player extends MovableGameObject {
     
     private Animation<TextureRegion> idleDownAnim, idleUpAnim, idleLeftAnim, idleRightAnim;
     private Animation<TextureRegion> runDownAnim, runUpAnim, runLeftAnim, runRightAnim;
-    
-    /**
-     * Constructs a new Player at the given position.
-     * 
-     * @param x Starting X coordinate
-     * @param y Starting Y coordinate
-     * @param tileSize Size of each tile in pixels
-     * @param mapData Reference to the map data for collision detection
-     */
     public Player(float x, float y, int tileSize, int[][] mapData) {
         super(x, y, tileSize, tileSize);
         
@@ -49,15 +35,11 @@ public class Player extends MovableGameObject {
         this.isRunning = false;
         this.isDamaged = false;
         this.invulnerabilityTimer = 0f;
-        
         setMapData(mapData, tileSize);
         setCollisionBox(16, 16, 40, 20);
         loadAnimations();
     }
-    
-    /**
-     * Loads all player animations from sprite files.
-     */
+
     private void loadAnimations() {
         int FRAME_WIDTH = 96;
         int FRAME_HEIGHT = 80;
@@ -104,12 +86,6 @@ public class Player extends MovableGameObject {
         facing = Direction.DOWN;
         currentAnimation = idleDownAnim;
     }
-    
-    /**
-     * Updates player state, handles input and movement.
-     * 
-     * @param delta Time elapsed since last frame
-     */
     @Override
     public void update(float delta) {
         super.update(delta);
@@ -128,12 +104,7 @@ public class Player extends MovableGameObject {
         
         handleInput(delta);
     }
-    
-    /**
-     * Handles keyboard input for player movement.
-     * 
-     * @param delta Time elapsed since last frame
-     */
+
     private void handleInput(float delta) {
         isRunning = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || 
                     Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
@@ -166,12 +137,7 @@ public class Player extends MovableGameObject {
         
         updateAnimation(moving);
     }
-    
-    /**
-     * Updates the current animation based on movement state and direction.
-     * 
-     * @param moving Whether the player is currently moving
-     */
+
     private void updateAnimation(boolean moving) {
         if (moving) {
             switch (facing) {
@@ -189,12 +155,7 @@ public class Player extends MovableGameObject {
             }
         }
     }
-    
-    /**
-     * Renders the player with damage effect if applicable.
-     * 
-     * @param batch SpriteBatch to draw with
-     */
+
     @Override
     public void render(SpriteBatch batch) {
         if (isDamaged && ((int)(damageTimer * 10) % 2 == 0)) {
@@ -210,12 +171,6 @@ public class Player extends MovableGameObject {
         
         batch.setColor(Color.WHITE);
     }
-    
-    /**
-     * Gets the collision box position and size for feet-based collision.
-     * The collision box is at the bottom-center of the sprite where the feet are.
-     * @return float array: [feetX, feetY, feetWidth, feetHeight]
-     */
     public float[] getFeetCollisionBox() {
         float feetWidth = 16;
         float feetHeight = 16;
@@ -223,10 +178,6 @@ public class Player extends MovableGameObject {
         float feetY = y + 20;
         return new float[]{feetX, feetY, feetWidth, feetHeight};
     }
-    
-    /**
-     * Makes the player take damage and lose a life.
-     */
     public void takeDamage() {
         if (invulnerabilityTimer <= 0) {
             lives--;
@@ -235,37 +186,19 @@ public class Player extends MovableGameObject {
             invulnerabilityTimer = INVULNERABILITY_TIME;
         }
     }
-    
-    /**
-     * Adds a life to the player (up to max).
-     */
+
     public void addLife() {
         if (lives < maxLives) {
             lives++;
         }
     }
-    
-    /**
-     * Collects a key.
-     */
     public void collectKey() {
         hasKey = true;
     }
-    
-    /**
-     * Checks if player is dead.
-     * 
-     * @return true if lives <= 0
-     */
     public boolean isDead() {
         return lives <= 0;
     }
-    
-    /**
-     * Checks if player is currently invulnerable.
-     * 
-     * @return true if invulnerable
-     */
+
     public boolean isInvulnerable() {
         return invulnerabilityTimer > 0;
     }

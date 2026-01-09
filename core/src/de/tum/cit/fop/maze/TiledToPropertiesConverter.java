@@ -240,7 +240,6 @@ public class TiledToPropertiesConverter {
             System.out.println("\nGame Types: 0=Wall, 1=Path, 2=Exit, 3=Trap, 4=Enemy, 5=Key");
             return;
         }
-        
         try {
             convert(args[0], args[1]);
         } catch (Exception e) {
