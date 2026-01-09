@@ -124,26 +124,25 @@ public class KnifesTrap extends GameObject {
     /**
      * Internal asset loading.
      *
-     * - Manually slices 16x16 regions from decorative.png
-     * - Source coordinates: x=160, y=16
-     * - Frame 3 used as static "Down/Safe" state
+     * - Loads individual knife animation frames from KnifeAnimation folder
+     * - Knife_0.png = fully retracted (safe state)
+     * - Knife_4.png = fully extended (most dangerous)
      */
     private void loadAssets() {
-        //  Load the full image
-        Texture trapSheet = new Texture(Gdx.files.internal("decorative.png"));
         Array<TextureRegion> frames = new Array<>();
 
-        // ADD FRAMES MANUALLY
-        frames.add(new TextureRegion(trapSheet, 160, 16, TILE_SIZE, TILE_SIZE));
-        frames.add(new TextureRegion(trapSheet, 176, 16, TILE_SIZE, TILE_SIZE));
-        frames.add(new TextureRegion(trapSheet, 192, 16, TILE_SIZE, TILE_SIZE));
-        frames.add(new TextureRegion(trapSheet, 208, 16, TILE_SIZE, TILE_SIZE));
+        // Load each frame from separate PNG files
+        frames.add(new TextureRegion(new Texture(Gdx.files.internal("KnifeAnimation/Knife_0.png"))));
+        frames.add(new TextureRegion(new Texture(Gdx.files.internal("KnifeAnimation/Knife_1.png"))));
+        frames.add(new TextureRegion(new Texture(Gdx.files.internal("KnifeAnimation/Knife_2.png"))));
+        frames.add(new TextureRegion(new Texture(Gdx.files.internal("KnifeAnimation/Knife_3.png"))));
+        frames.add(new TextureRegion(new Texture(Gdx.files.internal("KnifeAnimation/Knife_4.png"))));
 
-        // Create Animation
+        // Create Animation with ping-pong for smooth extend/retract
         this.animationUp = new Animation<>(FRAME_DURATION, frames, Animation.PlayMode.LOOP_PINGPONG);
 
-        // image for safe knifeTrap
-        this.textureDown = frames.get(3);
+        // First frame (Knife_0) is the safe/retracted state
+        this.textureDown = frames.get(0);
     }
 
 
