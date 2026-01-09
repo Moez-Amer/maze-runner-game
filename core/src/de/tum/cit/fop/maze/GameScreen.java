@@ -112,7 +112,7 @@ public class GameScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
 
         // Load map using appropriate method based on properties flag
-        loadMap("maps/level-5.properties");
+        loadMap("maps/level-1.properties");
 
         findEntry();
         // Create player at entry point
