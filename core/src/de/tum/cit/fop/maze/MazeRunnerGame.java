@@ -47,13 +47,8 @@ public class MazeRunnerGame extends Game {
         skin = new Skin(Gdx.files.internal("craft/craftacular-ui.json")); // Load UI skin
         this.loadCharacterAnimation(); // Load character animation
 
-        // Play some background music
-        // Background sound
-        Music backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("background.mp3"));
-        backgroundMusic.setLooping(true);
-        backgroundMusic.play();
-
-        goToMenu(); // Navigate to the menu screen
+        AudioManager.load();
+        goToMenu();
     }
 
     /**
@@ -61,6 +56,11 @@ public class MazeRunnerGame extends Game {
      */
     public void goToMenu() {
         this.setScreen(new MenuScreen(this)); // Set the current screen to MenuScreen
+
+        // Trigger the menu background music through the AudioManager
+        // Note: This must be outside the 'if' block to ensure it plays on first launch.
+        AudioManager.playMenuMusic();
+
         if (gameScreen != null) {
             gameScreen.dispose(); // Dispose the game screen if it exists
             gameScreen = null;
@@ -71,11 +71,14 @@ public class MazeRunnerGame extends Game {
      * Switches to the game screen.
      */
     public void goToGame() {
-        this.setScreen(new GameScreen(this)); // Set the current screen to GameScreen
         if (menuScreen != null) {
             menuScreen.dispose(); // Dispose the menu screen if it exists
             menuScreen = null;
         }
+
+        AudioManager.playGameMusic(); // Stop menu music and start the gameplay track
+
+        this.setScreen(new GameScreen(this)); // Set the current screen to GameScreen
     }
 
     /**

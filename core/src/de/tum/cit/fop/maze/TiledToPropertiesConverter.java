@@ -14,13 +14,14 @@ import java.util.*;
 public class TiledToPropertiesConverter {
     
     // Game object types for the properties file
-    private static final int TYPE_WALL = 0;
-    private static final int TYPE_PATH = 1;
-    private static final int TYPE_EXIT = 2;
-    private static final int TYPE_TRAP = 3;
-    private static final int TYPE_ENEMY = 4;
-    private static final int TYPE_KEY = 5;
-    
+    public static final int TYPE_WALL = 0;
+    public static final int TYPE_PATH = 1;
+    public static final int TYPE_EXIT = 2;
+    public static final int TYPE_DEATHTRAP = 3;
+    public static final int TYPE_ENEMY = 4;
+    public static final int TYPE_KEY = 5;
+    public static final int TYPE_ENTRY = 6;
+    public static final int TYPE_KNIFE_TRAP = 7;
     public static void convert(String tmxFilePath, String outputPropertiesPath) throws Exception {
         // Parse the TMX file
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -59,21 +60,23 @@ public class TiledToPropertiesConverter {
                 System.out.println("Skipping decoration layer (no collision)");
             } else if (layerName.contains("wall")) {
                 processWallLayer(tiles, gameMap, width, height);
-            } else if (layerName.contains("player")) {
-                processPlayerLayer(tiles, gameMap, width, height);
             } else if (layerName.contains("entry") || layerName.contains("spawn") || layerName.contains("start")) {
                 processEntryLayer(tiles, gameMap, width, height);
+            } else if (layerName.contains("player")) {
+                processPlayerLayer(tiles, gameMap, width, height);
             } else if (layerName.contains("exit") || layerName.contains("goal") || layerName.contains("end")) {
                 processExitLayer(tiles, gameMap, width, height);
             } else if (layerName.contains("death") || layerName.contains("trap") || layerName.contains("pit")) {
-                processTrapLayer(tiles, gameMap, width, height);
+                processDeathTrapLayer(tiles, gameMap, width, height);
+            }else if (layerName.contains("knife")) {
+                processKnifesLayer(tiles, gameMap, width, height);
             } else if (layerName.contains("enemy") || layerName.contains("monster")) {
                 processEnemyLayer(tiles, gameMap, width, height);
             } else if (layerName.contains("key") || layerName.contains("item") || layerName.contains("collect")) {
                 processKeyLayer(tiles, gameMap, width, height);
             }
         }
-        
+
         // Create properties file
         Properties props = new Properties();
         for (int x = 0; x < width; x++) {
@@ -135,7 +138,7 @@ public class TiledToPropertiesConverter {
             int y = height - 1 - (i / width);
             
             if (tiles[i] != 0) {
-                gameMap[x][y] = TYPE_PATH; // Entry is just a path with spawn point
+                gameMap[x][y] = TYPE_ENTRY; // Entry is just a path with spawn point
                 System.out.println("Entry point found at: " + x + "," + y);
             }
         }
@@ -147,7 +150,7 @@ public class TiledToPropertiesConverter {
             int y = height - 1 - (i / width);
             
             if (tiles[i] != 0) {
-                gameMap[x][y] = TYPE_PATH; // Player spawns on a path
+                gameMap[x][y] = TYPE_ENTRY; // Player spawns on a path
                 System.out.println("=== PLAYER START POSITION FOUND: " + x + "," + y + " ===");
             }
         }
@@ -165,17 +168,25 @@ public class TiledToPropertiesConverter {
         }
     }
     
-    private static void processTrapLayer(int[] tiles, int[][] gameMap, int width, int height) {
+    private static void processDeathTrapLayer(int[] tiles, int[][] gameMap, int width, int height) {
         for (int i = 0; i < tiles.length; i++) {
             int x = i % width;
             int y = height - 1 - (i / width);
             
             if (tiles[i] != 0) {
-                gameMap[x][y] = TYPE_TRAP;
+                gameMap[x][y] = TYPE_DEATHTRAP;
             }
         }
     }
-    
+    private static void processKnifesLayer(int[] tiles, int[][] gameMap, int width, int height) {
+        for (int i = 0; i < tiles.length; i++) {
+            int x = i % width;
+            int y = height - 1 - (i / width);
+            if (tiles[i] != 0) {
+                gameMap[x][y] = TYPE_KNIFE_TRAP;
+            }
+        }
+    }
     private static void processEnemyLayer(int[] tiles, int[][] gameMap, int width, int height) {
         for (int i = 0; i < tiles.length; i++) {
             int x = i % width;
@@ -209,7 +220,7 @@ public class TiledToPropertiesConverter {
                     case TYPE_WALL: walls++; break;
                     case TYPE_PATH: paths++; break;
                     case TYPE_EXIT: exits++; break;
-                    case TYPE_TRAP: traps++; break;
+                    case TYPE_DEATHTRAP: traps++; break;
                     case TYPE_ENEMY: enemies++; break;
                     case TYPE_KEY: keys++; break;
                 }

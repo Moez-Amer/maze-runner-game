@@ -27,6 +27,7 @@ public class Enemy extends MovableGameObject {
     private State state ;
     private ArrayList<Node> patrolPoints;
     int TILE_SIZE=16;
+    private int currentPatrolIndex = 0;  // ← ADD THIS at top of Enemy class
     /**
      * Constructs a new Enemy at the specified position.
      * Initializes the enemy with animations, collision detection, pathfinding,
