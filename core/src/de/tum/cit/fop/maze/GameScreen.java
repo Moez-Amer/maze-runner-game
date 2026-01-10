@@ -639,6 +639,8 @@ public class GameScreen implements Screen {
 
         // Update player (handles input, movement, animation)
         player.update(delta);
+        checkPlayerAttackHits();
+
         for (Enemy enemy : enemies){
             enemy.update(delta);
         }
@@ -764,6 +766,43 @@ public class GameScreen implements Screen {
         game.getSpriteBatch().end();
     }
 
+    /**
+     * Checks if player's sword attack hits any enemies.
+     * Uses the enemy's damage hitbox (3 tiles tall) for detection.
+     */
+    private void checkPlayerAttackHits() {
+        if (!player.isAttacking()) {
+            return;
+        }
+
+        if (player.hasAttackHit()) {
+            return;
+        }
+
+        Rectangle swordHitBox = player.getSwordHitBox();
+
+        for (int i = enemies.size - 1; i >= 0; i--) {
+            Enemy enemy = enemies.get(i);
+
+            Rectangle enemyDamageBox = enemy.getDamageHitBox();
+
+            if (swordHitBox.overlaps(enemyDamageBox)) {
+                float damage = 1.0f * player.getDamageMultiplier();
+
+                enemy.takeDamage(damage);
+
+                player.setAttackHasHit(true);
+
+                if (enemy.isDead()) {
+                    enemies.removeIndex(i);
+                    System.out.println("Enemy defeated! Remaining enemies: " + enemies.size);
+                }
+
+                break;
+            }
+        }
+    }
+
     private void renderCollisionDebug() {
         // Enable blending for transparency
         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -803,17 +842,40 @@ public class GameScreen implements Screen {
         }
         shapeRenderer.end();
 
+        // Draw enemy collision and damage boxes (FILLED)
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        for(Enemy enemy : enemies){
+        for (Enemy enemy : enemies) {
+            // Draw feet collision box (red) - used for movement/pathfinding
             float[] feetBox = enemy.getFeetCollisionBox();
             float feetX = feetBox[0];
             float feetY = feetBox[1];
             float feetW = feetBox[2];
             float feetH = feetBox[3];
-            shapeRenderer.setColor(1,0,0,0.4f);
+            shapeRenderer.setColor(1, 0, 0, 0.4f);
             shapeRenderer.rect(feetX, feetY, feetW, feetH);
+
+            // Draw damage hitbox (orange) - 3 tiles tall, used for combat
+            Rectangle damageBox = enemy.getDamageHitBox();
+            shapeRenderer.setColor(1, 0.5f, 0, 0.3f); // Orange, semi-transparent
+            shapeRenderer.rect(damageBox.x, damageBox.y, damageBox.width, damageBox.height);
         }
         shapeRenderer.end();
+
+        // Draw enemy collision and damage box outlines (LINES)
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        for (Enemy enemy : enemies) {
+            // Draw feet collision box outline (bright red)
+            float[] feetBox = enemy.getFeetCollisionBox();
+            shapeRenderer.setColor(1, 0, 0, 1f);
+            shapeRenderer.rect(feetBox[0], feetBox[1], feetBox[2], feetBox[3]);
+
+            // Draw damage hitbox outline (bright orange)
+            Rectangle damageBox = enemy.getDamageHitBox();
+            shapeRenderer.setColor(1, 0.6f, 0, 1f); // Bright orange
+            shapeRenderer.rect(damageBox.x, damageBox.y, damageBox.width, damageBox.height);
+        }
+        shapeRenderer.end();
+
         // Get the collision box from the player
         float[] feetBox = player.getFeetCollisionBox();
         float feetX = feetBox[0];

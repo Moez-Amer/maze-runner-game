@@ -3,7 +3,10 @@ package de.tum.cit.fop.maze;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+
 import java.util.ArrayList;
 
 /**
@@ -27,7 +30,13 @@ public class Enemy extends MovableGameObject {
     private State state ;
     private ArrayList<Node> patrolPoints;
     int TILE_SIZE=16;
-    private int currentPatrolIndex = 0;  // ← ADD THIS at top of Enemy class
+    private int currentPatrolIndex = 0;
+    private float health = 3.0f;
+    private boolean isDead = false;
+    private float damageFlashTimer = 0f;
+    private static final float DAMAGE_FLASH_DURATION = 0.3f;
+    private float attackCooldown = 0f;
+    private static final float ATTACK_INTERVAL = 1.0f;
     /**
      * Constructs a new Enemy at the specified position.
      * Initializes the enemy with animations, collision detection, pathfinding,
@@ -92,6 +101,10 @@ public class Enemy extends MovableGameObject {
     @Override
     public void update(float delta) {
         super.update(delta);
+        // Update damage flash timer
+        if (damageFlashTimer > 0) {
+            damageFlashTimer -= delta;
+        }
         movementLogic(delta);
     }
     /**
@@ -239,6 +252,15 @@ public class Enemy extends MovableGameObject {
         else{
             currentAnimation = attackAnim;
         }
+
+        if (player != null) {
+            attackCooldown -= com.badlogic.gdx.Gdx.graphics.getDeltaTime();
+            if (attackCooldown <= 0) {
+                player.takeDamage();
+                attackCooldown = ATTACK_INTERVAL;
+            }
+        }
+
     }
     /**
      * Handles chase behavior when enemy detects the player.
@@ -369,5 +391,73 @@ public class Enemy extends MovableGameObject {
 
 
     }
+
+    /**
+     * Gets the damage hitbox for the enemy.
+     * This is 3 tiles tall, positioned directly above the feet collision box.
+     *
+     * @return Rectangle representing the area where enemy can take damage
+     */
+    public Rectangle getDamageHitBox() {
+        float[] feetBox = getFeetCollisionBox();
+        float feetX = feetBox[0];
+        float feetY = feetBox[1];
+        float feetW = feetBox[2];
+        float feetH = feetBox[3];
+
+        // Create a hitbox that is 3 tiles tall, starting from the feet box
+        float damageWidth = feetW;
+        float damageHeight = TILE_SIZE * 3;
+        float damageX = feetX;
+        float damageY = feetY;
+
+        return new Rectangle(damageX, damageY, damageWidth, damageHeight);
+    }
+
+    /**
+     * Applies damage to the enemy.
+     *
+     * @param damage Amount of damage to apply
+     */
+    public void takeDamage(float damage) {
+        health -= damage;
+        damageFlashTimer = DAMAGE_FLASH_DURATION;
+
+        if (health <= 0) {
+            isDead = true;
+        }
+
+        System.out.println("Enemy took " + damage + " damage. Health: " + health);
+    }
+
+    /**
+     * Checks if the enemy is dead.
+     *
+     * @return true if enemy health is 0 or below
+     */
+    public boolean isDead() {
+        return isDead;
+    }
+
+
+    @Override
+    public void render(SpriteBatch batch) {
+        if (currentAnimation != null) {
+            TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTime);
+
+            // Flash red when damaged
+            if (damageFlashTimer > 0) {
+                if ((int)(damageFlashTimer * 10) % 2 == 0) {
+                    batch.setColor(1f, 0f, 0f, 1f); // Red flash
+                }
+            }
+
+            batch.draw(currentFrame, x, y, width, height);
+            batch.setColor(com.badlogic.gdx.graphics.Color.WHITE); // Reset color
+        }
+    }
+
+
+
 
 }

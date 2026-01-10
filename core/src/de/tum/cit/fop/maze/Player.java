@@ -53,6 +53,7 @@ public class Player extends MovableGameObject {
 
     private boolean isFalling;
     private float respawnX, respawnY;
+    private boolean attackHasHit = false;
     
     /**
      * Constructs a new Player at the given position.
@@ -250,21 +251,19 @@ public class Player extends MovableGameObject {
      */
     private boolean handleInput(float delta) {
 
-        //  Attack Check
         if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
             isAttacking = true;
-            // Play the sound when player is attacking
+            attackHasHit = false;
             AudioManager.playAttackSound();
             stateTime = 0f;
             speed = 0;
             if (attackCombo == 1) {
-                attackCombo = 2; // Next time, do Attack 2
+                attackCombo = 2;
             } else {
-                attackCombo = 1; // Next time, go back to Attack 1
+                attackCombo = 1;
             }
-            return false; // Not moving when the player is attacking
+            return false;
         }
-
 
         isRunning = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ||
                     Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
@@ -652,7 +651,9 @@ public class Player extends MovableGameObject {
     public float getDamageMultiplier() {
         return powerBoostTimer > 0 ? POWER_BOOST_MULTIPLIER : 1.0f;
     }
-    
+
+    public boolean hasAttackHit() {return attackHasHit;}
+    public void setAttackHasHit(boolean hit) {this.attackHasHit = hit;}
     public int getLives() { return lives; }
     public int getMaxLives() { return maxLives; }
     public boolean hasKey() { return hasKey; }
