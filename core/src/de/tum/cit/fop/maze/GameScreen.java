@@ -104,7 +104,6 @@ public class GameScreen implements Screen {
         // Create and configure the camera for the game view
         camera = new OrthographicCamera();
         camera.setToOrtho(false, TILE_SIZE * 30, TILE_SIZE * 18);
-
         // Get the font from the game's skin
         font = game.getSkin().getFont("font");
 
@@ -122,8 +121,8 @@ public class GameScreen implements Screen {
         for (int j = 0; j < mapHeight; j++) {
             for (int i = 0; i < mapWidth; i++) {
                 if (mapData[i][j] == 4){
-                    float centeredX= (i*TILE_SIZE)-100/2f+ TILE_SIZE/2;
-                    float centeredY= (j*TILE_SIZE)-20;
+                    float centeredX= (i*TILE_SIZE);
+                    float centeredY= (j*TILE_SIZE);
                     Enemy enemy = new Enemy(centeredX,centeredY,TILE_SIZE,mapData, "Enemy_Assets/Undead executioner puppet/png/",100,100);
                     this.enemies.add(enemy);
                     for(int xOffSet = 0;xOffSet<2;xOffSet++){

@@ -24,24 +24,25 @@ public class Enemy extends MovableGameObject {
     private float pathTimer;
     private float stuckTimer = 0f;
     private float lastX, lastY;
-    private float detectionRange=150f;
-    private float LosePlayerRange=200f;
     private enum State {PATROL,ATTACK,CHASE};
     private State state ;
     private ArrayList<Node> patrolPoints;
     int TILE_SIZE=16;
-    private int currentPatrolIndex = 0;
     private float health = 3.0f;
     private boolean isDead = false;
     private float damageFlashTimer = 0f;
     private static final float DAMAGE_FLASH_DURATION = 0.3f;
     private float attackCooldown = 0f;
     private static final float ATTACK_INTERVAL = 1.0f;
+    private int patrolDirectionX = 1;
+    private int patrolDirectionY = 0;
+    private float patrolSpeed = 45f;
+    private static final int[][] DIAGONAL_DIRECTIONS={{1, 1},{-1, 1},{-1, -1},{1, -1}};
+    private int currentDirectionIndex = 0;
     /**
      * Constructs a new Enemy at the specified position.
      * Initializes the enemy with animations, collision detection, pathfinding,
      * and generates random patrol points around the spawn location.
-     *
      * @param x The initial X coordinate in pixels
      * @param y The initial Y coordinate in pixels
      * @param tileSize The size of each tile in the game world
@@ -50,13 +51,13 @@ public class Enemy extends MovableGameObject {
      * @param frameWidth Width of each animation frame in pixels
      * @param frameHeight Height of each animation frame in pixels
      */
-    public Enemy(float x, float y, int tileSize, int[][] mapData, String path, int frameWidth, int frameHeight) {
+    public Enemy(float x,float y,int tileSize,int[][] mapData,String path,int frameWidth,int frameHeight) {
         super(x, y, frameWidth, frameHeight);
-        this.speed = 85f;
-        this.facing = Direction.LEFT;
-        this.lastX = x;
-        this.lastY = y;
-        this.state = State.PATROL;
+        this.speed =85f;
+        this.facing =Direction.LEFT;
+        this.lastX =x;
+        this.lastY =y;
+        this.state =State.PATROL;
 
         setMapData(mapData, tileSize);
         if (mapData != null) {
@@ -64,38 +65,12 @@ public class Enemy extends MovableGameObject {
         } else {
             System.out.println("the enemy was created with null mapData");
         }
-
         setCollisionBox(12, 12, 44, 22);
-        patrolPoints = new ArrayList<>();
-        int attempt=0;
-        int maxAttempts=50;
-        int TILEx=(int)(x/TILE_SIZE);
-        int TILEy=(int) (y/TILE_SIZE);
-        while (patrolPoints.size()!=3&&attempt<maxAttempts){
-                attempt++;
-                int range = 5;
-                int randomOffsetX = (int) (Math.random() * (2*range+1))-range;
-                int randomOffsetY = (int) (Math.random() * (2*range+1))-range;
-
-                int patrolX = TILEx+randomOffsetX;
-                int patrolY = TILEy+randomOffsetY;
-
-            if (patrolX >= 0 && patrolX < mapData.length &&
-                    patrolY >= 0 && patrolY < mapData[0].length){
-                if  (mapData[patrolX][patrolY]!=0){
-                    Node patrolNode = new Node(patrolX,patrolY);
-                    patrolPoints.add(patrolNode);
-                }}
-        }
-        if (patrolPoints.isEmpty()) {
-            patrolPoints.add(new Node(TILEx, TILEy));
-        }
         loadAnimation(path, frameWidth, frameHeight);
     }
     /**
      * Updates the enemy's state each frame.
      * Calls the parent update method and executes movement logic.
-     *
      * @param delta Time elapsed since last frame in seconds
      */
     @Override
@@ -123,7 +98,6 @@ public class Enemy extends MovableGameObject {
             if (d < 15 && d > 0) {
                 float pushX = -dx * 0.06f;
                 float pushY = -dy * 0.06f;
-                // Only push if it won't cause collision
                 if (canMoveTo(this.x + pushX, this.y + pushY)) {
                     this.x += pushX;
                     this.y += pushY;
@@ -171,10 +145,7 @@ public class Enemy extends MovableGameObject {
     }
     /**
      * Merges two arrays of texture regions into one.
-     * <p>
      * Used to combine multiple rows of animation frames from a sprite sheet.
-     * </p>
-     *
      * @param r1 First array of texture regions
      * @param r2 Second array of texture regions
      * @return Combined array containing all frames from both inputs
@@ -219,23 +190,8 @@ public class Enemy extends MovableGameObject {
         switch (state){
             case ATTACK -> attack(enemyFeet[0],playerFeet[0]);
             case CHASE -> chase(enemyFeet[0],playerFeet[0],delta);
-            case PATROL -> patrol(enemyFeet[0],playerFeet[0]);
+            case PATROL -> patrol(enemyFeet[0],playerFeet[0],delta);
         }
-
-//        if (enemyFeet[0]>playerFeet[0]){
-//            currentAnimation = attackLeftAnim;
-//            return;
-//        }
-//        else{
-//            currentAnimation = attackAnim;
-//        }
-//        if(enemyFeet[0]>playerFeet[0]){
-//            currentAnimation = floatingLeftAnim;
-//        }
-//        else{
-//            currentAnimation = floatingAnim;
-//        }
-
     }
     /**
      * Handles attack behavior when enemy is very close to player.
@@ -273,6 +229,7 @@ public class Enemy extends MovableGameObject {
      * @param delta Time elapsed since last frame in seconds
      */
     public void chase(float EnemyX, float PlayerX, float delta){
+        this.speed=85f;
         if(EnemyX>PlayerX){
             currentAnimation = floatingLeftAnim;
         }
@@ -296,23 +253,142 @@ public class Enemy extends MovableGameObject {
             pathTimer = 0;
             stuckTimer = 0;
 
-            float playerCenterX = playerFeet[0] + 8;
+            // Round to nearest tile center to prevent zigzag
+            float playerCenterX = (float)(Math.round(playerFeet[0] / TILE_SIZE) * TILE_SIZE) + TILE_SIZE / 2f;
+            float playerCenterY = (float)(Math.round(playerFeet[1] / TILE_SIZE) * TILE_SIZE) + TILE_SIZE / 2f;
             float enemyCenterX = enemyFeet[0] + 8;
-            float targetX=0f;
-            if (enemyCenterX < playerCenterX){
-                targetX = playerCenterX ;
-            }
-            else {
-                targetX = playerCenterX ;
-            }
-            this.path = pathFinder.findPath(enemyFeet[0], enemyFeet[1], targetX, playerFeet[1] + 8);
-            if (path != null && !path.isEmpty()) {
-                path.remove(0);
-                this.path = pathFinder.smoothPath(path);
-            }
+            float targetX = playerCenterX ;
+
+
+        calculatePathTo(playerCenterX,playerCenterY);
+        }
+        startFollowingThePath(delta);
+
+        applySeparation();
+    }
+    /**
+     * Handles patrol behavior with wall-bounce logic.
+     * Enemy moves in diagonal directions until hitting a wall, then bounces.
+     *
+     * @param EnemyX Enemy's X position
+     * @param PlayerX Player's X position
+     * @param delta Time elapsed since last frame in seconds
+     */
+    public void patrol(float EnemyX, float PlayerX, float delta) {
+        this.speed = patrolSpeed;
+        float[] enemyFeet = getFeetCollisionBox();
+        if(patrolDirectionX<0){
+            currentAnimation=floatingLeftAnim;
+        }
+        else
+        {
+            currentAnimation=floatingAnim;
         }
 
+        float moveX=patrolDirectionX*speed*delta;
+        float moveY=patrolDirectionY*speed*delta;
+
+        if (canMoveTo(x+moveX,y+moveY)) {
+            x+=moveX;
+            y+=moveY;
+        }
+        else{
+            changePatrolDirection();
+
+            moveX=patrolDirectionX*speed*delta;
+            moveY=patrolDirectionY*speed*delta;
+
+            if(canMoveTo(x+moveX,y+moveY)) {
+                x+=moveX;
+                y+=moveY;
+            }
+        }
+        applySeparation();
+    }
+
+    /**
+     * Changes patrol direction when hitting a wall.
+     * Cycles through diagonal directions: (1,1) -> (-1,1) -> (-1,-1) -> (1,-1) -> repeat
+     */
+    private void changePatrolDirection() {
+        currentDirectionIndex = (currentDirectionIndex + 1) % DIAGONAL_DIRECTIONS.length;
+        patrolDirectionX = DIAGONAL_DIRECTIONS[currentDirectionIndex][0];
+        patrolDirectionY = DIAGONAL_DIRECTIONS[currentDirectionIndex][1];
+
+    }
+    /**
+     * Gets the damage hitbox for the enemy.
+     * This is 3 tiles tall, positioned directly above the feet collision box.
+     *
+     * @return Rectangle representing the area where enemy can take damage
+     */
+    public Rectangle getDamageHitBox() {
+        float[] feetBox = getFeetCollisionBox();
+        float feetX = feetBox[0];
+        float feetY = feetBox[1];
+        float feetW = feetBox[2];
+        float feetH = feetBox[3];
+
+        // Create a hitbox that is 3 tiles tall, starting from the feet box
+        float damageWidth = feetW;
+        float damageHeight = TILE_SIZE * 3;
+        float damageX = feetX;
+        float damageY = feetY;
+
+        return new Rectangle(damageX, damageY, damageWidth, damageHeight);
+    }
+
+    /**
+     * Applies damage to the enemy.
+     *
+     * @param damage Amount of damage to apply
+     */
+    public void takeDamage(float damage) {
+        health -= damage;
+        damageFlashTimer = DAMAGE_FLASH_DURATION;
+
+        if (health <= 0) {
+            isDead = true;
+        }
+
+        System.out.println("Enemy took " + damage + " damage. Health: " + health);
+    }
+
+    /**
+     * Checks if the enemy is dead.
+     *
+     * @return true if enemy health is 0 or below
+     */
+    public boolean isDead() {
+        return isDead;
+    }
+    @Override
+    public void render(SpriteBatch batch) {
+        if (currentAnimation != null) {
+            TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTime);
+
+            // Flash red when damaged
+            if (damageFlashTimer > 0) {
+                if ((int)(damageFlashTimer * 10) % 2 == 0) {
+                    batch.setColor(1f, 0f, 0f, 1f); // Red flash
+                }
+            }
+
+            batch.draw(currentFrame, x, y, width, height);
+            batch.setColor(com.badlogic.gdx.graphics.Color.WHITE); // Reset color
+        }
+    }
+    public void  calculatePathTo(float targetX, float targetY){
+        float [] enemyFeet= getFeetCollisionBox();
+        this.path = pathFinder.findPath(enemyFeet[0], enemyFeet[1], targetX, targetY);
+        if (path != null && !path.isEmpty()) {
+            path.remove(0);
+            this.path = pathFinder.smoothPath(path);
+        }
+    }
+    private void startFollowingThePath(float delta){
         if (this.path != null && !this.path.isEmpty()) {
+            float[]enemyFeet = getFeetCollisionBox();
             Node nextNode = this.path.get(0);
             float targetX = nextNode.x * 16;
             float targetY = nextNode.y * 16;
@@ -370,93 +446,7 @@ public class Enemy extends MovableGameObject {
                 this.path.remove(0);
             }
         }
-        applySeparation();
     }
-    /**
-     * Handles patrol behavior when player is not detected.
-     * Enemy cycles through predetermined patrol points.
-     * Currently only handles animation; movement logic to be implemented.
-     *
-     * @param EnemyX Enemy's X position
-     * @param PlayerX Player's X position
-     */
-    public void patrol(float EnemyX, float PlayerX){
-        if(EnemyX>PlayerX){
-            currentAnimation = floatingLeftAnim;
-        }
-        else{
-            currentAnimation = floatingAnim;
-        }
-
-
-
-    }
-
-    /**
-     * Gets the damage hitbox for the enemy.
-     * This is 3 tiles tall, positioned directly above the feet collision box.
-     *
-     * @return Rectangle representing the area where enemy can take damage
-     */
-    public Rectangle getDamageHitBox() {
-        float[] feetBox = getFeetCollisionBox();
-        float feetX = feetBox[0];
-        float feetY = feetBox[1];
-        float feetW = feetBox[2];
-        float feetH = feetBox[3];
-
-        // Create a hitbox that is 3 tiles tall, starting from the feet box
-        float damageWidth = feetW;
-        float damageHeight = TILE_SIZE * 3;
-        float damageX = feetX;
-        float damageY = feetY;
-
-        return new Rectangle(damageX, damageY, damageWidth, damageHeight);
-    }
-
-    /**
-     * Applies damage to the enemy.
-     *
-     * @param damage Amount of damage to apply
-     */
-    public void takeDamage(float damage) {
-        health -= damage;
-        damageFlashTimer = DAMAGE_FLASH_DURATION;
-
-        if (health <= 0) {
-            isDead = true;
-        }
-
-        System.out.println("Enemy took " + damage + " damage. Health: " + health);
-    }
-
-    /**
-     * Checks if the enemy is dead.
-     *
-     * @return true if enemy health is 0 or below
-     */
-    public boolean isDead() {
-        return isDead;
-    }
-
-
-    @Override
-    public void render(SpriteBatch batch) {
-        if (currentAnimation != null) {
-            TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTime);
-
-            // Flash red when damaged
-            if (damageFlashTimer > 0) {
-                if ((int)(damageFlashTimer * 10) % 2 == 0) {
-                    batch.setColor(1f, 0f, 0f, 1f); // Red flash
-                }
-            }
-
-            batch.draw(currentFrame, x, y, width, height);
-            batch.setColor(com.badlogic.gdx.graphics.Color.WHITE); // Reset color
-        }
-    }
-
 
 
 
