@@ -2,13 +2,25 @@ package de.tum.cit.fop.maze;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import de.tum.cit.fop.maze.Screens.GameScreen;
+import de.tum.cit.fop.maze.Screens.MenuScreen;
+import de.tum.cit.fop.maze.Screens.PauseScreen;
+import de.tum.cit.fop.maze.Screens.SelectMapScreen;
 import games.spooky.gdx.nativefilechooser.NativeFileChooser;
 
 /**
@@ -55,30 +67,45 @@ public class MazeRunnerGame extends Game {
      * Switches to the menu screen.
      */
     public void goToMenu() {
-        this.setScreen(new MenuScreen(this)); // Set the current screen to MenuScreen
 
-        // Trigger the menu background music through the AudioManager
-        // Note: This must be outside the 'if' block to ensure it plays on first launch.
-        AudioManager.playMenuMusic();
 
         if (gameScreen != null) {
-            gameScreen.dispose(); // Dispose the game screen if it exists
+            gameScreen.dispose();
             gameScreen = null;
         }
+
+         AudioManager.playMenuMusic();
+
+        this.setScreen(new MenuScreen(this));
+
     }
 
     /**
      * Switches to the game screen.
      */
-    public void goToGame() {
+    public void goToGame(String mapPath) {
         if (menuScreen != null) {
-            menuScreen.dispose(); // Dispose the menu screen if it exists
+            menuScreen.dispose();
             menuScreen = null;
         }
 
-        AudioManager.playGameMusic(); // Stop menu music and start the gameplay track
+        AudioManager.playGameMusic();
+        this.setScreen(new GameScreen(this, mapPath)); // Set the current screen to GameScreen
+    }
+    public void goToSelectMap() {
+        if (menuScreen != null) {
+            menuScreen.dispose();
+            menuScreen = null;
+        }
+        if (gameScreen != null) {
+            gameScreen.dispose();
+            gameScreen = null;
+        }
+        this.setScreen(new SelectMapScreen(this));
+    }
 
-        this.setScreen(new GameScreen(this)); // Set the current screen to GameScreen
+    public void goToPause(GameScreen currentGameScreen) {
+        this.setScreen(new PauseScreen(this, currentGameScreen));
     }
 
     /**
@@ -107,10 +134,48 @@ public class MazeRunnerGame extends Game {
      */
     @Override
     public void dispose() {
-        getScreen().hide(); // Hide the current screen
-        getScreen().dispose(); // Dispose the current screen
-        spriteBatch.dispose(); // Dispose the spriteBatch
-        skin.dispose(); // Dispose the skin
+        getScreen().hide();
+        getScreen().dispose();
+        spriteBatch.dispose();
+        skin.dispose();
+    }
+
+    private void addButton(Table table, String text, Runnable action, float delay) {
+        TextButton button = new TextButton(text, this.getSkin());
+
+        button.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                button.addAction(Actions.scaleTo(1.1f, 1.1f, 0.1f));
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                button.addAction(Actions.scaleTo(1.0f, 1.0f, 0.1f));
+            }
+        });
+
+        button.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                action.run();
+            }
+        });
+
+        button.setTransform(true);
+        button.setOrigin(Align.center);
+        button.getColor().a = 0f;
+        button.addAction(Actions.sequence(
+                Actions.delay(delay),
+                Actions.parallel(
+                        Actions.fadeIn(0.5f),
+                        Actions.moveBy(0, 20, 0.5f, Interpolation.pow2Out)
+                )
+        ));
+
+        button.moveBy(0, -20);
+
+        table.add(button).width(500).height(80).padBottom(18).row();
     }
 
     // Getter methods

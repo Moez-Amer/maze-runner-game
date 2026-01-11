@@ -9,8 +9,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 
-import static de.tum.cit.fop.maze.GameScreen.TILE_SIZE;
-
 /**
  * Represents the player character in the maze game.
  * Handles player-specific logic: lives, keys, input, damage effects.

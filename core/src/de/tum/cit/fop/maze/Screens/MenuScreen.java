@@ -1,17 +1,23 @@
-package de.tum.cit.fop.maze;
+package de.tum.cit.fop.maze.Screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import de.tum.cit.fop.maze.MazeRunnerGame;
 
 /**
  * The MenuScreen class is responsible for displaying the main menu of the game.
@@ -20,6 +26,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class MenuScreen implements Screen {
 
     private final Stage stage;
+    private final MazeRunnerGame game;
 
     /**
      * Constructor for MenuScreen. Sets up the camera, viewport, stage, and UI elements.
@@ -27,28 +34,32 @@ public class MenuScreen implements Screen {
      * @param game The main game class, used to access global resources and methods.
      */
     public MenuScreen(MazeRunnerGame game) {
+        this.game = game;
         var camera = new OrthographicCamera();
-        camera.zoom = 1.5f; // Set camera zoom for a closer view
+        camera.zoom = 1.5f;
 
         Viewport viewport = new ScreenViewport(camera); // Create a viewport with the camera
         stage = new Stage(viewport, game.getSpriteBatch()); // Create a stage for UI elements
 
-        Table table = new Table(); // Create a table for layout
-        table.setFillParent(true); // Make the table fill the stage
-        stage.addActor(table); // Add the table to the stage
+        Table table = new Table();
+        table.setFillParent(true);
+        stage.addActor(table);
 
-        // Add a label as a title
         table.add(new Label("Hello World from the Menu!", game.getSkin(), "title")).padBottom(80).row();
 
-        // Create and add a button to go to the game screen
-        TextButton goToGameButton = new TextButton("Go To Game", game.getSkin());
-        table.add(goToGameButton).width(300).row();
-        goToGameButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                game.goToGame(); // Change to the game screen when button is pressed
-            }
-        });
+        addButton(table,"Start New Game", ()-> {
+            game.goToGame("maps/level-1.properties");
+        },0.1f);
+
+        addButton(table,"Select Level", ()-> {
+            game.goToSelectMap();
+        },0.2f);
+
+        addButton(table,"Exit",()->{
+            Gdx.app.exit();
+        },0.3f);
+
+
     }
 
     @Override
@@ -65,17 +76,14 @@ public class MenuScreen implements Screen {
 
     @Override
     public void dispose() {
-        // Dispose of the stage when screen is disposed
         stage.dispose();
     }
 
     @Override
     public void show() {
-        // Set the input processor so the stage can receive input events
         Gdx.input.setInputProcessor(stage);
     }
 
-    // The following methods are part of the Screen interface but are not used in this screen.
     @Override
     public void pause() {
     }
@@ -87,4 +95,44 @@ public class MenuScreen implements Screen {
     @Override
     public void hide() {
     }
+
+
+    private void addButton(Table table, String text, Runnable action, float delay) {
+        TextButton button = new TextButton(text, game.getSkin());
+
+        button.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                button.addAction(Actions.scaleTo(1.1f, 1.1f, 0.1f));
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                button.addAction(Actions.scaleTo(1.0f, 1.0f, 0.1f));
+            }
+        });
+
+        button.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                action.run();
+            }
+        });
+
+        button.setTransform(true);
+        button.setOrigin(Align.center);
+        button.getColor().a = 0f;
+        button.addAction(Actions.sequence(
+                Actions.delay(delay),
+                Actions.parallel(
+                        Actions.fadeIn(0.5f),
+                        Actions.moveBy(0, 20, 0.5f, Interpolation.pow2Out)
+                )
+        ));
+
+        button.moveBy(0, -20);
+
+        table.add(button).width(500).height(80).padBottom(18).row();
+    }
+
 }

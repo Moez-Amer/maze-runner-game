@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
-import static de.tum.cit.fop.maze.GameScreen.TILE_SIZE;
+import static de.tum.cit.fop.maze.Screens.GameScreen.TILE_SIZE;
 
 /**
  * Dynamic floor trap hazard: retractable spikes with synchronized timing.

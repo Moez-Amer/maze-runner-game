@@ -1,6 +1,6 @@
 package de.tum.cit.fop.maze;
 
-import static de.tum.cit.fop.maze.GameScreen.TILE_SIZE;
+import static de.tum.cit.fop.maze.Screens.GameScreen.TILE_SIZE;
 
 /**
  * Level start point data container.

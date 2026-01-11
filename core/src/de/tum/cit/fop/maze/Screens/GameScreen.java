@@ -1,4 +1,4 @@
-package de.tum.cit.fop.maze;
+package de.tum.cit.fop.maze.Screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -17,7 +17,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.TimeUtils;
+import de.tum.cit.fop.maze.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +43,7 @@ public class GameScreen implements Screen {
     private final MazeRunnerGame game;
     private final OrthographicCamera camera;
     private final BitmapFont font;
+    private final String mapPath;
 
     // Tiled map rendering (used only in hybrid mode)
     private TiledMap tiledMap;
@@ -88,7 +89,6 @@ public class GameScreen implements Screen {
     private float entranceX, entranceY, entranceWidth, entranceHeight;
     private boolean exitBoundsFound = false;
     private boolean entranceBoundsFound = false;
-
     // Loading mode flag
     private boolean useTiledMap = false;
 
@@ -97,10 +97,10 @@ public class GameScreen implements Screen {
      *
      * @param game The main game class, used to access global resources and methods.
      */
-    public GameScreen(MazeRunnerGame game) {
+    public GameScreen(MazeRunnerGame game, String mapPath) {
         this.game = game;
+        this.mapPath =mapPath;
         this.enemies=new Array<>();
-
         // Create and configure the camera for the game view
         camera = new OrthographicCamera();
         camera.setToOrtho(false, TILE_SIZE * 30, TILE_SIZE * 18);
@@ -111,12 +111,13 @@ public class GameScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
 
         // Load map using appropriate method based on properties flag
-        loadMap("maps/level-1.properties");
+        loadMap(mapPath);
 
         findEntry();
         // Create player at entry point
         player = new Player(entry.getX(), entry.getY(), TILE_SIZE, mapData);
         findDeathPits_KnifesTraps();
+
         //Create enemy
         for (int j = 0; j < mapHeight; j++) {
             for (int i = 0; i < mapWidth; i++) {
@@ -623,9 +624,10 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        // Check for escape key press to go back to the menu
+        // Check for escape key press to go back to the pause
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.goToMenu();
+            game.goToPause(this);
+            return;
         }
 
         // Toggle collision box visualization with K key
@@ -950,5 +952,8 @@ public class GameScreen implements Screen {
 
         AudioManager.dispose();
     }
-    
+
+    public String getMapPath() {
+        return mapPath;
+    }
 }
