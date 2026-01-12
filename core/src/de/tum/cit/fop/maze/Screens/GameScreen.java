@@ -92,6 +92,8 @@ public class GameScreen implements Screen {
     // Loading mode flag
     private boolean useTiledMap = false;
 
+
+    private KeyBindings keys ;
     /**
      * Constructor for GameScreen. Sets up the camera and font.
      *
@@ -101,6 +103,8 @@ public class GameScreen implements Screen {
         this.game = game;
         this.mapPath =mapPath;
         this.enemies=new Array<>();
+        this.keys = KeyBindings.getKeyBindings();
+
         // Create and configure the camera for the game view
         camera = new OrthographicCamera();
         camera.setToOrtho(false, TILE_SIZE * 30, TILE_SIZE * 18);
@@ -631,7 +635,7 @@ public class GameScreen implements Screen {
         }
 
         // Toggle collision box visualization with K key
-        if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
+        if (keys.isKeyJustPressed("Debug")) {
             showCollisionBoxes = !showCollisionBoxes;
             System.out.println("Collision boxes: " + (showCollisionBoxes ? "ON" : "OFF"));
         }

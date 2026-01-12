@@ -54,15 +54,18 @@ public PauseScreen( MazeRunnerGame game,GameScreen currentGameScreen) {
         game.goToGame(currentMap);
     },0.2f);
 
+    addButton(table, "Settings", () -> {
+        game.goToSettings(this);
+    }, 0.3f);
 
     addButton(table, "Return to Menu",()-> {
         currentGameScreen.dispose();
         game.goToMenu();
-    }, 0.3F);
+    }, 0.4f);
 
     addButton(table, "Quit Game", () -> {
         Gdx.app.exit();
-    }, 0.4f);
+    }, 0.5f);
 
 }
 

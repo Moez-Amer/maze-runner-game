@@ -2,6 +2,7 @@ package de.tum.cit.fop.maze;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -17,10 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
-import de.tum.cit.fop.maze.Screens.GameScreen;
-import de.tum.cit.fop.maze.Screens.MenuScreen;
-import de.tum.cit.fop.maze.Screens.PauseScreen;
-import de.tum.cit.fop.maze.Screens.SelectMapScreen;
+import de.tum.cit.fop.maze.Screens.*;
 import de.tum.cit.fop.maze.Screens.VictoryScreen;
 import de.tum.cit.fop.maze.Screens.GameOverScreen;
 import games.spooky.gdx.nativefilechooser.NativeFileChooser;
@@ -94,6 +92,10 @@ public class MazeRunnerGame extends Game {
         AudioManager.playGameMusic();
         this.setScreen(new GameScreen(this, mapPath)); // Set the current screen to GameScreen
     }
+    /**
+     * Disposes of any active menu or game screens and navigates to the map selection screen.
+     * Ensures memory is freed before creating the new screen.
+     */
     public void goToSelectMap() {
         if (menuScreen != null) {
             menuScreen.dispose();
@@ -105,9 +107,21 @@ public class MazeRunnerGame extends Game {
         }
         this.setScreen(new SelectMapScreen(this));
     }
-
+    /**
+     * Pauses the current game and switches to the pause menu.
+     *
+     * @param currentGameScreen The active game screen, preserved to allow resuming.
+     */
     public void goToPause(GameScreen currentGameScreen) {
         this.setScreen(new PauseScreen(this, currentGameScreen));
+    }
+    /**
+     * Navigates to the settings menu.
+     *
+     * @param previousScreen The screen to return to when exiting settings.
+     */
+    public void goToSettings(Screen previousScreen) {
+        this.setScreen(new SettingsScreen(this, previousScreen));
     }
 
     /**

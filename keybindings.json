@@ -1,0 +1,34 @@
+{
+Move Left: {
+	class: java.lang.String
+	value: Left
+}
+Toggle Debug: {
+	class: java.lang.String
+	value: K
+}
+Move Down: {
+	class: java.lang.String
+	value: Down
+}
+Open Console: {
+	class: java.lang.String
+	value: T
+}
+Attack: {
+	class: java.lang.String
+	value: Space
+}
+Sprint: {
+	class: java.lang.String
+	value: L-Shift
+}
+Move Up: {
+	class: java.lang.String
+	value: Up
+}
+Move Right: {
+	class: java.lang.String
+	value: Right
+}
+}

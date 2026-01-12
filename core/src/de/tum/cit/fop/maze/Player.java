@@ -1,7 +1,6 @@
 package de.tum.cit.fop.maze;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -52,7 +51,9 @@ public class Player extends MovableGameObject {
     private boolean isFalling;
     private float respawnX, respawnY;
     private boolean attackHasHit = false;
-    
+
+    private KeyBindings keys;
+
     /**
      * Constructs a new Player at the given position.
      * 
@@ -76,8 +77,8 @@ public class Player extends MovableGameObject {
         this.speedBoostTimer = 0f;
         this.powerBoostTimer = 0f;
         this.shieldTimer = 0f;
-        
         this.attackCombo=1;
+        this.keys = KeyBindings.getKeyBindings();
         setMapData(mapData, tileSize);
         setCollisionBox(16, 16, 40, 20);
         loadAnimations();
@@ -249,7 +250,7 @@ public class Player extends MovableGameObject {
      */
     private boolean handleInput(float delta) {
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
+        if((keys.isKeyJustPressed("Attack")) ){
             isAttacking = true;
             attackHasHit = false;
             AudioManager.playAttackSound();
@@ -263,16 +264,15 @@ public class Player extends MovableGameObject {
             return false;
         }
 
-        isRunning = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ||
-                    Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
+        isRunning = (keys.isKeyPressed("Sprint"));
         float baseSpeed = isRunning ? RUN_SPEED : WALK_SPEED;
         speed = speedBoostTimer > 0 ? baseSpeed * SPEED_BOOST_MULTIPLIER : baseSpeed;
 
         // check movement keys
-        boolean isUp    = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
-        boolean isDown  = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
-        boolean isLeft  = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
-        boolean isRight = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+        boolean isUp    = (keys.isKeyPressed("Move Up"));
+        boolean isDown  = (keys.isKeyPressed("Move Down"));
+        boolean isLeft  = (keys.isKeyPressed("Move Left"));
+        boolean isRight =(keys.isKeyPressed("Move Right"));
 
         if (!isUp && !isDown && !isLeft && !isRight) {
             return false;

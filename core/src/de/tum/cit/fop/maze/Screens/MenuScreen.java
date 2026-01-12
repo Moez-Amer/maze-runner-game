@@ -55,9 +55,13 @@ public class MenuScreen implements Screen {
             game.goToSelectMap();
         },0.2f);
 
+        addButton(table, "Settings", () -> {
+            game.goToSettings(this);
+        }, 0.3f);
+
         addButton(table,"Exit",()->{
             Gdx.app.exit();
-        },0.3f);
+        },0.4f);
 
 
     }
@@ -67,7 +71,7 @@ public class MenuScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Clear the screen
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f)); // Update the stage
-        stage.draw(); // Draw the stage
+        stage.draw();
     }
 
     @Override
