@@ -21,6 +21,8 @@ import de.tum.cit.fop.maze.Screens.GameScreen;
 import de.tum.cit.fop.maze.Screens.MenuScreen;
 import de.tum.cit.fop.maze.Screens.PauseScreen;
 import de.tum.cit.fop.maze.Screens.SelectMapScreen;
+import de.tum.cit.fop.maze.Screens.VictoryScreen;
+import de.tum.cit.fop.maze.Screens.GameOverScreen;
 import games.spooky.gdx.nativefilechooser.NativeFileChooser;
 
 /**
@@ -107,6 +109,29 @@ public class MazeRunnerGame extends Game {
     public void goToPause(GameScreen currentGameScreen) {
         this.setScreen(new PauseScreen(this, currentGameScreen));
     }
+
+    /**
+     * Switches to the victory screen.
+     */
+    public void goToVictory() {
+        if (gameScreen != null) {
+            gameScreen.dispose();
+            gameScreen = null;
+        }
+        this.setScreen(new VictoryScreen(this));
+    }
+
+    /**
+     * Switches to the game over screen.
+     */
+    public void goToGameOver(String mapPath) {
+        if (gameScreen != null) {
+            gameScreen.dispose();
+            gameScreen = null;
+        }
+        this.setScreen(new GameOverScreen(this, mapPath));
+    }
+
 
     /**
      * Loads the character animation from the character.png file.

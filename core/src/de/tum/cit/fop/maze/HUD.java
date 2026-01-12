@@ -98,21 +98,21 @@ public class HUD {
      */
     private void renderKeyStatus(SpriteBatch batch, Player player, float x, float y) {
         if (keyTexture != null) {
-            if (player.hasKey()) {
+            int keyCount = player.getKeyCount();
+            int requiredKeys = 3; // Change if configurable
+            if (keyCount > 0) {
                 batch.setColor(1f, 0.85f, 0f, 1f);
                 batch.draw(keyTexture, x, y, KEY_SIZE, KEY_SIZE * 0.5f);
                 batch.setColor(Color.WHITE);
-                
                 boldFont.setColor(1f, 0.85f, 0f, 1f);
-                boldFont.draw(batch, "KEY", x + KEY_SIZE + 8, y + KEY_SIZE * 0.35f);
+                boldFont.draw(batch, "KEYS: " + keyCount + "/" + requiredKeys, x + KEY_SIZE + 8, y + KEY_SIZE * 0.35f);
                 boldFont.setColor(Color.WHITE);
             } else {
                 batch.setColor(0.4f, 0.4f, 0.4f, 0.6f);
                 batch.draw(keyTexture, x, y, KEY_SIZE, KEY_SIZE * 0.5f);
                 batch.setColor(Color.WHITE);
-                
                 font.setColor(0.5f, 0.5f, 0.5f, 0.8f);
-                font.draw(batch, "No Key", x + KEY_SIZE + 8, y + KEY_SIZE * 0.35f);
+                font.draw(batch, "KEYS: 0/" + requiredKeys, x + KEY_SIZE + 8, y + KEY_SIZE * 0.35f);
                 font.setColor(Color.WHITE);
             }
         }

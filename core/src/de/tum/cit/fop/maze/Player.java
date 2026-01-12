@@ -24,7 +24,7 @@ public class Player extends MovableGameObject {
     
     private int lives;
     private int maxLives;
-    private boolean hasKey;
+    private int keyCount;
     
     private float speedBoostTimer;
     private float powerBoostTimer;
@@ -67,7 +67,7 @@ public class Player extends MovableGameObject {
         this.speed = WALK_SPEED;
         this.lives = 3;
         this.maxLives = 3;
-        this.hasKey = false;
+        this.keyCount = 0;
         this.isRunning = false;
         this.isDamaged = false;
         this.isFalling = false;
@@ -565,7 +565,11 @@ public class Player extends MovableGameObject {
      * Collects a key.
      */
     public void collectKey() {
-        hasKey = true;
+        keyCount++;
+    }
+
+    public boolean hasAllKeys(){
+        return 3==keyCount;
     }
     
     /**
@@ -654,7 +658,7 @@ public class Player extends MovableGameObject {
     public void setAttackHasHit(boolean hit) {this.attackHasHit = hit;}
     public int getLives() { return lives; }
     public int getMaxLives() { return maxLives; }
-    public boolean hasKey() { return hasKey; }
+    public int getKeyCount() { return keyCount; }
     public boolean isRunning() { return isRunning; }
     public boolean isMoving() {return isMoving;}
     public boolean isAttacking() {return isAttacking;}

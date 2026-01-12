@@ -657,6 +657,9 @@ public class GameScreen implements Screen {
         // Update collectibles
         updateCollectibles(delta);
 
+        checkWinCondition();
+        checkLoseCondition();
+
         // Center camera on player
         camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
         camera.update();
@@ -804,7 +807,49 @@ public class GameScreen implements Screen {
         }
     }
 
+    /**
+     * Checks if the player has won the game.
+     * Win condition: Player must have the 3 keys AND reach the exit.
+     */
+    private void checkWinCondition() {
+        if (!player.hasAllKeys()) {
+            return;
+        }
+
+        float[] playerBox = player.getFeetCollisionBox();
+        float px = playerBox[0], py = playerBox[1], pw = playerBox[2], ph = playerBox[3];
+
+
+        for (int x = 0; x < mapWidth; x++) {
+            for (int y = 0; y < mapHeight; y++) {
+                if (mapData[x][y] == TiledToPropertiesConverter.TYPE_EXIT) {
+                    float tileX = x * TILE_SIZE;
+                    float tileY = y * TILE_SIZE;
+
+                    if (px < tileX + TILE_SIZE && px + pw > tileX &&
+                            py < tileY + TILE_SIZE && py + ph > tileY) {
+
+                        System.out.println("Victory condition met!");
+                        game.goToVictory();
+                        return; // Exit the method once victory is triggered
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks if the player has lost the game.
+     * Lose condition: Player's lives reach 0.
+     */
+    private void checkLoseCondition() {
+        if (player.isDead()) {
+            game.goToGameOver(mapPath);
+        }
+    }
+
     private void renderCollisionDebug() {
+
         // Enable blending for transparency
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -823,6 +868,11 @@ public class GameScreen implements Screen {
                 int type = mapData[x][y];
                 if (type == 0) {
                     shapeRenderer.setColor(1, 0, 0, 0.4f);
+                    shapeRenderer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
+                // Shade exit tiles in green
+                if (type == TYPE_EXIT) {
+                    shapeRenderer.setColor(0, 1, 0, 0.4f);
                     shapeRenderer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
             }
