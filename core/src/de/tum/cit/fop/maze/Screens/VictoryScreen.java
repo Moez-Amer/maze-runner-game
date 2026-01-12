@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import de.tum.cit.fop.maze.AudioManager;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 
 /**
@@ -68,7 +69,11 @@ public class VictoryScreen implements Screen {
     }
 
     @Override
-    public void show() {}
+    public void show() {
+        AudioManager.stopMusic();
+        AudioManager.playVictorySound();
+        Gdx.input.setInputProcessor(stage);
+    }
 
     @Override
     public void render(float delta) {

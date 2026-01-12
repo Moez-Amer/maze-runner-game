@@ -20,6 +20,7 @@ public class AudioManager {
     private static Sound attackSound;
     private static Sound gotoTheNextLevelSound;
 
+    private static Music gameOverMusic;
     private static Music victoryMusic;
     private static Music menuMusic;
     private static Music gameMusic;
@@ -28,11 +29,15 @@ public class AudioManager {
     private static float musicVolume = 1.0f;
     private static float sfxVolume = 1.0f;
 
+    // Flag to ensure assets are only loaded once to prevent multiple music instances
+    private static boolean loaded = false;
+
     /**
      * Loads all sound and music assets from the internal storage and restores saved settings.
      * Must be called once during game initialization.
      */
     public static void load() {
+        if (loaded) return;
 
         pickupSound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/Pickup.wav"));
         pickupKeySound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/PickupKey.wav"));
@@ -40,6 +45,7 @@ public class AudioManager {
         hitWithShieldSound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/HitWithShield.wav"));
         attackSound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/Attack.wav"));
         gotoTheNextLevelSound=Gdx.audio.newSound(Gdx.files.internal("audio/sfx/GotoNextLevel.wav"));
+        gameOverMusic=Gdx.audio.newMusic(Gdx.files.internal("audio/sfx/Gameover.wav"));
         victoryMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/Victory.wav"));
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/MenuMusic.mp3"));
         menuMusic.setLooping(true);
@@ -48,6 +54,8 @@ public class AudioManager {
 
         loadSettings();
         updateMusicVolume();
+        // Mark as loaded to prevent future redundant initializations
+        loaded = true;
     }
 
     /**
@@ -175,6 +183,14 @@ public class AudioManager {
             gotoTheNextLevelSound.play(getSFXVol());
         }
     }
+    /**
+     * Plays the music when player failed.
+     */
+    public static void playGameOverMusic() {
+        if (gameOverMusic != null) {
+            gameOverMusic.play();
+        }
+    }
 
     /**
      * Stops game music and starts looping the main menu music.
@@ -236,6 +252,22 @@ public class AudioManager {
         }
     }
 
+    public static void stopMusic() {
+        if(gameMusic != null){
+            gameMusic.stop();
+        }
+        if(menuMusic != null){
+            menuMusic.stop();
+        }
+        if(victoryMusic != null){
+            victoryMusic.stop();
+        }
+
+        if(gameOverMusic != null){
+            gameOverMusic.stop();
+        }
+    }
+
 
     public static void dispose() {
         if (pickupSound != null) pickupSound.dispose();
@@ -247,5 +279,6 @@ public class AudioManager {
         if (gotoTheNextLevelSound != null) gotoTheNextLevelSound.dispose();
         if (menuMusic != null) menuMusic.dispose();
         if (gameMusic != null) gameMusic.dispose();
+        if (gameOverMusic != null) gameOverMusic.dispose();
     }
 }

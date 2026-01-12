@@ -73,8 +73,8 @@ public class MazeRunnerGame extends Game {
             gameScreen.dispose();
             gameScreen = null;
         }
-
-         AudioManager.playMenuMusic();
+        AudioManager.stopMusic();
+        AudioManager.playMenuMusic();
 
         this.setScreen(new MenuScreen(this));
 
@@ -113,6 +113,7 @@ public class MazeRunnerGame extends Game {
      * @param currentGameScreen The active game screen, preserved to allow resuming.
      */
     public void goToPause(GameScreen currentGameScreen) {
+        AudioManager.stopMusic();
         this.setScreen(new PauseScreen(this, currentGameScreen));
     }
     /**
@@ -139,6 +140,7 @@ public class MazeRunnerGame extends Game {
      * Switches to the game over screen.
      */
     public void goToGameOver(String mapPath) {
+        AudioManager.stopMusic();
         if (gameScreen != null) {
             gameScreen.dispose();
             gameScreen = null;

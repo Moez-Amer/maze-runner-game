@@ -19,6 +19,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import de.tum.cit.fop.maze.AudioManager;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 
 public class PauseScreen implements Screen {
@@ -45,6 +46,7 @@ public PauseScreen( MazeRunnerGame game,GameScreen currentGameScreen) {
     table.add(label).padTop(40).padBottom(80).row();
 
     addButton(table,"Resume",()->{
+            AudioManager.playGameMusic();
             game.setScreen(currentGameScreen);
     },0.1f);
 
