@@ -84,6 +84,10 @@ public class GameScreen implements Screen {
     private TextureRegion entranceTexture;
     private Texture mainlevbuildTexture;
 
+    private Texture arrowTexture;
+    private com.badlogic.gdx.graphics.g2d.Sprite arrowSprite;
+    private com.badlogic.gdx.math.Vector2 exitPosition;
+
     // Exit and entrance bounds (computed once for properties-only mode)
     private float exitX, exitY, exitWidth, exitHeight;
     private float entranceX, entranceY, entranceWidth, entranceHeight;
@@ -165,6 +169,27 @@ public class GameScreen implements Screen {
 
         // Load Audio
         AudioManager.load();
+
+        // Initialize the arrow texture and sprite
+        arrowTexture = new Texture(Gdx.files.internal("Arrow.png"));
+        arrowSprite = new com.badlogic.gdx.graphics.g2d.Sprite(arrowTexture);
+        arrowSprite.setOriginCenter();
+        arrowSprite.setScale(0.8f);
+
+        // Ensure the arrow points to the correct winning location
+        for (int x = 0; x < mapWidth; x++) {
+            for (int y = 0; y < mapHeight; y++) {
+                // TYPE_EXIT is used here to stay consistent with the victory condition logic
+                if (mapData[x][y] == de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_EXIT) {
+                    // Store the center point of the exit tile in world coordinates
+                    this.exitPosition = new com.badlogic.gdx.math.Vector2(x * TILE_SIZE + TILE_SIZE / 2f, y * TILE_SIZE + TILE_SIZE / 2f);
+                    break;
+                }
+            }
+        }
+        if (exitPosition == null) {
+            exitPosition = new com.badlogic.gdx.math.Vector2(0, 0);
+        }
     }
 
     /**
@@ -696,6 +721,37 @@ public class GameScreen implements Screen {
             enemy.render(game.getSpriteBatch());
         }
 
+        // Logic for updating and rendering the navigation arrow
+        if (exitPosition != null && (exitPosition.x != 0 || exitPosition.y != 0)){
+            float[] feet = player.getFeetCollisionBox();
+            float pCenterX = feet[0] + feet[2] / 2f;
+            float pCenterY = feet[1] + feet[3] / 2f;
+
+            // Calculate the direction vector from player to exit
+            float dx = exitPosition.x - pCenterX;
+            float dy = exitPosition.y - pCenterY;
+
+            // Calculate the rotation angle based on the direction vector
+            float angle = com.badlogic.gdx.math.MathUtils.atan2(dy, dx) * com.badlogic.gdx.math.MathUtils.radDeg;
+
+            // Position the arrow slightly above the player's head
+            float arrowX = pCenterX - (arrowSprite.getWidth() / 2f);
+            float arrowY = player.getY() + 48f;
+
+            arrowSprite.setPosition(arrowX, arrowY);
+            arrowSprite.setRotation(angle);
+
+            // Turn arrow yellow when the objective is met (all keys collected)
+            if (player.hasAllKeys()) {
+                arrowSprite.setColor(com.badlogic.gdx.graphics.Color.YELLOW);
+            } else {
+                arrowSprite.setColor(com.badlogic.gdx.graphics.Color.WHITE);
+            }
+
+            // Render the arrow sprite in the world coordinate system
+            arrowSprite.draw(game.getSpriteBatch());
+        }
+
         // Draw player
         player.render(game.getSpriteBatch());
         game.getSpriteBatch().end();
@@ -1005,6 +1061,8 @@ public class GameScreen implements Screen {
         if (mainlevbuildTexture != null) mainlevbuildTexture.dispose();
 
         AudioManager.dispose();
+
+        if (arrowTexture != null) arrowTexture.dispose();
     }
 
     public String getMapPath() {
