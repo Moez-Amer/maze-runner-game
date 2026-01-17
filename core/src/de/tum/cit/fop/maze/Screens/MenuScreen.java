@@ -55,6 +55,18 @@ public class MenuScreen implements Screen {
             game.goToSelectMap();
         },0.2f);
 
+        addButton(table, "Marketplace (Shop)", () -> {
+            game.goToMarketplace();
+        }, 0.3f);
+
+        addButton(table, "Leaderboard", () -> {
+            game.goToLeaderboard();
+        }, 0.35f);
+
+        addButton(table, "Achievements", () -> {
+            game.goToAchievements();
+        }, 0.38f); // Set a delay between Leaderboard and Settings
+
         addButton(table, "Settings", () -> {
             game.goToSettings(this);
         }, 0.3f);

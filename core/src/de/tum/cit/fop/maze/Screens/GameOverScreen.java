@@ -29,8 +29,10 @@ public class GameOverScreen implements Screen {
      * Constructs the game over screen with UI elements.
      *
      * @param game Reference to the main game instance
+     * @param mapPath The path to the map to allow retrying
+     * @param score The final score earned during the session
      */
-    public GameOverScreen(MazeRunnerGame game, String mapPath) {
+    public GameOverScreen(MazeRunnerGame game, String mapPath, int score) {
         this.game = game;
         this.mapPath = mapPath;
 
@@ -44,17 +46,29 @@ public class GameOverScreen implements Screen {
         table.setFillParent(true);
         stage.addActor(table);
 
+        // Labels
         Label titleLabel = new Label("GAME OVER", game.getSkin(), "title");
+        Label scoreLabel = new Label("Points Earned: " + score, game.getSkin()); // Requirement: Display score
         Label defeatLabel = new Label("You Died...", game.getSkin());
 
+        // Buttons
         TextButton retryButton = new TextButton("Try Again", game.getSkin());
+        TextButton marketButton = new TextButton("Visit Marketplace", game.getSkin()); // Requirement: Skill point usage
         TextButton menuButton = new TextButton("Main Menu", game.getSkin());
         TextButton quitButton = new TextButton("Quit Game", game.getSkin());
 
+        // Listeners
         retryButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.goToGame(mapPath);
+            }
+        });
+
+        marketButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                game.goToMarketplace(); // Transition to Skill Tree
             }
         });
 
@@ -72,10 +86,13 @@ public class GameOverScreen implements Screen {
             }
         });
 
-        table.add(titleLabel).padBottom(50).row();
-        table.add(defeatLabel).padBottom(100).row();
-        table.add(retryButton).width(300).padBottom(20).row();
-        table.add(menuButton).width(300).padBottom(20).row();
+        // UI Layout
+        table.add(titleLabel).padBottom(20).row();
+        table.add(scoreLabel).padBottom(20).row(); // Display session score
+        table.add(defeatLabel).padBottom(60).row();
+        table.add(retryButton).width(300).padBottom(15).row();
+        table.add(marketButton).width(300).padBottom(15).row(); // Link to marketplace
+        table.add(menuButton).width(300).padBottom(15).row();
         table.add(quitButton).width(300);
     }
 

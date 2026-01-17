@@ -1,0 +1,15 @@
+{
+"playerName": "Bobby",
+"warriorPoints": 12,
+"swiftnessPoints": 10,
+"vitalityPoints": 4,
+"enemiesKilledCounter": 6,
+"distanceSprintedCounter": 3577.7908,
+"heartsCollectedCounter": 2,
+"killsProgress": 1,
+"sprintProgress": 1289.5482,
+"heartsProgress": 1,
+"unlockedAchievements": [
+	"SLAYER_1"
+]
+}

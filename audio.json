@@ -1,0 +1,14 @@
+{
+music: {
+	class: java.lang.Float
+	value: 1
+}
+sfx: {
+	class: java.lang.Float
+	value: 1
+}
+main: {
+	class: java.lang.Float
+	value: 1
+}
+}

@@ -31,4 +31,8 @@ Move Right: {
 	class: java.lang.String
 	value: Right
 }
+Debug: {
+	class: java.lang.String
+	value: K
+}
 }

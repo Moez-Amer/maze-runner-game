@@ -1,0 +1,23 @@
+[
+  {
+    "id": "SLAYER_1",
+    "name": "Slayer",
+    "description": "Defeated your first 5 foes!",
+    "statName": "enemiesKilled",
+    "targetValue": 5
+  },
+  {
+    "id": "WIND_RUNNER",
+    "name": "Wind Runner",
+    "description": "Sprinted a great distance!",
+    "statName": "distanceSprinted",
+    "targetValue": 5000
+  },
+  {
+    "id": "SURVIVOR_1",
+    "name": "Survivor",
+    "description": "Found 3 life-giving hearts!",
+    "statName": "heartsCollected",
+    "targetValue": 3
+  }
+]

@@ -28,6 +28,9 @@ import games.spooky.gdx.nativefilechooser.NativeFileChooser;
  * It manages the screens and global resources like SpriteBatch and Skin.
  */
 public class MazeRunnerGame extends Game {
+
+    private GameState gameState;
+
     // Screens
     private MenuScreen menuScreen;
     private GameScreen gameScreen;
@@ -55,13 +58,18 @@ public class MazeRunnerGame extends Game {
      */
     @Override
     public void create() {
-        spriteBatch = new SpriteBatch(); // Create SpriteBatch
-        skin = new Skin(Gdx.files.internal("craft/craftacular-ui.json")); // Load UI skin
-        this.loadCharacterAnimation(); // Load character animation
-
+        spriteBatch = new SpriteBatch();
+        skin = new Skin(Gdx.files.internal("craft/craftacular-ui.json"));
+        this.loadCharacterAnimation();
         AudioManager.load();
-        goToMenu();
+
+        // Fulfills the requirement to sign in/select profile on startup
+        goToProfileSelection();
+        //goToMenu();
     }
+
+    /** Returns the global game state for the active player. */
+    public GameState getGameState() { return gameState; }
 
     /**
      * Switches to the menu screen.
@@ -125,27 +133,17 @@ public class MazeRunnerGame extends Game {
         this.setScreen(new SettingsScreen(this, previousScreen));
     }
 
-    /**
-     * Switches to the victory screen.
-     */
-    public void goToVictory() {
-        if (gameScreen != null) {
-            gameScreen.dispose();
-            gameScreen = null;
-        }
-        this.setScreen(new VictoryScreen(this));
+    /** Switches to the victory screen and passes the final score. */
+    public void goToVictory(int score) {
+        if (gameScreen != null) { gameScreen.dispose(); gameScreen = null; }
+        this.setScreen(new VictoryScreen(this, score));
     }
 
-    /**
-     * Switches to the game over screen.
-     */
-    public void goToGameOver(String mapPath) {
+    /** Switches to the game over screen and passes the final score. */
+    public void goToGameOver(String mapPath, int score) {
         AudioManager.stopMusic();
-        if (gameScreen != null) {
-            gameScreen.dispose();
-            gameScreen = null;
-        }
-        this.setScreen(new GameOverScreen(this, mapPath));
+        if (gameScreen != null) { gameScreen.dispose(); gameScreen = null; }
+        this.setScreen(new GameOverScreen(this, mapPath, score));
     }
 
 
@@ -230,5 +228,29 @@ public class MazeRunnerGame extends Game {
 
     public SpriteBatch getSpriteBatch() {
         return spriteBatch;
+    }
+
+    /** Navigates to the sign-in/profile selection screen. */
+    public void goToProfileSelection() {
+        this.setScreen(new ProfileSelectionScreen(this));
+    }
+
+    /** Sets the active player profile based on the selected name. */
+    public void setProfileAndContinue(String name) {
+        this.gameState = SaveManager.loadProfile(name);
+        goToMenu();
+    }
+
+    /** Navigates to the Marketplace/Skill Tree screen. */
+    public void goToMarketplace() {
+        this.setScreen(new SkillTreeScreen(this));
+    }
+
+    public void goToLeaderboard() {
+        this.setScreen(new LeaderboardScreen(this));
+    }
+
+    public void goToAchievements() {
+        this.setScreen(new AchievementScreen(this));
     }
 }

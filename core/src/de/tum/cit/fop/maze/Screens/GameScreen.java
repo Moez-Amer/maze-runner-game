@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import static de.tum.cit.fop.maze.TiledToPropertiesConverter.*;
 
@@ -43,6 +45,7 @@ public class GameScreen implements Screen {
     private final MazeRunnerGame game;
     private final OrthographicCamera camera;
     private final BitmapFont font;
+    private final Viewport viewport;
     private final String mapPath;
 
     // Tiled map rendering (used only in hybrid mode)
@@ -105,28 +108,23 @@ public class GameScreen implements Screen {
      */
     public GameScreen(MazeRunnerGame game, String mapPath) {
         this.game = game;
-        this.mapPath =mapPath;
-        this.enemies=new Array<>();
+        this.mapPath = mapPath;
+        this.enemies = new Array<>();
         this.keys = KeyBindings.getKeyBindings();
 
-        // Create and configure the camera for the game view
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, TILE_SIZE * 30, TILE_SIZE * 18);
-        // Get the font from the game's skin
+        viewport = new ExtendViewport(TILE_SIZE * 30, TILE_SIZE * 18, camera);
+        camera.setToOrtho(false);
         font = game.getSkin().getFont("font");
 
-        // Create shape renderer for debug visualization
         shapeRenderer = new ShapeRenderer();
 
-        // Load map using appropriate method based on properties flag
         loadMap(mapPath);
-
         findEntry();
-        // Create player at entry point
-        player = new Player(entry.getX(), entry.getY(), TILE_SIZE, mapData);
+
+        player = new Player(entry.getX(), entry.getY(), TILE_SIZE, mapData, game.getGameState());
         findDeathPits_KnifesTraps();
 
-        //Create enemy
         for (int j = 0; j < mapHeight; j++) {
             for (int i = 0; i < mapWidth; i++) {
                 if (mapData[i][j] == 4){
@@ -134,6 +132,7 @@ public class GameScreen implements Screen {
                     float centeredY= (j*TILE_SIZE);
                     Enemy enemy = new Enemy(centeredX,centeredY,TILE_SIZE,mapData, "Enemy_Assets/Undead executioner puppet/png/",100,100);
                     this.enemies.add(enemy);
+                    // ... existing path marking logic ...
                     for(int xOffSet = 0;xOffSet<2;xOffSet++){
                         for(int yOffSet=0; yOffSet<4; yOffSet++){
                             int checkX=i+xOffSet;
@@ -143,45 +142,46 @@ public class GameScreen implements Screen {
                             }
                         }
                     }
-
                 }
             }
         }
         player.setEnemies(this.enemies);
-
         for (Enemy enemy : enemies) {
             enemy.setEnemies(this.enemies);
             enemy.setPlayer(player);
         }
-        // Load UI atlas for collectibles and HUD
+
         uiAtlas = new TextureAtlas(Gdx.files.internal("craft/craftacular-ui.atlas"));
         Collectibles.loadTextures(uiAtlas);
 
-        // Create HUD
         BitmapFont regularFont = game.getSkin().getFont("font");
         BitmapFont boldFont = game.getSkin().getFont("bold");
         hud = new HUD(uiAtlas, regularFont, boldFont);
+
+        // --- NEW: LISTENER FOR POPUPS ---
+        GameState.getAchievementManager().setListener(new AchievementManager.AchievementListener() {
+            @Override
+            public void onAchievementUnlocked(Achievement achievement) {
+                hud.showAchievementPopup(achievement.name);
+                AudioManager.playPickupKeySound();
+            }
+        });
+        // --------------------------------
+
         hudCamera = new OrthographicCamera();
         hudCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        // Spawn collectibles from map data
         spawnCollectibles();
-
-        // Load Audio
         AudioManager.load();
 
-        // Initialize the arrow texture and sprite
         arrowTexture = new Texture(Gdx.files.internal("Arrow.png"));
         arrowSprite = new com.badlogic.gdx.graphics.g2d.Sprite(arrowTexture);
         arrowSprite.setOriginCenter();
         arrowSprite.setScale(0.8f);
 
-        // Ensure the arrow points to the correct winning location
         for (int x = 0; x < mapWidth; x++) {
             for (int y = 0; y < mapHeight; y++) {
-                // TYPE_EXIT is used here to stay consistent with the victory condition logic
                 if (mapData[x][y] == de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_EXIT) {
-                    // Store the center point of the exit tile in world coordinates
                     this.exitPosition = new com.badlogic.gdx.math.Vector2(x * TILE_SIZE + TILE_SIZE / 2f, y * TILE_SIZE + TILE_SIZE / 2f);
                     break;
                 }
@@ -624,6 +624,7 @@ public class GameScreen implements Screen {
 
     private void handleCollectiblePickup(Collectibles collectible) {
         collectible.collect();
+        player.addScore(collectible.getPoints()); // Add points to run
 
         if (collectible.getType() == Collectibles.CollectibleType.KEY) {
             // Play a more distinct sound for quest-critical items like keys
@@ -634,6 +635,7 @@ public class GameScreen implements Screen {
 
         switch (collectible.getType()) {
             case HEALTH:
+                game.getGameState().recordHeartPickup();
                 player.addLife();
                 break;
             case SPEED_BOOSTER:
@@ -657,6 +659,14 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.goToPause(this);
             return;
+        }
+
+        float zoomSpeed = 0.5f * delta;
+        if (Gdx.input.isKeyPressed(Input.Keys.EQUALS) || Gdx.input.isKeyPressed(Input.Keys.PLUS)) {
+            camera.zoom = Math.max(0.1f, camera.zoom - zoomSpeed); // Zoom In
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) {
+            camera.zoom = Math.min(3.0f, camera.zoom + zoomSpeed); // Zoom Out
         }
 
         // Toggle collision box visualization with K key
@@ -690,7 +700,7 @@ public class GameScreen implements Screen {
         checkLoseCondition();
 
         // Center camera on player
-        camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
+        centerCameraOnPlayer();
         camera.update();
 
         // Render map based on loading mode
@@ -766,6 +776,10 @@ public class GameScreen implements Screen {
         // Debug visualization
         if (showCollisionBoxes) {
             renderCollisionDebug();
+        }
+
+        if (player.isMoving() && player.isRunning()) {
+            game.getGameState().recordSprinting(player.getSpeed() * delta);
         }
     }
 
@@ -859,7 +873,9 @@ public class GameScreen implements Screen {
 
                 if (enemy.isDead()) {
                     enemies.removeIndex(i);
-                    System.out.println("Enemy defeated! Remaining enemies: " + enemies.size);
+                    game.getGameState().recordKill(); // Track for Warrior Points
+                    player.addScore(100);
+                    SaveManager.save(game.getGameState()); // Auto-save kills
                 }
 
                 break;
@@ -890,8 +906,14 @@ public class GameScreen implements Screen {
                             py < tileY + TILE_SIZE && py + ph > tileY) {
 
                         System.out.println("Victory condition met!");
-                        game.goToVictory();
-                        return; // Exit the method once victory is triggered
+
+                        int currentHighScore = game.getGameState().levelHighScores.getOrDefault(mapPath, 0);
+                        if (player.getScore() > currentHighScore) {
+                            game.getGameState().levelHighScores.put(mapPath, player.getScore());
+                            SaveManager.save(game.getGameState());
+                        }
+                        game.goToVictory(player.getScore());
+                        return;
                     }
                 }
             }
@@ -904,7 +926,7 @@ public class GameScreen implements Screen {
      */
     private void checkLoseCondition() {
         if (player.isDead()) {
-            game.goToGameOver(mapPath);
+            game.goToGameOver(mapPath, player.getScore());
         }
     }
 
@@ -1022,16 +1044,14 @@ public class GameScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        if (useTiledMap && tiledMap != null) {
-            // Hybrid mode: Get dimensions from Tiled map
-            int tileWidth = tiledMap.getProperties().get("tilewidth", Integer.class);
-            int tileHeight = tiledMap.getProperties().get("tileheight", Integer.class);
-            camera.setToOrtho(false, tileWidth * 30, tileHeight * 18);
-        } else {
-            // Properties-only mode: Use TILE_SIZE constant
-            camera.setToOrtho(false, TILE_SIZE * 30, TILE_SIZE * 18);
-        }
+        // This tells the viewport to recalculate based on new window dimensions
+        viewport.update(width, height, false);
+
+        // Update the HUD camera separately so UI stays correctly sized
         hudCamera.setToOrtho(false, width, height);
+
+        // Readjust camera position immediately so the player stays centered
+        centerCameraOnPlayer();
     }
 
     @Override
@@ -1067,5 +1087,16 @@ public class GameScreen implements Screen {
 
     public String getMapPath() {
         return mapPath;
+    }
+
+    /**
+     * Centers the camera on the player's position with the required offset.
+     */
+    private void centerCameraOnPlayer() {
+        if (player != null) {
+            // Keeps the player centered + 40 pixel vertical offset
+            camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
+            camera.update();
+        }
     }
 }
