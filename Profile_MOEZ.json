@@ -1,0 +1,24 @@
+{
+"playerName": "MOEZ",
+"warriorPoints": 2,
+"swiftnessPoints": 4,
+"vitalityPoints": 4,
+"enemiesKilledCounter": 4,
+"distanceSprintedCounter": 4267.0405,
+"unlockedSkills": [
+	"Swift_I",
+	"Warrior_I",
+	"Vitality_I"
+],
+"unlockedAchievements": [
+	"Wind Runner",
+	"Survivor",
+	"WIND_RUNNER",
+	"SURVIVOR_1",
+	"SLAYER_1"
+],
+"levelHighScores": {
+	"class": "java.util.HashMap",
+	"maps/level-1.properties": 1090
+}
+}

@@ -54,6 +54,11 @@ public class Player extends MovableGameObject {
 
     private KeyBindings keys;
 
+    private int sessionScore = 0;
+    private float currentWalkSpeed;
+    private float currentRunSpeed;
+    private float damageMultiplier;
+
     /**
      * Constructs a new Player at the given position.
      * 
@@ -62,12 +67,27 @@ public class Player extends MovableGameObject {
      * @param tileSize Size of each tile in pixels
      * @param mapData Reference to the map data for collision detection
      */
-    public Player(float x, float y, int tileSize, int[][] mapData) {
+    public Player(float x, float y, int tileSize, int[][] mapData, GameState state) {
         super(x, y, tileSize, tileSize);
-        
-        this.speed = WALK_SPEED;
-        this.lives = 3;
-        this.maxLives = 3;
+
+        // 1. Get the levels from the Map (default is 0)
+        int vitLevel = state.getSkillLevel("Vitality");
+        int swiftLevel = state.getSkillLevel("Swiftness");
+        int warLevel = state.getSkillLevel("Warrior");
+
+        // 2. Vitality: Base 3 lives + 1 per level (Level 1 = 4 lives, Level 2 = 5 lives)
+        this.maxLives = 3 + vitLevel;
+
+        // 3. Swiftness: Base Speed + 25% per level
+        float speedMult = 1.0f + (0.25f * swiftLevel);
+        this.currentWalkSpeed = 80f * speedMult;
+        this.currentRunSpeed = 150f * speedMult;
+
+        // 4. Warrior: Base Damage + 50% per level
+        this.damageMultiplier = 1.0f + (0.5f * warLevel);
+
+        this.lives = this.maxLives;
+        this.speed = currentWalkSpeed;
         this.keyCount = 0;
         this.isRunning = false;
         this.isDamaged = false;
@@ -77,7 +97,7 @@ public class Player extends MovableGameObject {
         this.speedBoostTimer = 0f;
         this.powerBoostTimer = 0f;
         this.shieldTimer = 0f;
-        this.attackCombo=1;
+        this.attackCombo = 1;
         this.keys = KeyBindings.getKeyBindings();
         setMapData(mapData, tileSize);
         setCollisionBox(16, 16, 40, 20);
@@ -265,7 +285,7 @@ public class Player extends MovableGameObject {
         }
 
         isRunning = (keys.isKeyPressed("Sprint"));
-        float baseSpeed = isRunning ? RUN_SPEED : WALK_SPEED;
+        float baseSpeed = isRunning ? currentRunSpeed : currentWalkSpeed;
         speed = speedBoostTimer > 0 ? baseSpeed * SPEED_BOOST_MULTIPLIER : baseSpeed;
 
         // check movement keys
@@ -560,6 +580,11 @@ public class Player extends MovableGameObject {
             lives++;
         }
     }
+
+
+    public void addScore(int p) { this.sessionScore += p; }
+    public int getScore() { return sessionScore; }
+
     
     /**
      * Collects a key.
@@ -651,9 +676,13 @@ public class Player extends MovableGameObject {
      * @return Damage multiplier
      */
     public float getDamageMultiplier() {
-        return powerBoostTimer > 0 ? POWER_BOOST_MULTIPLIER : 1.0f;
-    }
+        float totalDamage = damageMultiplier;
 
+        if (powerBoostTimer > 0) {
+            totalDamage += 1.0f;
+        }
+        return totalDamage;
+    }
     public boolean hasAttackHit() {return attackHasHit;}
     public void setAttackHasHit(boolean hit) {this.attackHasHit = hit;}
     public int getLives() { return lives; }

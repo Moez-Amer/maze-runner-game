@@ -2,134 +2,120 @@ package de.tum.cit.fop.maze.Screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import de.tum.cit.fop.maze.GameState;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 
 public class SelectMapScreen implements Screen {
-private final MazeRunnerGame game;
-private final Stage stage;
-    public SelectMapScreen(MazeRunnerGame game) {
+    private final MazeRunnerGame game;
+    private final Stage stage;
 
+    public SelectMapScreen(MazeRunnerGame game) {
         this.game = game;
         var camera = new OrthographicCamera();
-        camera.zoom = 1.5f;
+        // zoom = 1.0 means 1:1 scale. Increasing this makes the UI look smaller.
+        camera.zoom = 1.0f;
         this.stage = new Stage(new ScreenViewport(camera), game.getSpriteBatch());
 
         Table table = new Table();
         table.setFillParent(true);
         stage.addActor(table);
 
-        table.add(new Label("Select Level", game.getSkin(),"title")).
-                padTop(80)
-                .row();
+        // Title
+        table.add(new Label("SELECT LEVEL", game.getSkin(), "title")).padBottom(30).colspan(2).row();
 
-        addButton(table, "LEVEL 1", () -> {
-            game.goToGame("maps/level-1.properties");
-        }, 0.1f);
-        addButton(table, "LEVEL 2",()-> {
-            game.goToGame("maps/level-2.properties");
-        }, 0.2F);
-        addButton(table, "LEVEL 3",()-> {
-            game.goToGame("maps/level-3.properties");
-        }, 0.3F);
-        addButton(table, "LEVEL 4",()-> {
-            game.goToGame("maps/level-4.properties");
-        }, 0.4F);
-        addButton(table, "LEVEL 5",()-> {
-            game.goToGame("maps/level-5.properties");
-        }, 0.5F);
-        addButton(table, "Go Back",()-> {
-            game.goToMenu();
-        }, 0.6F);
+        GameState state = game.getGameState();
+        String[] mapPaths = {
+                "maps/level-1.properties", "maps/level-2.properties",
+                "maps/level-3.properties", "maps/level-4.properties",
+                "maps/level-5.properties"
+        };
 
+        for (int i = 0; i < mapPaths.length; i++) {
+            final String path = mapPaths[i];
+            boolean completed = state.levelHighScores.containsKey(path);
+            Integer highScore = state.levelHighScores.get(path);
 
+            String scoreText = completed ? "" + highScore : "---";
+            // Uses a Checkmark (✓) for completion. Alternatively, use "★"
+            String btnText = "LVL " + (i + 1) + (completed ? " \u2713" : "");
+
+            // Using the COMPACT helper defined below
+            addCompactLevelRow(table, btnText, scoreText, () -> game.goToGame(path), 0.05f * i, completed);
+        }
+
+        // Back Button
+        addSmallMenuButton(table, "Return to Menu", game::goToMenu, 0.4f);
     }
 
-    @Override
-    public void show() {
-        Gdx.input.setInputProcessor(stage);
-    }
+    /**
+     * THE FIX: This forces the level buttons to be very small (180x35).
+     */
+    private void addCompactLevelRow(Table table, String btnTxt, String scoreTxt, Runnable action, float delay, boolean done) {
+        Label scoreLabel = new Label(scoreTxt, game.getSkin());
+        TextButton button = new TextButton(btnTxt, game.getSkin());
 
-    @Override
-    public void render(float delta) {
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Clear the screen
-        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f)); // Update the stage
-        stage.draw();
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
-    }
-
-    @Override
-    public void pause() {
-
-    }
-
-    @Override
-    public void resume() {
-
-    }
-
-    @Override
-    public void hide() {
-
-    }
-
-    @Override
-    public void dispose() {
-        stage.dispose();
-
-    }
-    private void addButton(Table table, String text, Runnable action, float delay) {
-        TextButton button = new TextButton(text, game.getSkin());
-
-        button.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                button.addAction(Actions.scaleTo(1.1f, 1.1f, 0.1f));
-            }
-
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                button.addAction(Actions.scaleTo(1.0f, 1.0f, 0.1f));
-            }
-        });
+        if (done) {
+            button.setColor(Color.GREEN);
+            scoreLabel.setColor(Color.GOLD);
+        } else {
+            button.setColor(Color.LIGHT_GRAY);
+        }
 
         button.addListener(new ChangeListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                action.run();
-            }
+            public void changed(ChangeEvent event, Actor actor) { action.run(); }
         });
 
-        button.setTransform(true);
-        button.setOrigin(Align.center);
-        button.getColor().a = 0f;
-        button.addAction(Actions.sequence(
-                Actions.delay(delay),
-                Actions.parallel(
-                        Actions.fadeIn(0.5f),
-                        Actions.moveBy(0, 20, 0.5f, Interpolation.pow2Out)
-                )
-        ));
+        // Forced Fade-in Animation
+        button.getColor().a = 0;
+        scoreLabel.getColor().a = 0;
+        button.addAction(Actions.sequence(Actions.delay(delay), Actions.fadeIn(0.4f)));
+        scoreLabel.addAction(Actions.sequence(Actions.delay(delay), Actions.fadeIn(0.4f)));
 
-        button.moveBy(0, -20);
-
-        table.add(button).width(500).height(80).padBottom(18).row();
+        // SIZING: width(80) for score and width(180) for button
+        table.add(scoreLabel).width(80).padRight(15).right();
+        table.add(button).width(180).height(35).padBottom(6).left().row();
     }
+
+    /**
+     * Small version of the menu button (220x45).
+     */
+    private void addSmallMenuButton(Table table, String text, Runnable action, float delay) {
+        TextButton button = new TextButton(text, game.getSkin());
+        button.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) { action.run(); }
+        });
+
+        button.getColor().a = 0;
+        button.addAction(Actions.sequence(Actions.delay(delay), Actions.fadeIn(0.5f)));
+
+        // Fixed sizing for the menu button
+        table.add(button).width(350).height(65).padTop(20).colspan(2).row();
+    }
+
+    @Override public void show() { Gdx.input.setInputProcessor(stage); }
+    @Override public void render(float delta) {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        stage.act(delta);
+        stage.draw();
+    }
+    @Override public void resize(int w, int h) { stage.getViewport().update(w, h, true); }
+    @Override public void hide() {}
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void dispose() { stage.dispose(); }
 }
