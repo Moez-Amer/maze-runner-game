@@ -24,6 +24,13 @@ public class Player extends MovableGameObject {
     private int lives;
     private int maxLives;
     private int keyCount;
+    private int scrollCount;
+
+    // Ghost mode (revive mechanic)
+    private boolean isGhostMode;
+    private float ghostModeTimer;
+    private boolean hasUsedRevive;
+    private static final float GHOST_MODE_DURATION = 20.0f;
     
     private float speedBoostTimer;
     private float powerBoostTimer;
@@ -38,6 +45,13 @@ public class Player extends MovableGameObject {
     private boolean isAttacking;
     private float damageTimer;
     private float fallingTimer;
+
+    // Parry mechanic
+    private boolean isParrying;
+    private float parryWindowTimer;
+    private boolean lastAttackWasParry;
+    private static final float PARRY_WINDOW_DURATION = 0.3f; // 300ms window to parry
+    private static final float PARRY_DAMAGE_MULTIPLIER = 3.0f; // 3x damage on parry
     private static final float DAMAGE_FLASH_DURATION = 1.0f;
     private static final float INVULNERABILITY_TIME = 1.5f;
     private static final float FALLING_DURATION = .5f;
@@ -89,6 +103,7 @@ public class Player extends MovableGameObject {
         this.lives = this.maxLives;
         this.speed = currentWalkSpeed;
         this.keyCount = 0;
+        this.scrollCount = 0;
         this.isRunning = false;
         this.isDamaged = false;
         this.isFalling = false;
@@ -99,6 +114,12 @@ public class Player extends MovableGameObject {
         this.shieldTimer = 0f;
         this.attackCombo = 1;
         this.keys = KeyBindings.getKeyBindings();
+        this.isGhostMode = false;
+        this.ghostModeTimer = 0f;
+        this.hasUsedRevive = false;
+        this.isParrying = false;
+        this.parryWindowTimer = 0f;
+        this.lastAttackWasParry = false;
         setMapData(mapData, tileSize);
         setCollisionBox(16, 16, 40, 20);
         loadAnimations();
@@ -239,6 +260,22 @@ public class Player extends MovableGameObject {
             shieldSoundTimer -= delta;
         }
 
+        if (isGhostMode) {
+            ghostModeTimer -= delta;
+            if (ghostModeTimer <= 0) {
+                // Time ran out in ghost mode - game over
+                lives = 0;
+                isGhostMode = false;
+            }
+        }
+
+        if (parryWindowTimer > 0) {
+            parryWindowTimer -= delta;
+            if (parryWindowTimer <= 0) {
+                isParrying = false;
+            }
+        }
+
         if(isFalling){
             fallingTimer += delta;
             if(fallingTimer >= FALLING_DURATION) {
@@ -276,6 +313,11 @@ public class Player extends MovableGameObject {
             AudioManager.playAttackSound();
             stateTime = 0f;
             speed = 0;
+
+            // Activate parry window
+            isParrying = true;
+            parryWindowTimer = PARRY_WINDOW_DURATION;
+
             if (attackCombo == 1) {
                 attackCombo = 2;
             } else {
@@ -409,6 +451,15 @@ public class Player extends MovableGameObject {
             float drawX = this.x;
             float drawY = this.y;
 
+            // Apply ghost mode transparency
+            if (isGhostMode) {
+                alpha = 0.5f;
+                // Add slight blue tint for ghost effect
+                r = 0.8f;
+                g = 0.9f;
+                b = 1.0f;
+            }
+
             if (isFalling) {
                 float progress = Math.min(fallingTimer / FALLING_DURATION, 1.0f);
 
@@ -430,23 +481,23 @@ public class Player extends MovableGameObject {
             }
 
             batch.setColor(r, g, b, alpha);
-            
+
             // Draw aura effects for active boosts (behind the player)
             if (powerBoostTimer > 0 && !isDamaged) {
-                // Bright red aura for power boost - multi-layer pulsing glow
+                // Bright purple aura for power boost - multi-layer pulsing glow
                 float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 6);
                 // Outer glow layer
-                batch.setColor(1f, 0f, 0f, pulse * 0.4f);
+                batch.setColor(0.6f, 0f, 0.8f, pulse * 0.4f);
                 batch.draw(currentFrame, drawX - 8, drawY - 8, drawWidth + 16, drawHeight + 16);
                 // Middle glow layer
-                batch.setColor(1f, 0.1f, 0.1f, pulse * 0.6f);
+                batch.setColor(0.7f, 0.1f, 0.9f, pulse * 0.6f);
                 batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
                 // Inner bright layer
-                batch.setColor(1f, 0.3f, 0.2f, pulse * 0.8f);
+                batch.setColor(0.8f, 0.3f, 1f, pulse * 0.8f);
                 batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
                 batch.setColor(r, g, b, alpha);
             }
-            
+
             if (speedBoostTimer > 0) {
                 // Bright blue aura for speed boost - multi-layer pulsing glow
                 float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 8);
@@ -458,6 +509,21 @@ public class Player extends MovableGameObject {
                 batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
                 // Inner bright layer
                 batch.setColor(0.4f, 0.8f, 1f, pulse * 0.8f);
+                batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
+                batch.setColor(r, g, b, alpha);
+            }
+
+            if (shieldTimer > 0) {
+                // Bright green aura for shield - multi-layer pulsing glow
+                float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 5);
+                // Outer glow layer
+                batch.setColor(0f, 0.8f, 0.2f, pulse * 0.4f);
+                batch.draw(currentFrame, drawX - 8, drawY - 8, drawWidth + 16, drawHeight + 16);
+                // Middle glow layer
+                batch.setColor(0.2f, 0.9f, 0.3f, pulse * 0.6f);
+                batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
+                // Inner bright layer
+                batch.setColor(0.4f, 1f, 0.5f, pulse * 0.8f);
                 batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
                 batch.setColor(r, g, b, alpha);
             }
@@ -537,8 +603,27 @@ public class Player extends MovableGameObject {
     
     /**
      * Makes the player take damage and lose a life.
+     * Returns true if damage was parried successfully.
      */
-    public void takeDamage() {
+    public boolean takeDamage() {
+        if (isGhostMode) {
+            // Ghost mode players cannot take damage
+            return false;
+        }
+
+        // Check for successful parry
+        if (isParrying && parryWindowTimer > 0) {
+            System.out.println("PARRY! Perfect timing!");
+            isParrying = false;
+            parryWindowTimer = 0f;
+            lastAttackWasParry = true;
+            // Play special sound or visual effect for parry
+            AudioManager.playPickupKeySound(); // Using key sound as parry sound
+            return true; // Damage was parried
+        }
+
+        lastAttackWasParry = false;
+
         if (invulnerabilityTimer <= 0 && shieldTimer <= 0) {
             lives--;
             isDamaged = true;
@@ -554,6 +639,7 @@ public class Player extends MovableGameObject {
                 shieldSoundTimer = 0.5f;
             }
         }
+        return false;
     }
     /**
      * Triggers the falling sequence.
@@ -593,8 +679,23 @@ public class Player extends MovableGameObject {
         keyCount++;
     }
 
+    /**
+     * Collects a scroll.
+     */
+    public void collectScroll() {
+        scrollCount++;
+    }
+
     public boolean hasAllKeys(){
-        return 3==keyCount;
+        return keyCount >= 1;
+    }
+
+    public boolean hasAllScrolls(){
+        return scrollCount >= 3;
+    }
+
+    public boolean canExitMaze(){
+        return hasAllKeys() && hasAllScrolls();
     }
     
     /**
@@ -671,8 +772,8 @@ public class Player extends MovableGameObject {
     }
     
     /**
-     * Gets the damage multiplier based on active boosts.
-     * 
+     * Gets the damage multiplier based on active boosts and parry.
+     *
      * @return Damage multiplier
      */
     public float getDamageMultiplier() {
@@ -681,14 +782,68 @@ public class Player extends MovableGameObject {
         if (powerBoostTimer > 0) {
             totalDamage += 1.0f;
         }
+
+        // Apply critical damage if last attack was a successful parry
+        if (lastAttackWasParry) {
+            totalDamage *= PARRY_DAMAGE_MULTIPLIER;
+        }
+
         return totalDamage;
     }
+
+    /**
+     * Resets the parry flag after dealing damage.
+     */
+    public void resetParryFlag() {
+        lastAttackWasParry = false;
+    }
+
+    /**
+     * Checks if the last attack was a successful parry.
+     * @return true if last attack was a parry
+     */
+    public boolean wasLastAttackParry() {
+        return lastAttackWasParry;
+    }
+
     public boolean hasAttackHit() {return attackHasHit;}
     public void setAttackHasHit(boolean hit) {this.attackHasHit = hit;}
     public int getLives() { return lives; }
     public int getMaxLives() { return maxLives; }
     public int getKeyCount() { return keyCount; }
+    public int getScrollCount() { return scrollCount; }
     public boolean isRunning() { return isRunning; }
     public boolean isMoving() {return isMoving;}
     public boolean isAttacking() {return isAttacking;}
+
+    // Ghost mode methods
+    public boolean isGhostMode() { return isGhostMode; }
+    public float getGhostModeTimer() { return ghostModeTimer; }
+    public boolean hasUsedRevive() { return hasUsedRevive; }
+
+    /**
+     * Enters ghost mode after death.
+     * Player respawns at entry point and has limited time to reach soul orb.
+     */
+    public void enterGhostMode(float entryX, float entryY) {
+        isGhostMode = true;
+        ghostModeTimer = GHOST_MODE_DURATION;
+        hasUsedRevive = true;
+        lives = 0; // Keep at 0 until revived
+        this.x = entryX;
+        this.y = entryY;
+        isDamaged = false;
+        invulnerabilityTimer = 0f;
+    }
+
+    /**
+     * Revives the player after collecting the soul orb.
+     * Restores 1 life and exits ghost mode.
+     */
+    public void revive() {
+        isGhostMode = false;
+        ghostModeTimer = 0f;
+        lives = 1; // Revive with 1 heart
+        invulnerabilityTimer = INVULNERABILITY_TIME; // Give brief invulnerability
+    }
 }

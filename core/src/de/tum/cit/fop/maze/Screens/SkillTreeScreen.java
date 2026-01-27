@@ -3,6 +3,7 @@ package de.tum.cit.fop.maze.Screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
@@ -47,10 +48,10 @@ public class SkillTreeScreen implements Screen {
         Table pointsTable = new Table();
 
         Label warLabel = new Label("Warrior Pts: " + state.warriorPoints, game.getSkin());
-        warLabel.setColor(com.badlogic.gdx.graphics.Color.RED);
+        warLabel.setColor(com.badlogic.gdx.graphics.Color.PURPLE);
 
         Label swiftLabel = new Label("Swiftness Pts: " + state.swiftnessPoints, game.getSkin());
-        swiftLabel.setColor(com.badlogic.gdx.graphics.Color.CYAN);
+        swiftLabel.setColor(new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f)); // Dark blue
 
         Label vitLabel = new Label("Vitality Pts: " + state.vitalityPoints, game.getSkin());
         vitLabel.setColor(com.badlogic.gdx.graphics.Color.GREEN);
@@ -61,9 +62,9 @@ public class SkillTreeScreen implements Screen {
 
         root.add(pointsTable).colspan(3).padBottom(50).row();
 
-        Table combatBranch = createContinuousBranch(state, "COMBAT", "Warrior", "Sharpened Blade", "+50% Dmg per Lvl", "warrior", com.badlogic.gdx.graphics.Color.RED);
-        Table agilityBranch = createContinuousBranch(state, "AGILITY", "Swiftness", "Fast Feet", "+25% Speed per Lvl", "swiftness", com.badlogic.gdx.graphics.Color.CYAN);
-        Table survivalBranch = createContinuousBranch(state, "SURVIVAL", "Vitality", "Tank Armor", "+1 Heart per Lvl", "vitality", com.badlogic.gdx.graphics.Color.GREEN);
+        Table combatBranch = createContinuousBranch(state, "COMBAT", "Warrior", "Sharpened Blade", "+50% Dmg per Lvl", "warrior", com.badlogic.gdx.graphics.Color.PURPLE, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon19.png");
+        Table agilityBranch = createContinuousBranch(state, "AGILITY", "Swiftness", "Fast Feet", "+25% Speed per Lvl", "swiftness", new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f), "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon18.png");
+        Table survivalBranch = createContinuousBranch(state, "SURVIVAL", "Vitality", "Tank Armor", "+1 Heart per Lvl", "vitality", com.badlogic.gdx.graphics.Color.GREEN, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon17.png");
 
         root.add(combatBranch).top().pad(20);
         root.add(agilityBranch).top().pad(20);
@@ -92,10 +93,22 @@ public class SkillTreeScreen implements Screen {
      * @param description A short description of the skill effect.
      * @param type The type of point currency used (warrior, swiftness, vitality).
      * @param color The color theme for this branch.
+     * @param iconPath The path to the icon image for this skill.
      * @return A Table containing the UI elements for this branch.
      */
-    private Table createContinuousBranch(GameState state, String title, final String skillKey, String name, String description, final String type, com.badlogic.gdx.graphics.Color color) {
+    private Table createContinuousBranch(GameState state, String title, final String skillKey, String name, String description, final String type, com.badlogic.gdx.graphics.Color color, String iconPath) {
         Table branch = new Table();
+
+        // Add icon at the top
+        if (iconPath != null && !iconPath.isEmpty()) {
+            try {
+                Texture iconTexture = new Texture(Gdx.files.internal(iconPath));
+                Image icon = new Image(iconTexture);
+                branch.add(icon).size(64, 64).padBottom(15).row();
+            } catch (Exception e) {
+                System.err.println("Failed to load skill icon: " + iconPath);
+            }
+        }
 
         Label titleLabel = new Label(title, game.getSkin(), "bold");
         titleLabel.setColor(color);

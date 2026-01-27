@@ -174,7 +174,11 @@ public class Enemy extends MovableGameObject {
         float dyToP = playerFeet[1] - enemyFeet[1];
         float distanceToPlayer = (float) Math.sqrt(dxToP * dxToP + dyToP * dyToP);
 
-        if(distanceToPlayer<26f)
+        // Enemies ignore ghost players - always patrol
+        if (player.isGhostMode()) {
+            this.state = State.PATROL;
+        }
+        else if(distanceToPlayer<26f)
         {
             this.state=State.ATTACK;
         }
@@ -209,10 +213,16 @@ public class Enemy extends MovableGameObject {
             currentAnimation = attackAnim;
         }
 
-        if (player != null) {
+        if (player != null && !player.isGhostMode()) {
             attackCooldown -= com.badlogic.gdx.Gdx.graphics.getDeltaTime();
             if (attackCooldown <= 0) {
-                player.takeDamage();
+                boolean wasParried = player.takeDamage();
+                if (wasParried) {
+                    // Player successfully parried! Deal counter damage to enemy
+                    float counterDamage = 2.0f * player.getDamageMultiplier();
+                    takeDamage(counterDamage);
+                    System.out.println("Counter attack! Dealt " + counterDamage + " damage to enemy!");
+                }
                 attackCooldown = ATTACK_INTERVAL;
             }
         }

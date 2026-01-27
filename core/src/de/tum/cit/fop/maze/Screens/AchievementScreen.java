@@ -79,11 +79,39 @@ public class AchievementScreen implements Screen {
             if ("enemiesKilled".equals(ach.statName)) currentVal = state.enemiesKilledCounter;
             else if ("distanceSprinted".equals(ach.statName)) currentVal = state.distanceSprintedCounter;
             else if ("heartsCollected".equals(ach.statName)) currentVal = state.heartsCollectedCounter;
+            else if ("tilesExplored".equals(ach.statName)) currentVal = state.tilesExploredCounter;
+            else if ("keysCollected".equals(ach.statName)) currentVal = state.keysCollectedCounter;
+            else if ("coinsCollected".equals(ach.statName)) currentVal = state.coinsCollectedCounter;
+            else if ("potionsUsed".equals(ach.statName)) currentVal = state.potionsUsedCounter;
+            else if ("successfulParries".equals(ach.statName)) currentVal = state.successfulParriesCounter;
+            else if ("perfectMazes".equals(ach.statName)) currentVal = state.perfectMazesCounter;
+            else if ("mazesCompleted".equals(ach.statName)) currentVal = state.mazesCompletedCounter;
 
             // --- Row Container ---
             Table row = new Table();
             // Use our custom generated background
             row.setBackground(rowBackground);
+
+            // --- Icon + Name Row ---
+            Table headerRow = new Table();
+
+            // --- 0. Achievement Icon ---
+            if (ach.iconPath != null && !ach.iconPath.isEmpty()) {
+                try {
+                    Texture iconTexture = new Texture(Gdx.files.internal(ach.iconPath));
+                    Image icon = new Image(iconTexture);
+                    icon.setSize(48, 48);
+
+                    if (!isUnlocked) {
+                        // Dim locked icons
+                        icon.setColor(0.5f, 0.5f, 0.5f, 0.7f);
+                    }
+
+                    headerRow.add(icon).size(48, 48).padRight(15);
+                } catch (Exception e) {
+                    System.err.println("Failed to load achievement icon: " + ach.iconPath);
+                }
+            }
 
             // --- 1. Name & Status ---
             Label nameLabel = new Label(ach.name, game.getSkin(), "bold");
@@ -93,7 +121,9 @@ public class AchievementScreen implements Screen {
             } else {
                 nameLabel.setColor(Color.GRAY);
             }
-            row.add(nameLabel).left().expandX().pad(10).row();
+            headerRow.add(nameLabel).left().expandX();
+
+            row.add(headerRow).left().expandX().pad(10).row();
 
             // --- 2. Description ---
             Label descLabel = new Label(ach.description, game.getSkin());

@@ -20,7 +20,8 @@ public class Collectibles extends GameObject {
         SPEED_BOOSTER,
         POWER_BOOSTER,
         SHIELD,
-        KEY
+        KEY,
+        SCROLL
     }
 
     // Static textures shared across all collectible instances
@@ -29,6 +30,7 @@ public class Collectibles extends GameObject {
     private static TextureRegion speedTexture;
     private static TextureRegion potionTexture;
     private static TextureRegion shieldTexture;
+    private static TextureRegion scrollTexture;
     
     // Instance variables
     private final int points;
@@ -45,23 +47,34 @@ public class Collectibles extends GameObject {
     /**
      * Loads shared textures for all collectibles.
      * Call this once during game initialization.
-     * 
-     * @param uiAtlas The UI texture atlas containing the heart texture
+     *
+     * @param uiAtlas The UI texture atlas (not used anymore, kept for compatibility)
      */
     public static void loadTextures(TextureAtlas uiAtlas) {
-        // Load heart from UI atlas
-        heartTexture = uiAtlas.findRegion("heart");
-        
-        // Load key from standalone PNG file and convert to TextureRegion
-        Texture keyTextureFile = new Texture(Gdx.files.internal("Key.png"));
+        // Load heart from undead loot icons - Icon 12
+        Texture heartTextureFile = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon12.png"));
+        heartTexture = new TextureRegion(heartTextureFile);
+
+        // Load key from undead loot icons - Icon 41
+        Texture keyTextureFile = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon41.png"));
         keyTexture = new TextureRegion(keyTextureFile);
-        
-        // Load collectibles from sprite sheet
-        // Image: 176x152 pixels, tiles: 16x16
-        Texture collectiblesSheet = new Texture(Gdx.files.internal("collectibles.png"));
-        speedTexture = new TextureRegion(collectiblesSheet, 144, 48, 16, 16);  // Row 4, Col 10
-        potionTexture = new TextureRegion(collectiblesSheet, 128, 48, 16, 16); // Row 4, Col 9
-        shieldTexture = new TextureRegion(collectiblesSheet, 128, 16, 16, 16); // Row 2, Col 9
+
+        // Load potions from magic potions pack
+        // Speed booster (blue) - Icon 10
+        Texture speedTextureFile = new Texture(Gdx.files.internal("48 Free Magic Potions Pixel Art Icons/PNG/Transperent/Icon10.png"));
+        speedTexture = new TextureRegion(speedTextureFile);
+
+        // Power booster (purple) - Icon 12
+        Texture potionTextureFile = new Texture(Gdx.files.internal("48 Free Magic Potions Pixel Art Icons/PNG/Transperent/Icon12.png"));
+        potionTexture = new TextureRegion(potionTextureFile);
+
+        // Shield (green potion) - Icon 19
+        Texture shieldTextureFile = new Texture(Gdx.files.internal("48 Free Magic Potions Pixel Art Icons/PNG/Transperent/Icon19.png"));
+        shieldTexture = new TextureRegion(shieldTextureFile);
+
+        // Scroll - Icon 43
+        Texture scrollTextureFile = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon43.png"));
+        scrollTexture = new TextureRegion(scrollTextureFile);
     }
 
     /**
@@ -97,6 +110,9 @@ public class Collectibles extends GameObject {
                 break;
             case SHIELD:
                 this.texture = shieldTexture;
+                break;
+            case SCROLL:
+                this.texture = scrollTexture;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown collectible type: " + type);
@@ -166,11 +182,24 @@ public class Collectibles extends GameObject {
      * Call this when shutting down the game or switching screens.
      */
     public static void dispose() {
-        // Dispose of the key texture since we loaded it separately
+        // Dispose of all the texture files
+        if (heartTexture != null && heartTexture.getTexture() != null) {
+            heartTexture.getTexture().dispose();
+        }
         if (keyTexture != null && keyTexture.getTexture() != null) {
             keyTexture.getTexture().dispose();
         }
-        // Note: collectiblesSheet texture should also be stored and disposed
-        // This is a limitation of the current implementation
+        if (speedTexture != null && speedTexture.getTexture() != null) {
+            speedTexture.getTexture().dispose();
+        }
+        if (potionTexture != null && potionTexture.getTexture() != null) {
+            potionTexture.getTexture().dispose();
+        }
+        if (shieldTexture != null && shieldTexture.getTexture() != null) {
+            shieldTexture.getTexture().dispose();
+        }
+        if (scrollTexture != null && scrollTexture.getTexture() != null) {
+            scrollTexture.getTexture().dispose();
+        }
     }
 }

@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -21,6 +23,7 @@ import de.tum.cit.fop.maze.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -80,10 +83,25 @@ public class GameScreen implements Screen {
     private TextureAtlas uiAtlas;
     private OrthographicCamera hudCamera;
 
+    // Voodoo doll for revive mechanic
+    private VoodooDoll voodooDoll;
+
+    // Kill streak system
+    private int killStreak;
+    private String killStreakText;
+    private float killStreakDisplayTimer;
+    private int previousPlayerLives;
+    private static final float KILL_STREAK_DISPLAY_DURATION = 2.0f;
+    private Texture killStreakIconTexture;
+    private TextureRegion killStreakIcon;
+
     // Properties-only mode: Textures for manual tile rendering
     private HashMap<Integer, TextureRegion> tileTextures;
     private TextureRegion groundTexture;
     private TextureRegion exitTexture;
+
+    // Tile exploration tracking
+    private HashSet<String> visitedTiles;
     private TextureRegion entranceTexture;
     private Texture mainlevbuildTexture;
 
@@ -111,6 +129,7 @@ public class GameScreen implements Screen {
         this.mapPath = mapPath;
         this.enemies = new Array<>();
         this.keys = KeyBindings.getKeyBindings();
+        this.visitedTiles = new HashSet<>();
 
         camera = new OrthographicCamera();
         viewport = new ExtendViewport(TILE_SIZE * 30, TILE_SIZE * 18, camera);
@@ -153,6 +172,11 @@ public class GameScreen implements Screen {
 
         uiAtlas = new TextureAtlas(Gdx.files.internal("craft/craftacular-ui.atlas"));
         Collectibles.loadTextures(uiAtlas);
+        VoodooDoll.loadTexture();
+
+        // Load kill streak icon
+        killStreakIconTexture = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon1.png"));
+        killStreakIcon = new TextureRegion(killStreakIconTexture);
 
         BitmapFont regularFont = game.getSkin().getFont("font");
         BitmapFont boldFont = game.getSkin().getFont("bold");
@@ -162,7 +186,7 @@ public class GameScreen implements Screen {
         GameState.getAchievementManager().setListener(new AchievementManager.AchievementListener() {
             @Override
             public void onAchievementUnlocked(Achievement achievement) {
-                hud.showAchievementPopup(achievement.name);
+                hud.showAchievementPopup(achievement);
                 AudioManager.playPickupKeySound();
             }
         });
@@ -190,6 +214,12 @@ public class GameScreen implements Screen {
         if (exitPosition == null) {
             exitPosition = new com.badlogic.gdx.math.Vector2(0, 0);
         }
+
+        // Initialize kill streak
+        this.killStreak = 0;
+        this.killStreakText = "";
+        this.killStreakDisplayTimer = 0f;
+        this.previousPlayerLives = player.getLives();
     }
 
     /**
@@ -530,12 +560,16 @@ public class GameScreen implements Screen {
             return;
         }
 
-        int collectibleSize = TILE_SIZE + 8;
+        int collectibleSize = TILE_SIZE; // 16 pixels
         float minDistanceBetweenSameType = 10.0f;
         java.util.Random random = new java.util.Random();
 
-        // Spawn 3 of each collectible type
-        spawnCollectibleType(Collectibles.CollectibleType.KEY, 3, 50,
+        // Spawn collectibles
+        spawnCollectibleType(Collectibles.CollectibleType.KEY, 1, 50,
+                           collectibleSize, collectibleSize,
+                           walkablePositions, minDistanceBetweenSameType, random);
+
+        spawnCollectibleType(Collectibles.CollectibleType.SCROLL, 3, 50,
                            collectibleSize, collectibleSize,
                            walkablePositions, minDistanceBetweenSameType, random);
 
@@ -626,9 +660,10 @@ public class GameScreen implements Screen {
         collectible.collect();
         player.addScore(collectible.getPoints()); // Add points to run
 
-        if (collectible.getType() == Collectibles.CollectibleType.KEY) {
-            // Play a more distinct sound for quest-critical items like keys
-            AudioManager.playPickupKeySound();} else {
+        if (collectible.getType() == Collectibles.CollectibleType.KEY || collectible.getType() == Collectibles.CollectibleType.SCROLL) {
+            // Play a more distinct sound for quest-critical items (keys and scrolls)
+            AudioManager.playPickupKeySound();
+        } else {
             // Play the standard pickup sound for general items
             AudioManager.playPickupSound();
         }
@@ -640,16 +675,167 @@ public class GameScreen implements Screen {
                 break;
             case SPEED_BOOSTER:
                 player.applySpeedBoost(5.0f);
+                game.getGameState().recordPotionUsed();
                 break;
             case POWER_BOOSTER:
                 player.applyPowerBoost(5.0f);
+                game.getGameState().recordPotionUsed();
                 break;
             case SHIELD:
                 player.applyShield(8.0f);
+                game.getGameState().recordPotionUsed();
                 break;
             case KEY:
                 player.collectKey();
+                game.getGameState().recordKeyCollected();
                 break;
+            case SCROLL:
+                player.collectScroll();
+                break;
+        }
+    }
+
+    /**
+     * Renders the kill streak announcement text and icon on screen.
+     */
+    private void renderKillStreakAnnouncement(SpriteBatch batch) {
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
+
+        BitmapFont boldFont = game.getSkin().getFont("bold");
+
+        // Scale effect - text and icon grow as they appear
+        float progress = 1.0f - (killStreakDisplayTimer / KILL_STREAK_DISPLAY_DURATION);
+        float scale = Math.min(1.0f + progress * 0.5f, 1.5f);
+
+        boldFont.getData().setScale(scale);
+
+        // Color based on streak level
+        Color color;
+        if (killStreak >= 15) {
+            color = new Color(1f, 0.84f, 0f, 1f); // Gold
+        } else if (killStreak >= 10) {
+            color = new Color(1f, 0.5f, 0f, 1f); // Orange
+        } else if (killStreak >= 5) {
+            color = new Color(1f, 0f, 0f, 1f); // Red
+        } else {
+            color = Color.WHITE;
+        }
+
+        boldFont.setColor(color);
+
+        // Position - center of screen, slightly above middle
+        GlyphLayout layout = new GlyphLayout(boldFont, killStreakText);
+        float textX = (screenWidth - layout.width) / 2f;
+        float textY = screenHeight / 2f + 100;
+
+        // Draw icon above the text
+        if (killStreakIcon != null) {
+            float iconSize = 48f * scale; // Icon scales with text
+            float iconX = (screenWidth - iconSize) / 2f;
+            float iconY = textY + 20; // Position above text
+
+            batch.setColor(color);
+            batch.draw(killStreakIcon, iconX, iconY, iconSize, iconSize);
+            batch.setColor(Color.WHITE);
+        }
+
+        boldFont.draw(batch, killStreakText, textX, textY);
+
+        // Reset font
+        boldFont.getData().setScale(1.0f);
+        boldFont.setColor(Color.WHITE);
+    }
+
+    /**
+     * Displays kill streak announcement based on current streak count.
+     */
+    private void announceKillStreak(int streak) {
+        String announcement = "";
+        switch (streak) {
+            case 2:
+                announcement = "DOUBLE KILL!";
+                break;
+            case 3:
+                announcement = "TRIPLE KILL!";
+                break;
+            case 4:
+                announcement = "QUAD KILL!";
+                break;
+            case 5:
+                announcement = "KILLING SPREE!";
+                break;
+            case 7:
+                announcement = "RAMPAGE!";
+                break;
+            case 10:
+                announcement = "UNSTOPPABLE!";
+                break;
+            case 15:
+                announcement = "GODLIKE!";
+                break;
+            default:
+                if (streak > 15) {
+                    announcement = "LEGENDARY!";
+                }
+                break;
+        }
+
+        if (!announcement.isEmpty()) {
+            killStreakText = announcement;
+            killStreakDisplayTimer = KILL_STREAK_DISPLAY_DURATION;
+            System.out.println("Kill Streak: " + announcement + " (" + streak + " kills)");
+        }
+    }
+
+    /**
+     * Resets the kill streak (called when player takes damage).
+     */
+    private void resetKillStreak() {
+        if (killStreak > 0) {
+            System.out.println("Kill streak ended at " + killStreak);
+            killStreak = 0;
+        }
+    }
+
+    /**
+     * Tracks tile exploration for achievements.
+     * Records when player visits a new tile.
+     */
+    private void trackTileExploration() {
+        // Get player's current tile position
+        int tileX = (int) (player.getX() / TILE_SIZE);
+        int tileY = (int) (player.getY() / TILE_SIZE);
+
+        // Create unique key for this tile
+        String tileKey = tileX + "," + tileY;
+
+        // If this is a new tile, record it
+        if (!visitedTiles.contains(tileKey)) {
+            visitedTiles.add(tileKey);
+            game.getGameState().recordTileExplored();
+        }
+    }
+
+    /**
+     * Checks if the ghost player has collected their voodoo doll to revive.
+     */
+    private void checkVoodooDollCollection() {
+        if (voodooDoll == null || !player.isGhostMode()) {
+            return;
+        }
+
+        float[] playerBox = player.getFeetCollisionBox();
+        float px = playerBox[0], py = playerBox[1], pw = playerBox[2], ph = playerBox[3];
+        float vx = voodooDoll.getX(), vy = voodooDoll.getY();
+        float vw = voodooDoll.getWidth(), vh = voodooDoll.getHeight();
+
+        // Check collision between player and voodoo doll
+        if (px < vx + vw && px + pw > vx && py < vy + vh && py + ph > vy) {
+            voodooDoll.collect();
+            player.revive();
+            AudioManager.playPickupKeySound(); // Play special sound for revive
+            System.out.println("Player revived with 1 life!");
         }
     }
 
@@ -679,6 +865,16 @@ public class GameScreen implements Screen {
 
         // Update player (handles input, movement, animation)
         player.update(delta);
+
+        // Track tile exploration
+        trackTileExploration();
+
+        // Check if player took damage (reset kill streak)
+        if (player.getLives() < previousPlayerLives) {
+            resetKillStreak();
+        }
+        previousPlayerLives = player.getLives();
+
         checkPlayerAttackHits();
 
         for (Enemy enemy : enemies){
@@ -695,6 +891,17 @@ public class GameScreen implements Screen {
 
         // Update collectibles
         updateCollectibles(delta);
+
+        // Update voodoo doll if it exists
+        if (voodooDoll != null && !voodooDoll.isCollected()) {
+            voodooDoll.update(delta);
+            checkVoodooDollCollection();
+        }
+
+        // Update kill streak display timer
+        if (killStreakDisplayTimer > 0) {
+            killStreakDisplayTimer -= delta;
+        }
 
         checkWinCondition();
         checkLoseCondition();
@@ -727,6 +934,12 @@ public class GameScreen implements Screen {
         for (Collectibles collectible : collectibles) {
             collectible.render(game.getSpriteBatch());
         }
+
+        // Draw voodoo doll if active
+        if (voodooDoll != null && !voodooDoll.isCollected()) {
+            voodooDoll.render(game.getSpriteBatch());
+        }
+
         for (Enemy enemy : enemies){
             enemy.render(game.getSpriteBatch());
         }
@@ -751,8 +964,8 @@ public class GameScreen implements Screen {
             arrowSprite.setPosition(arrowX, arrowY);
             arrowSprite.setRotation(angle);
 
-            // Turn arrow yellow when the objective is met (all keys collected)
-            if (player.hasAllKeys()) {
+            // Turn arrow yellow when the objective is met (key + all scrolls collected)
+            if (player.canExitMaze()) {
                 arrowSprite.setColor(com.badlogic.gdx.graphics.Color.YELLOW);
             } else {
                 arrowSprite.setColor(com.badlogic.gdx.graphics.Color.WHITE);
@@ -771,6 +984,12 @@ public class GameScreen implements Screen {
         game.getSpriteBatch().setProjectionMatrix(hudCamera.combined);
         game.getSpriteBatch().begin();
         hud.render(game.getSpriteBatch(), player);
+
+        // Render kill streak announcement
+        if (killStreakDisplayTimer > 0 && !killStreakText.isEmpty()) {
+            renderKillStreakAnnouncement(game.getSpriteBatch());
+        }
+
         game.getSpriteBatch().end();
 
         // Debug visualization
@@ -871,11 +1090,22 @@ public class GameScreen implements Screen {
 
                 player.setAttackHasHit(true);
 
+                // Track successful parry before resetting flag
+                if (player.wasLastAttackParry()) {
+                    game.getGameState().recordSuccessfulParry();
+                }
+
+                player.resetParryFlag(); // Reset parry flag after dealing damage
+
                 if (enemy.isDead()) {
                     enemies.removeIndex(i);
                     game.getGameState().recordKill(); // Track for Warrior Points
                     player.addScore(100);
                     SaveManager.save(game.getGameState()); // Auto-save kills
+
+                    // Increment kill streak and announce
+                    killStreak++;
+                    announceKillStreak(killStreak);
                 }
 
                 break;
@@ -885,10 +1115,10 @@ public class GameScreen implements Screen {
 
     /**
      * Checks if the player has won the game.
-     * Win condition: Player must have the 3 keys AND reach the exit.
+     * Win condition: Player must have 1 key AND 3 scrolls AND reach the exit.
      */
     private void checkWinCondition() {
-        if (!player.hasAllKeys()) {
+        if (!player.canExitMaze()) {
             return;
         }
 
@@ -912,6 +1142,15 @@ public class GameScreen implements Screen {
                             game.getGameState().levelHighScores.put(mapPath, player.getScore());
                             SaveManager.save(game.getGameState());
                         }
+
+                        // Track maze completion
+                        game.getGameState().recordMazeCompleted();
+
+                        // Check if it was a perfect maze (no damage taken)
+                        if (player.getLives() == player.getMaxLives()) {
+                            game.getGameState().recordPerfectMaze();
+                        }
+
                         game.goToVictory(player.getScore());
                         return;
                     }
@@ -923,10 +1162,25 @@ public class GameScreen implements Screen {
     /**
      * Checks if the player has lost the game.
      * Lose condition: Player's lives reach 0.
+     * If they haven't used their revive yet, enters ghost mode.
      */
     private void checkLoseCondition() {
-        if (player.isDead()) {
-            game.goToGameOver(mapPath, player.getScore());
+        if (player.isDead() && !player.isGhostMode()) {
+            // Check if player can use revive mechanic (once per level)
+            if (!player.hasUsedRevive()) {
+                // Spawn voodoo doll at death location
+                float[] playerBox = player.getFeetCollisionBox();
+                float deathX = playerBox[0];
+                float deathY = playerBox[1];
+                voodooDoll = new VoodooDoll(deathX, deathY, TILE_SIZE * 1.5f, TILE_SIZE * 1.5f);
+
+                // Enter ghost mode and respawn at entry
+                player.enterGhostMode(entry.getX(), entry.getY());
+                System.out.println("Ghost mode activated! Find your voodoo doll to revive!");
+            } else {
+                // Already used revive or time ran out - game over
+                game.goToGameOver(mapPath, player.getScore());
+            }
         }
     }
 
@@ -1083,6 +1337,9 @@ public class GameScreen implements Screen {
         AudioManager.dispose();
 
         if (arrowTexture != null) arrowTexture.dispose();
+        if (killStreakIconTexture != null) killStreakIconTexture.dispose();
+
+        VoodooDoll.dispose();
     }
 
     public String getMapPath() {

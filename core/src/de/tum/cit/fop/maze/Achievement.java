@@ -9,4 +9,5 @@ public class Achievement {
     public String description;
     public String statName;   // e.g., "enemiesKilled", "distanceSprinted"
     public float targetValue; // Value needed to unlock
+    public String iconPath;   // Path to achievement icon image
 }
