@@ -13,16 +13,35 @@ import de.tum.cit.fop.maze.MazeRunnerGame;
 import de.tum.cit.fop.maze.SaveManager;
 
 /**
- * Screen for the Skill Tree/Marketplace where players can upgrade stats.
- * Supports continuous upgrades with increasing costs.
+ * Screen for the Skill Tree/Marketplace where players can upgrade their character stats.
+ * <p>
+ * This screen provides three upgrade branches:
+ * <ul>
+ *   <li><b>COMBAT</b> - Upgrades the Power Ring for increased damage</li>
+ *   <li><b>AGILITY</b> - Upgrades Swift Boots for increased movement speed</li>
+ *   <li><b>SURVIVAL</b> - Upgrades Tank Armor for increased health</li>
+ * </ul>
+ * Each upgrade requires spending skill points earned through gameplay.
+ * Upgrade costs increase exponentially with each level (cost = 2 * 2^level).
+ *
+ * @author TUM Chair of Information Technology
+ * @version 1.0
+ * @since 2024
  */
 public class SkillTreeScreen implements Screen {
+    /** The stage that contains all UI actors for this screen. */
     private final Stage stage;
+
+    /** Reference to the main game instance. */
     private final MazeRunnerGame game;
 
     /**
-     * Constructor to initialize the screen.
-     * @param game The main game instance.
+     * Constructs a new SkillTreeScreen.
+     * <p>
+     * Initializes the stage with a screen viewport and builds the UI
+     * displaying all available skill upgrades.
+     *
+     * @param game the main game instance used to access game state and UI skin
      */
     public SkillTreeScreen(MazeRunnerGame game) {
         this.game = game;
@@ -31,8 +50,17 @@ public class SkillTreeScreen implements Screen {
     }
 
     /**
-     * Rebuilds the UI elements based on the current game state.
-     * Refreshes values and button states.
+     * Rebuilds the complete UI for the skill tree screen.
+     * <p>
+     * This method:
+     * <ul>
+     *   <li>Clears the current stage</li>
+     *   <li>Displays current skill point totals for all three categories</li>
+     *   <li>Creates three upgrade branches (Combat, Agility, Survival)</li>
+     *   <li>Updates button states based on available points</li>
+     *   <li>Adds a return button to go back to the main menu</li>
+     * </ul>
+     * Called initially and after each upgrade to refresh the display.
      */
     private void rebuildUI() {
         stage.clear();
@@ -62,9 +90,9 @@ public class SkillTreeScreen implements Screen {
 
         root.add(pointsTable).colspan(3).padBottom(50).row();
 
-        Table combatBranch = createContinuousBranch(state, "COMBAT", "Warrior", "Sharpened Blade", "+50% Dmg per Lvl", "warrior", com.badlogic.gdx.graphics.Color.PURPLE, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon19.png");
-        Table agilityBranch = createContinuousBranch(state, "AGILITY", "Swiftness", "Fast Feet", "+25% Speed per Lvl", "swiftness", new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f), "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon18.png");
-        Table survivalBranch = createContinuousBranch(state, "SURVIVAL", "Vitality", "Tank Armor", "+1 Heart per Lvl", "vitality", com.badlogic.gdx.graphics.Color.GREEN, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon17.png");
+        Table combatBranch = createContinuousBranch(state, "COMBAT", "Warrior", "Power Ring", "+50% Dmg per Lvl", "warrior", com.badlogic.gdx.graphics.Color.PURPLE, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon19.png");
+        Table agilityBranch = createContinuousBranch(state, "AGILITY", "Swiftness", "Swiftness Ring", "+25% Speed per Lvl", "swiftness", new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f), "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon18.png");
+        Table survivalBranch = createContinuousBranch(state, "SURVIVAL", "Vitality", "Health Ring", "+1 Heart per Lvl", "vitality", com.badlogic.gdx.graphics.Color.GREEN, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon17.png");
 
         root.add(combatBranch).top().pad(20);
         root.add(agilityBranch).top().pad(20);
@@ -78,23 +106,32 @@ public class SkillTreeScreen implements Screen {
                 game.goToMenu();
             }
         });
-        // Edited: Increased button size
         root.add(back).colspan(3).padTop(60).width(400).height(80);
     }
 
     /**
-     * Creates a vertical UI branch for a specific skill type.
-     * Handles dynamic cost calculation and upgrade logic.
+     * Creates a vertical UI branch for a specific skill upgrade type.
+     * <p>
+     * Each branch contains:
+     * <ul>
+     *   <li>An icon representing the skill (64x64 pixels)</li>
+     *   <li>A colored title label</li>
+     *   <li>The skill name with current level</li>
+     *   <li>A description of the upgrade effect</li>
+     *   <li>An upgrade button showing the cost in skill points</li>
+     * </ul>
+     * The upgrade button is disabled if the player doesn't have enough points.
+     * Cost increases exponentially: cost = 2 * 2^currentLevel
      *
-     * @param state The current game state.
-     * @param title The visual title of the branch.
-     * @param skillKey The key used in the skill map.
-     * @param name The display name of the skill.
-     * @param description A short description of the skill effect.
-     * @param type The type of point currency used (warrior, swiftness, vitality).
-     * @param color The color theme for this branch.
-     * @param iconPath The path to the icon image for this skill.
-     * @return A Table containing the UI elements for this branch.
+     * @param state the current game state containing skill levels and points
+     * @param title the visual title of the branch (e.g., "COMBAT")
+     * @param skillKey the key used in the skill map to track this skill's level
+     * @param name the display name of the skill (e.g., "Upgrade Power Ring")
+     * @param description a short description of the skill effect (e.g., "+50% Dmg per Lvl")
+     * @param type the type of point currency used ("warrior", "swiftness", or "vitality")
+     * @param color the color theme for this branch's text and buttons
+     * @param iconPath the file path to the icon image for this skill
+     * @return a Table containing all UI elements for this skill branch
      */
     private Table createContinuousBranch(GameState state, String title, final String skillKey, String name, String description, final String type, com.badlogic.gdx.graphics.Color color, String iconPath) {
         Table branch = new Table();
@@ -150,13 +187,18 @@ public class SkillTreeScreen implements Screen {
             }
         });
 
-        // Edited: Increased button size
-        // Edited: Massively increase Upgrade button size to 550x140
         branch.add(buy).size(400, 80);
 
         return branch;
     }
 
+    /**
+     * Renders the skill tree screen.
+     * <p>
+     * Clears the screen with a dark blue-gray background and updates/draws all stage actors.
+     *
+     * @param delta the time in seconds since the last render call
+     */
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
@@ -165,10 +207,53 @@ public class SkillTreeScreen implements Screen {
         stage.draw();
     }
 
+    /**
+     * Called when this screen becomes the current screen.
+     * <p>
+     * Currently does nothing as initialization is handled in the constructor.
+     */
     @Override public void show() {}
-    @Override public void resize(int width, int height) { stage.getViewport().update(width, height, true); }
+
+    /**
+     * Called when the screen is resized.
+     * <p>
+     * Updates the stage's viewport to match the new screen dimensions.
+     *
+     * @param width the new screen width in pixels
+     * @param height the new screen height in pixels
+     */
+    @Override public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    /**
+     * Called when the game is paused (typically on Android).
+     * <p>
+     * Currently does nothing as no pause-specific logic is needed.
+     */
     @Override public void pause() {}
+
+    /**
+     * Called when the game is resumed from a paused state (typically on Android).
+     * <p>
+     * Currently does nothing as no resume-specific logic is needed.
+     */
     @Override public void resume() {}
+
+    /**
+     * Called when this screen is no longer the current screen.
+     * <p>
+     * Currently does nothing as no cleanup is needed when hiding.
+     */
     @Override public void hide() {}
-    @Override public void dispose() { stage.dispose(); }
+
+    /**
+     * Disposes of all resources used by this screen.
+     * <p>
+     * Cleans up the stage and all its actors to prevent memory leaks.
+     * This method should be called when the screen is no longer needed.
+     */
+    @Override public void dispose() {
+        stage.dispose();
+    }
 }

@@ -1,11 +1,11 @@
 [
   {
-    "id": "FIRST_BLOOD",
-    "name": "First Blood",
+    "id": "FIRST_KILL",
+    "name": "First Kill",
     "description": "Defeat your first enemy",
     "statName": "enemiesKilled",
     "targetValue": 1,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon1.png"
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon15.png"
   },
   {
     "id": "APPRENTICE_WARRIOR",
@@ -18,122 +18,66 @@
   {
     "id": "SLAYER",
     "name": "Slayer",
-    "description": "Defeat 25 enemies",
+    "description": "Defeat 20 enemies",
     "statName": "enemiesKilled",
-    "targetValue": 25,
+    "targetValue": 20,
     "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon15.png"
   },
   {
     "id": "REAPER",
     "name": "Reaper",
-    "description": "Defeat 50 enemies",
+    "description": "Defeat 20 enemies",
     "statName": "enemiesKilled",
     "targetValue": 50,
     "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon17.png"
   },
   {
-    "id": "MASTER_OF_COMBAT",
-    "name": "Master of Combat",
-    "description": "Defeat 100 enemies",
-    "statName": "enemiesKilled",
-    "targetValue": 100,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon9.png"
-  },
-  {
     "id": "EXPLORER",
     "name": "Explorer",
-    "description": "Explore 500 tiles",
+    "description": "Explore 400 tiles",
     "statName": "tilesExplored",
-    "targetValue": 500,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon4.png"
+    "targetValue": 400,
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon47.png"
   },
   {
-    "id": "CARTOGRAPHER",
-    "name": "Cartographer",
-    "description": "Explore 2000 tiles",
-    "statName": "tilesExplored",
-    "targetValue": 2000,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon27.png"
-  },
-  {
-    "id": "SPEED_DEMON",
-    "name": "Speed Demon",
-    "description": "Sprint 5000 units",
+    "id": "SPEED_MASTER",
+    "name": "Speed Master",
+    "description": "Sprint 2000 units",
     "statName": "distanceSprinted",
-    "targetValue": 5000,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon5.png"
+    "targetValue": 2000,
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon36.png"
   },
   {
     "id": "WIND_RUNNER",
     "name": "Wind Runner",
-    "description": "Sprint 20000 units",
+    "description": "Sprint 5000 units",
     "statName": "distanceSprinted",
-    "targetValue": 20000,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon20.png"
+    "targetValue": 5000,
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon28.png"
   },
   {
-    "id": "LOCKSMITH",
-    "name": "Locksmith",
-    "description": "Collect 5 keys",
-    "statName": "keysCollected",
-    "targetValue": 5,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon7.png"
-  },
-  {
-    "id": "TREASURE_HUNTER",
-    "name": "Treasure Hunter",
-    "description": "Collect 50 coins",
-    "statName": "coinsCollected",
-    "targetValue": 50,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon8.png"
-  },
-  {
-    "id": "GREEDY_COLLECTOR",
-    "name": "Greedy Collector",
-    "description": "Collect 200 coins",
-    "statName": "coinsCollected",
-    "targetValue": 200,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon30.png"
+    "id": "SCROLL_Collector",
+    "name": "Scroll Collector",
+    "description": "Collect 3 magic Scrolls",
+    "statName": "scrollsCollected",
+    "targetValue": 3,
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon16.png"
   },
   {
     "id": "SURVIVOR",
     "name": "Survivor",
-    "description": "Collect 3 hearts",
-    "statName": "heartsCollected",
-    "targetValue": 3,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon31.png"
-  },
-  {
-    "id": "GUARDIAN",
-    "name": "Guardian",
     "description": "Collect 10 hearts",
     "statName": "heartsCollected",
     "targetValue": 10,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon22.png"
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon14.png"
   },
   {
     "id": "POTION_MASTER",
     "name": "Potion Master",
-    "description": "Use 10 potions",
+    "description": "Use 20 potions",
     "statName": "potionsUsed",
-    "targetValue": 10,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon10.png"
-  },
-  {
-    "id": "ALCHEMIST",
-    "name": "Alchemist",
-    "description": "Use 25 potions",
-    "statName": "potionsUsed",
-    "targetValue": 25,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon19.png"
-  },
-  {
-    "id": "PERFECT_STRIKE",
-    "name": "Perfect Strike",
-    "description": "Successfully parry 5 attacks",
-    "statName": "successfulParries",
-    "targetValue": 5,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon12.png"
+    "targetValue": 20,
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon5.png"
   },
   {
     "id": "UNTOUCHABLE",
@@ -141,22 +85,14 @@
     "description": "Complete a maze without taking damage",
     "statName": "perfectMazes",
     "targetValue": 1,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon16.png"
-  },
-  {
-    "id": "DUNGEON_MASTER",
-    "name": "Dungeon Master",
-    "description": "Complete 10 mazes",
-    "statName": "mazesCompleted",
-    "targetValue": 10,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon35.png"
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon21.png"
   },
   {
     "id": "LEGEND",
     "name": "Legend",
-    "description": "Complete 25 mazes",
+    "description": "Complete the 5 mazes",
     "statName": "mazesCompleted",
-    "targetValue": 25,
-    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon45.png"
+    "targetValue": 5,
+    "iconPath": "Free-Undead-achievement-Pixel-Art-Icons/PNG/Icon10.png"
   }
 ]

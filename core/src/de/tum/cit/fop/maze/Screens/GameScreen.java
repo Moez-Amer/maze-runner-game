@@ -509,10 +509,37 @@ public class GameScreen implements Screen {
     }
 
     /**
+     * Scans the mapData grid for TYPE_KEY tiles (5) and spawns Key collectibles.
+     * Matches the approach used for Walls, Entrance, and Traps.
+     */
+    private void findKeysInMap() {
+        for (int x = 0; x < mapWidth; x++) {
+            for (int y = 0; y < mapHeight; y++) {
+                // Check if the tile is a KEY (Type 5)
+                // You can use TiledToPropertiesConverter.TYPE_KEY or just 5
+                if (mapData[x][y] == de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_KEY) {
+
+                    // Spawn the key exactly at this tile's position
+                    collectibles.add(new Collectibles(
+                            x * TILE_SIZE,
+                            y * TILE_SIZE,
+                            TILE_SIZE, TILE_SIZE,
+                            50,
+                            Collectibles.CollectibleType.KEY
+                    ));
+
+                    System.out.println("Loaded Key from Map at: " + x + "," + y);
+                }
+            }
+        }
+    }
+
+    /**
      * Spawns collectibles randomly on the map.
      */
     private void spawnCollectibles() {
         collectibles = new ArrayList<>();
+        findKeysInMap();
 
         // Collect all safe walkable positions
         ArrayList<int[]> walkablePositions = new ArrayList<>();
@@ -561,56 +588,57 @@ public class GameScreen implements Screen {
         }
 
         int collectibleSize = TILE_SIZE; // 16 pixels
-        float minDistanceBetweenSameType = 10.0f;
+        float minDistanceBetweenColl = 96.0f;
         java.util.Random random = new java.util.Random();
 
         // Spawn collectibles
-        spawnCollectibleType(Collectibles.CollectibleType.KEY, 1, 50,
-                           collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenSameType, random);
 
         spawnCollectibleType(Collectibles.CollectibleType.SCROLL, 3, 50,
                            collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenSameType, random);
+                           walkablePositions, minDistanceBetweenColl, random);
 
-        spawnCollectibleType(Collectibles.CollectibleType.HEALTH, 3, 10,
+        spawnCollectibleType(Collectibles.CollectibleType.HEALTH, 2, 10,
                            collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenSameType, random);
+                           walkablePositions, minDistanceBetweenColl, random);
 
-        spawnCollectibleType(Collectibles.CollectibleType.SPEED_BOOSTER, 3, 20,
+        spawnCollectibleType(Collectibles.CollectibleType.SPEED_BOOSTER, 2, 20,
                            collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenSameType, random);
+                           walkablePositions, minDistanceBetweenColl, random);
 
-        spawnCollectibleType(Collectibles.CollectibleType.POWER_BOOSTER, 3, 20,
+        spawnCollectibleType(Collectibles.CollectibleType.POWER_BOOSTER, 2, 20,
                            collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenSameType, random);
+                           walkablePositions, minDistanceBetweenColl, random);
 
-        spawnCollectibleType(Collectibles.CollectibleType.SHIELD, 3, 30,
+        spawnCollectibleType(Collectibles.CollectibleType.SHIELD, 2, 30,
                            collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenSameType, random);
+                           walkablePositions, minDistanceBetweenColl, random);
 
         System.out.println("Spawned " + collectibles.size() + " collectibles");
     }
 
     private void spawnCollectibleType(Collectibles.CollectibleType type, int count, int points,
-                                     float width, float height,
-                                     ArrayList<int[]> walkablePositions,
-                                     float minDistance, java.util.Random random) {
-        ArrayList<int[]> spawnedPositions = new ArrayList<>();
+                                      float width, float height,
+                                      ArrayList<int[]> walkablePositions,
+                                      float minDistance, java.util.Random random) {
         int attempts = 0;
-        int maxAttempts = 100;
+        int maxAttempts = 300; // Increased attempts slightly since constraints are harder
+        int spawnedCount = 0;
 
-        while (spawnedPositions.size() < count && attempts < maxAttempts) {
+        while (spawnedCount < count && attempts < maxAttempts) {
             attempts++;
 
+            // Pick a random safe tile
             int[] pos = walkablePositions.get(random.nextInt(walkablePositions.size()));
-            int x = pos[0];
-            int y = pos[1];
+            float potentialX = pos[0] * TILE_SIZE;
+            float potentialY = pos[1] * TILE_SIZE;
 
             boolean tooClose = false;
-            for (int[] spawnedPos : spawnedPositions) {
-                float dx = x - spawnedPos[0];
-                float dy = y - spawnedPos[1];
+
+            // CHECK GLOBAL LIST: ensuring we don't spawn near ANY existing collectible
+            // This prevents potions from spawning on top of Keys, Scrolls, or other Potions
+            for (Collectibles existing : collectibles) {
+                float dx = potentialX - existing.getX();
+                float dy = potentialY - existing.getY();
                 float distance = (float) Math.sqrt(dx * dx + dy * dy);
 
                 if (distance < minDistance) {
@@ -621,12 +649,12 @@ public class GameScreen implements Screen {
 
             if (!tooClose) {
                 collectibles.add(new Collectibles(
-                    x * TILE_SIZE, y * TILE_SIZE,
-                    width, height,
-                    points,
-                    type
+                        potentialX, potentialY,
+                        width, height,
+                        points,
+                        type
                 ));
-                spawnedPositions.add(new int[]{x, y});
+                spawnedCount++;
             }
         }
     }
@@ -691,6 +719,7 @@ public class GameScreen implements Screen {
                 break;
             case SCROLL:
                 player.collectScroll();
+                game.getGameState().recordScrollCollected();
                 break;
         }
     }
