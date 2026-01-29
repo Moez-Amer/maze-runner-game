@@ -116,13 +116,14 @@ public class GameScreen implements Screen {
     private boolean entranceBoundsFound = false;
     // Loading mode flag
     private boolean useTiledMap = false;
-
-
-    private KeyBindings keys ;
-
+    private KeyBindings keys;
     // Track time between kills
     private float timeSinceLastKill;
     private static final float KILL_STREAK_WINDOW = 3.0f; // 3.0 seconds to get the next kill
+
+    // Developer console support
+    private boolean consolePaused = false;
+    private boolean godModeEnabled = false;
     /**
      * Constructor for GameScreen. Sets up the camera and font.
      *
@@ -601,24 +602,24 @@ public class GameScreen implements Screen {
         // Spawn collectibles
 
         spawnCollectibleType(Collectibles.CollectibleType.SCROLL, 3, 50,
-                           collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenColl, random);
+                collectibleSize, collectibleSize,
+                walkablePositions, minDistanceBetweenColl, random);
 
         spawnCollectibleType(Collectibles.CollectibleType.HEALTH, 2, 10,
-                           collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenColl, random);
+                collectibleSize, collectibleSize,
+                walkablePositions, minDistanceBetweenColl, random);
 
         spawnCollectibleType(Collectibles.CollectibleType.SPEED_BOOSTER, 2, 20,
-                           collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenColl, random);
+                collectibleSize, collectibleSize,
+                walkablePositions, minDistanceBetweenColl, random);
 
         spawnCollectibleType(Collectibles.CollectibleType.POWER_BOOSTER, 2, 20,
-                           collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenColl, random);
+                collectibleSize, collectibleSize,
+                walkablePositions, minDistanceBetweenColl, random);
 
         spawnCollectibleType(Collectibles.CollectibleType.SHIELD, 2, 30,
-                           collectibleSize, collectibleSize,
-                           walkablePositions, minDistanceBetweenColl, random);
+                collectibleSize, collectibleSize,
+                walkablePositions, minDistanceBetweenColl, random);
 
         System.out.println("Spawned " + collectibles.size() + " collectibles");
     }
@@ -899,55 +900,58 @@ public class GameScreen implements Screen {
 
         ScreenUtils.clear(0, 0, 0, 1);
 
-        // Update player (handles input, movement, animation)
-        player.update(delta);
+        if (!consolePaused) {
+            player.update(delta);
+            // Track tile exploration
+            trackTileExploration();
 
-        // Track tile exploration
-        trackTileExploration();
-
-        // Check if player took damage (reset kill streak)
-        if (player.getLives() < previousPlayerLives) {
-            resetKillStreak();
-        }
-        previousPlayerLives = player.getLives();
-
-        checkPlayerAttackHits();
-
-        for (Enemy enemy : enemies){
-            enemy.update(delta);
-        }
-        // Update traps
-        for (DeathPitTrap pitTrap : deathPitTraps) {
-            pitTrap.update();
-        }
-        for (KnifesTrap knifeTrap : knifesTraps) {
-            knifeTrap.update(delta);
-        }
-
-
-        // Update collectibles
-        updateCollectibles(delta);
-
-        // Update voodoo doll if it exists
-        if (voodooDoll != null && !voodooDoll.isCollected()) {
-            voodooDoll.update(delta);
-            checkVoodooDollCollection();
-        }
-
-        if (killStreak > 0) {
-            timeSinceLastKill += delta;
-            if (timeSinceLastKill > KILL_STREAK_WINDOW) {
+            // Check if player took damage (reset kill streak)
+            if (player.getLives() < previousPlayerLives) {
                 resetKillStreak();
             }
-        }
+            previousPlayerLives = player.getLives();
 
-        // Update kill streak display timer
-        if (killStreakDisplayTimer > 0) {
-            killStreakDisplayTimer -= delta;
-        }
+            checkPlayerAttackHits();
 
-        checkWinCondition();
-        checkLoseCondition();
+            for (Enemy enemy : enemies){
+                enemy.update(delta);
+            }
+            // Update traps
+            for (DeathPitTrap pitTrap : deathPitTraps) {
+                pitTrap.update();
+            }
+            for (KnifesTrap knifeTrap : knifesTraps) {
+                knifeTrap.update(delta);
+            }
+
+
+            // Update collectibles
+            updateCollectibles(delta);
+
+            // Update voodoo doll if it exists
+            if (voodooDoll != null && !voodooDoll.isCollected()) {
+                voodooDoll.update(delta);
+                checkVoodooDollCollection();
+            }
+
+            if (killStreak > 0) {
+                timeSinceLastKill += delta;
+                if (timeSinceLastKill > KILL_STREAK_WINDOW) {
+                    resetKillStreak();
+                }
+            }
+
+            // Update kill streak display timer
+            if (killStreakDisplayTimer > 0) {
+                killStreakDisplayTimer -= delta;
+            }
+
+            checkWinCondition();
+            checkLoseCondition();
+            if (player.isMoving() && player.isRunning()) {
+                game.getGameState().recordSprinting(player.getSpeed() * delta);
+            }
+        }
 
         // Center camera on player
         centerCameraOnPlayer();
@@ -1039,10 +1043,8 @@ public class GameScreen implements Screen {
         if (showCollisionBoxes) {
             renderCollisionDebug();
         }
-
-        if (player.isMoving() && player.isRunning()) {
-            game.getGameState().recordSprinting(player.getSpeed() * delta);
-        }
+        game.updateConsole(delta);
+        game.renderConsole();
     }
 
     /**
@@ -1069,7 +1071,7 @@ public class GameScreen implements Screen {
 
                 // Draw ground for walkable tiles
                 if (type == TYPE_PATH || type == TYPE_ENTRY || type == TYPE_ENEMY ||
-                    type == TYPE_KEY || type == TYPE_KNIFE_TRAP || type == TYPE_EXIT) {
+                        type == TYPE_KEY || type == TYPE_KNIFE_TRAP || type == TYPE_EXIT) {
                     if (groundTexture != null) {
                         game.getSpriteBatch().draw(groundTexture, worldX, worldY, TILE_SIZE, TILE_SIZE);
                     }
@@ -1350,6 +1352,11 @@ public class GameScreen implements Screen {
 
         // Readjust camera position immediately so the player stays centered
         centerCameraOnPlayer();
+
+        // Resize console
+        if (game.getConsole() != null) {
+            game.getConsole().resize(width, height);
+        }
     }
 
     @Override
@@ -1399,5 +1406,52 @@ public class GameScreen implements Screen {
             camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
             camera.update();
         }
+    }
+
+    /**
+     * Gets the player instance.
+     * @return The player
+     */
+    public Player getPlayer() {
+        return player;
+    }
+    /**
+     * Sets whether the console has paused the game.
+     * @param paused True to pause game logic, false to resume
+     */
+    public void setConsolePaused(boolean paused) {
+        this.consolePaused = paused;
+    }
+    /**
+     * Toggles god mode and returns the new state.
+     * @return True if god mode is now enabled, false otherwise
+     */
+    public boolean toggleGodMode() {
+        godModeEnabled = !godModeEnabled;
+        if (player != null) {
+            player.setGodMode(godModeEnabled);
+        }
+        return godModeEnabled;
+    }
+    /**
+     * Kills all enemies on the map.
+     * @return Number of enemies killed
+     */
+    public int killAllEnemies() {
+        int count = enemies.size;
+        enemies.clear();
+        return count;
+    }
+    /**
+     * Spawns an enemy at the specified position.
+     * @param x X coordinate in pixels
+     * @param y Y coordinate in pixels
+     */
+    public void spawnEnemyAtPosition(float x, float y) {
+        Enemy enemy = new Enemy(x, y, TILE_SIZE, mapData, "Enemy_Assets/Undead executioner puppet/png/", 100, 100);
+        enemy.setEnemies(this.enemies);
+        enemy.setPlayer(player);
+        this.enemies.add(enemy);
+        System.out.println("Enemy spawned at (" + x + ", " + y + ")");
     }
 }

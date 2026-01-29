@@ -13,14 +13,14 @@ import com.badlogic.gdx.math.Rectangle;
  * Handles player-specific logic: lives, keys, input, damage effects.
  */
 public class Player extends MovableGameObject {
-    
+
     private static final float WALK_SPEED = 80f;
     private static final float RUN_SPEED = 150f;
     private float shieldSoundTimer = 0;
     private  float swordSize ;
     private int attackCombo ;
     private boolean isRunning;
-    
+
     private int lives;
     private int maxLives;
     private int keyCount;
@@ -31,7 +31,7 @@ public class Player extends MovableGameObject {
     private float ghostModeTimer;
     private boolean hasUsedRevive;
     private static final float GHOST_MODE_DURATION = 20.0f;
-    
+
     private float speedBoostTimer;
     private float powerBoostTimer;
     private float shieldTimer;
@@ -39,7 +39,7 @@ public class Player extends MovableGameObject {
     private static final float SHIELD_DURATION = 8.0f;
     private static final float SPEED_BOOST_MULTIPLIER = 1.5f;
     private static final float POWER_BOOST_MULTIPLIER = 2.0f;
-    
+
     private boolean isMoving;
     private boolean isDamaged;
     private boolean isAttacking;
@@ -56,7 +56,7 @@ public class Player extends MovableGameObject {
     private static final float INVULNERABILITY_TIME = 1.5f;
     private static final float FALLING_DURATION = .5f;
     private float invulnerabilityTimer;
-    
+
     private Animation<TextureRegion> idleDownAnim, idleUpAnim, idleLeftAnim, idleRightAnim;
     private Animation<TextureRegion> runDownAnim, runUpAnim, runLeftAnim, runRightAnim;
     private Animation<TextureRegion> attackDownAnim1, attackLeftAnim1, attackRightAnim1, attackUpAnim1;
@@ -73,9 +73,12 @@ public class Player extends MovableGameObject {
     private float currentRunSpeed;
     private float damageMultiplier;
 
+    // God mode for developer console
+    private boolean godModeEnabled = false;
+
     /**
      * Constructs a new Player at the given position.
-     * 
+     *
      * @param x Starting X coordinate
      * @param y Starting Y coordinate
      * @param tileSize Size of each tile in pixels
@@ -124,19 +127,19 @@ public class Player extends MovableGameObject {
         setCollisionBox(16, 16, 40, 20);
         loadAnimations();
     }
-    
+
     /**
      * Loads all player animations from sprite files.
      */
     private void loadAnimations() {
         int FRAME_WIDTH = 96;
         int FRAME_HEIGHT = 80;
-        
+
         Texture idleDown = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/IDLE/idle_down.png"));
         Texture idleUp = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/IDLE/idle_up.png"));
         Texture idleLeft = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/IDLE/idle_left.png"));
         Texture idleRight = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/IDLE/idle_right.png"));
-        
+
         Texture runDown = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/RUN/run_down.png"));
         Texture runUp = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/RUN/run_up.png"));
         Texture runLeft = new Texture(Gdx.files.internal("Character1_Assets/FREE_Adventurer 2D Pixel Art/Sprites/RUN/run_left.png"));
@@ -158,7 +161,7 @@ public class Player extends MovableGameObject {
         TextureRegion[][] idleUpFrames = TextureRegion.split(idleUp, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] idleLeftFrames = TextureRegion.split(idleLeft, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] idleRightFrames = TextureRegion.split(idleRight, FRAME_WIDTH, FRAME_HEIGHT);
-        
+
         TextureRegion[][] runDownFrames = TextureRegion.split(runDown, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] runUpFrames = TextureRegion.split(runUp, FRAME_WIDTH, FRAME_HEIGHT);
         TextureRegion[][] runLeftFrames = TextureRegion.split(runLeft, FRAME_WIDTH, FRAME_HEIGHT);
@@ -180,7 +183,7 @@ public class Player extends MovableGameObject {
         idleUpAnim = new Animation<>(0.2f, idleUpFrames[0]);
         idleLeftAnim = new Animation<>(0.2f, idleLeftFrames[0]);
         idleRightAnim = new Animation<>(0.2f, idleRightFrames[0]);
-        
+
         runDownAnim = new Animation<>(0.1f, runDownFrames[0]);
         runUpAnim = new Animation<>(0.1f, runUpFrames[0]);
         runLeftAnim = new Animation<>(0.1f, runLeftFrames[0]);
@@ -219,10 +222,10 @@ public class Player extends MovableGameObject {
         facing = Direction.RIGHT;
         currentAnimation = idleDownAnim;
     }
-    
+
     /**
      * Updates player state, handles input and movement.
-     * 
+     *
      * @param delta Time elapsed since last frame
      */
     @Override
@@ -239,19 +242,19 @@ public class Player extends MovableGameObject {
                 damageTimer = 0f;
             }
         }
-        
+
         if (invulnerabilityTimer > 0) {
             invulnerabilityTimer -= delta;
         }
-        
+
         if (speedBoostTimer > 0) {
             speedBoostTimer -= delta;
         }
-        
+
         if (powerBoostTimer > 0) {
             powerBoostTimer -= delta;
         }
-        
+
         if (shieldTimer > 0) {
             shieldTimer -= delta;
         }
@@ -299,10 +302,10 @@ public class Player extends MovableGameObject {
         }
         updateAnimation(isMoving);
     }
-    
+
     /**
      * Handles keyboard input for player movement.
-     * 
+     *
      * @param delta Time elapsed since last frame
      */
     private boolean handleInput(float delta) {
@@ -340,9 +343,9 @@ public class Player extends MovableGameObject {
             return false;
         }
         //speed = isRunning ? RUN_SPEED : WALK_SPEED;
-        
+
         Direction moveDirection = null;
-        
+
         if (isUp) {
             moveDirection = Direction.UP;
             facing = Direction.UP;
@@ -359,17 +362,17 @@ public class Player extends MovableGameObject {
             facing = Direction.RIGHT;
 
         }
-        
+
         if ( moveDirection != null) {
             move(delta, moveDirection);
         }
-        
-       return true;
+
+        return true;
     }
-    
+
     /**
      * Updates the current animation based on movement state and direction.
-     * 
+     *
      * @param moving Whether the player is currently moving
      */
     private void updateAnimation(boolean moving) {
@@ -384,12 +387,12 @@ public class Player extends MovableGameObject {
         }
         if(isAttacking){
             if(attackCombo==1){
-            switch(facing) {
-                case UP: currentAnimation = attackUpAnim1; break;
-                case DOWN: currentAnimation= attackDownAnim1; break;
-                case LEFT: currentAnimation= attackLeftAnim1;break;
-                case RIGHT:currentAnimation= attackRightAnim1; break;
-            }
+                switch(facing) {
+                    case UP: currentAnimation = attackUpAnim1; break;
+                    case DOWN: currentAnimation= attackDownAnim1; break;
+                    case LEFT: currentAnimation= attackLeftAnim1;break;
+                    case RIGHT:currentAnimation= attackRightAnim1; break;
+                }
             }else {
                 switch(facing) {
                     case UP: currentAnimation = attackUpAnim2; break;
@@ -417,10 +420,10 @@ public class Player extends MovableGameObject {
             }
         }
     }
-    
+
     /**
      * Renders the player with damage effect if applicable.
-     * 
+     *
      * @param batch SpriteBatch to draw with
      */
     @Override
@@ -534,7 +537,7 @@ public class Player extends MovableGameObject {
         // Always reset to standard White for the rest of the game
         batch.setColor(Color.WHITE);
     }
-    
+
     /**
      * Gets the collision box position and size for feet-based collision.
      * The collision box is at the bottom-center of the sprite where the feet are.
@@ -600,12 +603,17 @@ public class Player extends MovableGameObject {
         }
         return new Rectangle(startX, startY, width, height);
     }
-    
+
     /**
      * Makes the player take damage and lose a life.
      * Returns true if damage was parried successfully.
      */
     public boolean takeDamage() {
+        // Check god mode first
+        if (godModeEnabled) {
+            return false;
+        }
+
         if (isGhostMode) {
             // Ghost mode players cannot take damage
             return false;
@@ -657,7 +665,7 @@ public class Player extends MovableGameObject {
         this.respawnX = respawnX;
         this.respawnY = respawnY;
     }
-    
+
     /**
      * Adds a life to the player (up to max).
      */
@@ -671,7 +679,7 @@ public class Player extends MovableGameObject {
     public void addScore(int p) { this.sessionScore += p; }
     public int getScore() { return sessionScore; }
 
-    
+
     /**
      * Collects a key.
      */
@@ -697,80 +705,80 @@ public class Player extends MovableGameObject {
     public boolean canExitMaze(){
         return hasAllKeys() && hasAllScrolls();
     }
-    
+
     /**
      * Checks if player is dead.
-     * 
+     *
      * @return true if lives <= 0
      */
     public boolean isDead() {
         return lives <= 0;
     }
-    
+
     /**
      * Checks if player is currently invulnerable.
-     * 
+     *
      * @return true if invulnerable
      */
     public boolean isInvulnerable() {
         return invulnerabilityTimer > 0;
     }
-    
+
     /**
      * Applies a speed boost for the specified duration.
-     * 
+     *
      * @param duration Duration of boost in seconds
      */
     public void applySpeedBoost(float duration) {
         this.speedBoostTimer = duration;
     }
-    
+
     /**
      * Applies a power boost for the specified duration.
-     * 
+     *
      * @param duration Duration of boost in seconds
      */
     public void applyPowerBoost(float duration) {
         this.powerBoostTimer = duration;
     }
-    
+
     /**
      * Applies shield protection for the specified duration.
-     * 
+     *
      * @param duration Duration of shield in seconds
      */
     public void applyShield(float duration) {
         this.shieldTimer = duration;
         System.out.println("Shield activated for " + duration + " seconds!");
     }
-    
+
     /**
      * Checks if speed boost is currently active.
-     * 
+     *
      * @return true if speed boost is active
      */
     public boolean hasSpeedBoost() {
         return speedBoostTimer > 0;
     }
-    
+
     /**
      * Checks if power boost is currently active.
-     * 
+     *
      * @return true if power boost is active
      */
     public boolean hasPowerBoost() {
         return powerBoostTimer > 0;
     }
-    
+
     /**
      * Checks if shield protection is currently active.
-     * 
+     *
      * @return true if shield is active
      */
     public boolean hasShield() {
         return shieldTimer > 0;
     }
-    
+
     /**
      * Gets the damage multiplier based on active boosts and parry.
      *
@@ -845,5 +853,11 @@ public class Player extends MovableGameObject {
         ghostModeTimer = 0f;
         lives = 1; // Revive with 1 heart
         invulnerabilityTimer = INVULNERABILITY_TIME; // Give brief invulnerability
+    }
+    /**
+     * Sets god mode status (for developer console).
+     * @param enabled True to enable god mode, false to disable
+     */public void setGodMode(boolean enabled) {
+        this.godModeEnabled = enabled;
     }
 }

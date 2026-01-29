@@ -44,6 +44,9 @@ public class MazeRunnerGame extends Game {
     // Character animation downwards
     private Animation<TextureRegion> characterDownAnimation;
 
+    // Developer console
+    private DeveloperConsole developerConsole;
+
     /**
      * Constructor for MazeRunnerGame.
      *
@@ -62,6 +65,9 @@ public class MazeRunnerGame extends Game {
         skin = new Skin(Gdx.files.internal("craft/craftacular-ui.json"));
         this.loadCharacterAnimation();
         AudioManager.load();
+
+        // Initialize developer console
+        developerConsole = new DeveloperConsole(this);
 
         // Fulfills the requirement to sign in/select profile on startup
         goToProfileSelection();
@@ -98,7 +104,14 @@ public class MazeRunnerGame extends Game {
         }
 
         AudioManager.playGameMusic();
-        this.setScreen(new GameScreen(this, mapPath)); // Set the current screen to GameScreen
+        GameScreen newGameScreen = new GameScreen(this, mapPath);
+
+        // Set the game screen in the console so commands work
+        if (developerConsole != null) {
+            developerConsole.setGameScreen(newGameScreen);
+        }
+
+        this.setScreen(newGameScreen); // Set the current screen to GameScreen
     }
     /**
      * Disposes of any active menu or game screens and navigates to the map selection screen.
@@ -177,6 +190,9 @@ public class MazeRunnerGame extends Game {
         getScreen().dispose();
         spriteBatch.dispose();
         skin.dispose();
+        if (developerConsole != null) {
+            developerConsole.dispose();
+        }
     }
 
     private void addButton(Table table, String text, Runnable action, float delay) {
@@ -252,5 +268,30 @@ public class MazeRunnerGame extends Game {
 
     public void goToAchievements() {
         this.setScreen(new AchievementScreen(this));
+    }
+    // Method for developer console
+    /**
+     * Updates the developer console.
+     * @param delta Time since last frame
+     */
+    public void updateConsole(float delta) {
+        if (developerConsole != null) {
+            developerConsole.update(delta);
+        }
+    }
+    /**
+     * Renders the developer console.
+     */
+    public void renderConsole() {
+        if (developerConsole != null) {
+            developerConsole.render();
+        }
+    }
+    /**
+     * Gets the developer console instance.
+     * @return The developer console
+     */
+    public DeveloperConsole getConsole() {
+        return developerConsole;
     }
 }
