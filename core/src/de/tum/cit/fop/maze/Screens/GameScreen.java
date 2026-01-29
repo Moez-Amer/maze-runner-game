@@ -884,14 +884,15 @@ public class GameScreen implements Screen {
             return;
         }
 
-        float zoomSpeed = 0.5f * delta;
-        if (Gdx.input.isKeyPressed(Input.Keys.EQUALS) || Gdx.input.isKeyPressed(Input.Keys.PLUS)) {
-            camera.zoom = Math.max(0.1f, camera.zoom - zoomSpeed); // Zoom In
+        if (!consolePaused) {
+            float zoomSpeed = 0.5f * delta;
+            if (Gdx.input.isKeyPressed(Input.Keys.EQUALS) || Gdx.input.isKeyPressed(Input.Keys.PLUS)) {
+                camera.zoom = Math.max(0.1f, camera.zoom - zoomSpeed); // Zoom In
+            }
+            if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) {
+                camera.zoom = Math.min(3.0f, camera.zoom + zoomSpeed); // Zoom Out
+            }
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) {
-            camera.zoom = Math.min(3.0f, camera.zoom + zoomSpeed); // Zoom Out
-        }
-
         // Toggle collision box visualization with K key
         if (keys.isKeyJustPressed("Debug")) {
             showCollisionBoxes = !showCollisionBoxes;

@@ -13,7 +13,7 @@ Move Down: {
 }
 Open Console: {
 	class: java.lang.String
-	value: T
+	value: Tab
 }
 Attack: {
 	class: java.lang.String

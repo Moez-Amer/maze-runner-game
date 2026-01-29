@@ -51,7 +51,7 @@ public class DeveloperConsole {
         this.consoleHeight = Gdx.graphics.getHeight() * 0.3f;
         this.consoleY = 0;
         registerCommands();
-        outputHistory.add("Developer Console - Press T to close");
+        outputHistory.add("Developer Console - Press TAB to close");
         outputHistory.add("Type 'help' for list of commands");
         outputHistory.add("");
     }
@@ -92,7 +92,7 @@ public class DeveloperConsole {
                 return "Clears console output";
             }
         });
-        commands.put("giveItem", new Command() {
+        commands.put("give_item", new Command() {
             @Override
             public String execute(String[] args) {
                 if (gameScreen == null || gameScreen.getPlayer() == null) {
@@ -158,7 +158,7 @@ public class DeveloperConsole {
                 return"Toggles invincibility";
             }
         });
-        commands.put("killAll",new Command() {
+        commands.put("kill_all",new Command() {
             @Override
             public String execute(String[] args) {
                 if (gameScreen == null) {
@@ -171,7 +171,7 @@ public class DeveloperConsole {
                 return "Kills all enemies on the map";
             }
         });
-        commands.put("listVars", new Command() {
+        commands.put("list_vars", new Command() {
             @Override
             public String execute(String[] args) {
                 if (gameScreen==null||gameScreen.getPlayer()==null) {
@@ -213,7 +213,7 @@ public class DeveloperConsole {
                 return "Spawns enemy near player location";
             }
         });
-        commands.put("addScore",new Command() {
+        commands.put("add_score",new Command() {
             @Override
             public String execute(String[] args) {
                 if (gameScreen == null||gameScreen.getPlayer()==null) {
@@ -291,6 +291,8 @@ public class DeveloperConsole {
         if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS)) {
             if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT)) {
                 currentInput += "_";
+            } else {
+                currentInput += "-";
             }
         }
     }

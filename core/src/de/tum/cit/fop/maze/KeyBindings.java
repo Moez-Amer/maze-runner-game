@@ -80,7 +80,7 @@ public class KeyBindings {
         bindings.put("Attack", Input.Keys.SPACE);
         bindings.put("Sprint", Input.Keys.SHIFT_LEFT);
         bindings.put("Debug", Input.Keys.K);
-        bindings.put("Open Console", Input.Keys.T);
+        bindings.put("Open Console", Input.Keys.TAB);
         System.out.println("Default bindings set");
     }
     /**
