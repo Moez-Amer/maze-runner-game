@@ -30,7 +30,6 @@ public class GameState {
     public int scrollsCollectedCounter = 0;
     public int coinsCollectedCounter = 0;      // Total lifetime coins collected
     public int potionsUsedCounter = 0;         // Total lifetime potions used
-    public int successfulParriesCounter = 0;   // Total lifetime successful parries
     public int perfectMazesCounter = 0;        // Total lifetime perfect mazes (no damage)
     public int mazesCompletedCounter = 0;      // Total lifetime mazes completed
 
@@ -113,10 +112,6 @@ public class GameState {
         achievementManager.onEvent(this, "potionsUsed", potionsUsedCounter);
     }
 
-    public void recordSuccessfulParry() {
-        successfulParriesCounter++;
-        achievementManager.onEvent(this, "successfulParries", successfulParriesCounter);
-    }
     public void recordScrollCollected() {
         scrollsCollectedCounter++;
         // This string "scrollsCollected" must match the statName in your JSON

@@ -150,7 +150,6 @@ public class AchievementScreen implements Screen {
             else if ("keysCollected".equals(ach.statName)) currentVal = state.keysCollectedCounter;
             else if ("coinsCollected".equals(ach.statName)) currentVal = state.coinsCollectedCounter;
             else if ("potionsUsed".equals(ach.statName)) currentVal = state.potionsUsedCounter;
-            else if ("successfulParries".equals(ach.statName)) currentVal = state.successfulParriesCounter;
             else if ("perfectMazes".equals(ach.statName)) currentVal = state.perfectMazesCounter;
             else if ("mazesCompleted".equals(ach.statName)) currentVal = state.mazesCompletedCounter;
 

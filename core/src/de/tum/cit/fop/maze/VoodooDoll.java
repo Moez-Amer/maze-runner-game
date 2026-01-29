@@ -23,8 +23,8 @@ public class VoodooDoll extends GameObject {
     private static final float PULSE_SPEED = 4f;
 
     /**
-     * Loads the voodoo doll texture.
-     * Call this once during game initialization.
+     * Loads the voodoo doll texture from the assets.
+     * This method should be called once during game initialization to prepare static resources.
      */
     public static void loadTexture() {
         Texture voodooDollTextureFile = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon38.png"));
@@ -33,11 +33,12 @@ public class VoodooDoll extends GameObject {
 
     /**
      * Constructs a new VoodooDoll at the given position.
+     * Initializes the doll as uncollected and resets animation timers.
      *
-     * @param x X coordinate
-     * @param y Y coordinate
-     * @param width Width of the doll
-     * @param height Height of the doll
+     * @param x      The X coordinate of the doll's position.
+     * @param y      The Y coordinate of the doll's position.
+     * @param width  The width of the doll.
+     * @param height The height of the doll.
      */
     public VoodooDoll(float x, float y, float width, float height) {
         super(x, y, width, height);
@@ -47,9 +48,10 @@ public class VoodooDoll extends GameObject {
     }
 
     /**
-     * Updates the voodoo doll floating and pulsing animation.
+     * Updates the voodoo doll floating and pulsing animation state.
+     * Calculations are based on the time elapsed since the last frame.
      *
-     * @param delta Time since last frame in seconds
+     * @param delta The time in seconds since the last render frame.
      */
     public void update(float delta) {
         if (!collected) {
@@ -60,9 +62,10 @@ public class VoodooDoll extends GameObject {
     }
 
     /**
-     * Renders the voodoo doll with pulsing glow effect.
+     * Renders the voodoo doll with a pulsing glow effect.
+     * The doll is only rendered if it has not yet been collected.
      *
-     * @param batch SpriteBatch to draw with
+     * @param batch The SpriteBatch used to draw the texture and effects.
      */
     @Override
     public void render(SpriteBatch batch) {
@@ -85,22 +88,24 @@ public class VoodooDoll extends GameObject {
 
     /**
      * Marks this voodoo doll as collected.
+     * Once collected, the doll will stop updating and rendering.
      */
     public void collect() {
         this.collected = true;
     }
 
     /**
-     * Checks if this voodoo doll has been collected.
+     * Checks if this voodoo doll has been collected by the player.
      *
-     * @return true if collected, false otherwise
+     * @return true if the doll has been collected, false otherwise.
      */
     public boolean isCollected() {
         return collected;
     }
 
     /**
-     * Disposes of the voodoo doll texture when no longer needed.
+     * Disposes of the voodoo doll texture when it is no longer needed.
+     * This prevents memory leaks by freeing the texture resource.
      */
     public static void dispose() {
         if (voodooDollTexture != null && voodooDollTexture.getTexture() != null) {
