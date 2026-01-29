@@ -119,6 +119,10 @@ public class GameScreen implements Screen {
 
 
     private KeyBindings keys ;
+
+    // Track time between kills
+    private float timeSinceLastKill;
+    private static final float KILL_STREAK_WINDOW = 3.0f; // 3.0 seconds to get the next kill
     /**
      * Constructor for GameScreen. Sets up the camera and font.
      *
@@ -134,6 +138,7 @@ public class GameScreen implements Screen {
         camera = new OrthographicCamera();
         viewport = new ExtendViewport(TILE_SIZE * 30, TILE_SIZE * 18, camera);
         camera.setToOrtho(false);
+        camera.zoom = 1.3f;
         font = game.getSkin().getFont("font");
 
         shapeRenderer = new ShapeRenderer();
@@ -220,6 +225,8 @@ public class GameScreen implements Screen {
         this.killStreakText = "";
         this.killStreakDisplayTimer = 0f;
         this.previousPlayerLives = player.getLives();
+
+        this.timeSinceLastKill = 0f;
     }
 
     /**
@@ -927,6 +934,13 @@ public class GameScreen implements Screen {
             checkVoodooDollCollection();
         }
 
+        if (killStreak > 0) {
+            timeSinceLastKill += delta;
+            if (timeSinceLastKill > KILL_STREAK_WINDOW) {
+                resetKillStreak();
+            }
+        }
+
         // Update kill streak display timer
         if (killStreakDisplayTimer > 0) {
             killStreakDisplayTimer -= delta;
@@ -1134,6 +1148,7 @@ public class GameScreen implements Screen {
 
                     // Increment kill streak and announce
                     killStreak++;
+                    timeSinceLastKill = 0f;
                     announceKillStreak(killStreak);
                 }
 
