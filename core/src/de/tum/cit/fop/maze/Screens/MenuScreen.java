@@ -55,25 +55,29 @@ public class MenuScreen implements Screen {
             game.goToSelectMap();
         },0.2f);
 
+        addButton(table,"SURVIVAL MODE", ()-> {
+            game.goToSurvival();
+        },0.3f);
+
         addButton(table, "Marketplace (Shop)", () -> {
             game.goToMarketplace();
-        }, 0.3f);
+        }, 0.4f);
 
         addButton(table, "Leaderboard", () -> {
             game.goToLeaderboard();
-        }, 0.35f);
+        }, 0.5f);
 
         addButton(table, "Achievements", () -> {
             game.goToAchievements();
-        }, 0.38f); // Set a delay between Leaderboard and Settings
+        }, 0.6f); // Set a delay between Leaderboard and Settings
 
         addButton(table, "Settings", () -> {
             game.goToSettings(this);
-        }, 0.3f);
+        }, 0.7f);
 
         addButton(table,"Exit",()->{
             Gdx.app.exit();
-        },0.4f);
+        },0.8f);
 
 
     }

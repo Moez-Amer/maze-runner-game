@@ -53,7 +53,11 @@ public PauseScreen( MazeRunnerGame game,GameScreen currentGameScreen) {
     addButton(table,"Restart",()->{
         String currentMap = currentGameScreen.getMapPath();
         currentGameScreen.dispose();
+        if(currentMap.contains("survival")){
+            game.goToSurvival();
+        }else {
         game.goToGame(currentMap);
+        }
     },0.2f);
 
     addButton(table, "Settings", () -> {

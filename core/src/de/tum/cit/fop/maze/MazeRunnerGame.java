@@ -19,8 +19,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import de.tum.cit.fop.maze.Screens.*;
-import de.tum.cit.fop.maze.Screens.VictoryScreen;
-import de.tum.cit.fop.maze.Screens.GameOverScreen;
 import games.spooky.gdx.nativefilechooser.NativeFileChooser;
 
 /**
@@ -81,8 +79,6 @@ public class MazeRunnerGame extends Game {
      * Switches to the menu screen.
      */
     public void goToMenu() {
-
-
         if (gameScreen != null) {
             gameScreen.dispose();
             gameScreen = null;
@@ -106,13 +102,35 @@ public class MazeRunnerGame extends Game {
         AudioManager.playGameMusic();
         GameScreen newGameScreen = new GameScreen(this, mapPath);
 
-        // Set the game screen in the console so commands work
         if (developerConsole != null) {
             developerConsole.setGameScreen(newGameScreen);
         }
 
-        this.setScreen(newGameScreen); // Set the current screen to GameScreen
+        this.setScreen(newGameScreen);
     }
+
+    /**
+     * Transitions to Survival Mode game screen.
+     * Loads the survival map and starts wave-based gameplay.
+     */
+    public void goToSurvival() {
+
+        if (getScreen() != null) {
+            getScreen().dispose();
+        }
+
+        AudioManager.playGameMusic();
+        SurvivalGameScreen survivalScreen = new SurvivalGameScreen(this, "maps/survival.properties");
+
+        if (developerConsole != null) {
+            developerConsole.setGameScreen(survivalScreen);
+        }
+
+        setScreen(survivalScreen);
+
+        System.out.println("Survival Mode started!");
+    }
+
     /**
      * Disposes of any active menu or game screens and navigates to the map selection screen.
      * Ensures memory is freed before creating the new screen.
@@ -233,15 +251,27 @@ public class MazeRunnerGame extends Game {
         table.add(button).width(500).height(80).padBottom(18).row();
     }
 
-    // Getter methods
+
+    /**
+     * Gets the UI skin for creating interface elements.
+     * @return The game's UI skin
+     */
     public Skin getSkin() {
         return skin;
     }
 
+    /**
+     * Gets the character walking down animation.
+     * @return The character animation
+     */
     public Animation<TextureRegion> getCharacterDownAnimation() {
         return characterDownAnimation;
     }
 
+    /**
+     * Gets the sprite batch for rendering.
+     * @return The sprite batch
+     */
     public SpriteBatch getSpriteBatch() {
         return spriteBatch;
     }
@@ -262,14 +292,23 @@ public class MazeRunnerGame extends Game {
         this.setScreen(new SkillTreeScreen(this));
     }
 
+    /**
+     * Navigates to the leaderboard screen.
+     * Displays high scores and rankings.
+     */
     public void goToLeaderboard() {
         this.setScreen(new LeaderboardScreen(this));
     }
 
+    /**
+     * Navigates to the achievements screen.
+     * Shows unlocked and locked achievements.
+     */
     public void goToAchievements() {
         this.setScreen(new AchievementScreen(this));
     }
-    // Method for developer console
+
+
     /**
      * Updates the developer console.
      * @param delta Time since last frame

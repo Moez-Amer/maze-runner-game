@@ -12,16 +12,11 @@ import java.util.Map;
 public class GameState {
     public String playerName = "Guest";
 
-    // Made static so it is accessible globally for definitions
     private static AchievementManager achievementManager = new AchievementManager();
 
-    // --- Skill Points (Currency) ---
     public int warriorPoints = 0;
     public int swiftnessPoints = 0;
     public int vitalityPoints = 0;
-
-    // --- Total Stats (For Achievements - THESE NEVER RESET) ---
-    // The AchievementManager watches these specific variable names ("enemiesKilled", etc)
     public int enemiesKilledCounter = 0;       // Total lifetime kills
     public float distanceSprintedCounter = 0;  // Total lifetime distance
     public int heartsCollectedCounter = 0;     // Total lifetime hearts
@@ -33,14 +28,14 @@ public class GameState {
     public int successfulParriesCounter = 0;   // Total lifetime successful parries
     public int perfectMazesCounter = 0;        // Total lifetime perfect mazes (no damage)
     public int mazesCompletedCounter = 0;      // Total lifetime mazes completed
-
-    // --- Progress Trackers (For Skill Points - THESE RESET) ---
-    // These track "progress toward the next point"
     public int killsProgress = 0;
     public float sprintProgress = 0;
     public int heartsProgress = 0;
 
-    // --- Permanent Upgrades & Achievements ---
+    public int survivalBestScore = 0;
+    public int survivalBestWave = 0;
+    public int survivalLongestTime = 0;
+
     public List<String> unlockedSkills = new ArrayList<>();
     public List<String> unlockedAchievements = new ArrayList<>();
     public Map<String, Integer> levelHighScores = new HashMap<>();
@@ -131,6 +126,67 @@ public class GameState {
     public void recordMazeCompleted() {
         mazesCompletedCounter++;
         achievementManager.onEvent(this, "mazesCompleted", mazesCompletedCounter);
+    }
+
+    /**
+     * Updates survival mode personal best records.
+     * Called when a survival game ends to check if new records were set.
+     *
+     * @param score     The final score achieved
+     * @param wave      The final wave reached
+     * @param timeAlive The total time survived in seconds
+     */
+    public void updateSurvivalScore(int score, int wave, int timeAlive) {
+        boolean newRecord = false;
+
+        if (score > survivalBestScore) {
+            survivalBestScore = score;
+            newRecord = true;
+            System.out.println("New survival best score: " + survivalBestScore);
+        }
+
+        if (wave > survivalBestWave) {
+            survivalBestWave = wave;
+            newRecord = true;
+            System.out.println("New survival best wave: " + survivalBestWave);
+        }
+
+        if (timeAlive > survivalLongestTime) {
+            survivalLongestTime = timeAlive;
+            newRecord = true;
+            System.out.println("New survival longest time: " + survivalLongestTime + " seconds");
+        }
+
+        if (newRecord) {
+            System.out.println("=== New Survival Record Set! ===");
+        }
+    }
+
+    /**
+     * Gets the best score achieved in survival mode.
+     *
+     * @return The highest score
+     */
+    public int getSurvivalBestScore() {
+        return survivalBestScore;
+    }
+
+    /**
+     * Gets the highest wave reached in survival mode.
+     *
+     * @return The highest wave number
+     */
+    public int getSurvivalBestWave() {
+        return survivalBestWave;
+    }
+
+    /**
+     * Gets the longest time survived in survival mode.
+     *
+     * @return The longest survival time in seconds
+     */
+    public int getSurvivalLongestTime() {
+        return survivalLongestTime;
     }
 
     public int getSkillLevel(String skillName) {

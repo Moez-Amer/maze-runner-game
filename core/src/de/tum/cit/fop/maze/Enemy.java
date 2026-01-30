@@ -14,7 +14,6 @@ import java.util.ArrayList;
  * Enemies can patrol designated areas, chase the player when detected,
  * and attack when in close proximity. They use A* pathfinding for navigation
  * and implement collision avoidance with other enemies.
-
  *
  */
 public class Enemy extends MovableGameObject {
@@ -29,6 +28,7 @@ public class Enemy extends MovableGameObject {
     private ArrayList<Node> patrolPoints;
     int TILE_SIZE=16;
     private float health = 3.0f;
+    private float baseHealth = 2.0f;  // Store original health for multiplier calculations
     private boolean isDead = false;
     private float damageFlashTimer = 0f;
     private static final float DAMAGE_FLASH_DURATION = 0.3f;
@@ -37,8 +37,13 @@ public class Enemy extends MovableGameObject {
     private int patrolDirectionX = 1;
     private int patrolDirectionY = 0;
     private float patrolSpeed = 45f;
+    private float baseSpeed = 85f;
     private static final int[][] DIAGONAL_DIRECTIONS={{1, 1},{-1, 1},{-1, -1},{1, -1}};
     private int currentDirectionIndex = 0;
+
+    private float speedMultiplier = 1.0f;
+    private float healthMultiplier = 1.0f;
+
     /**
      * Constructs a new Enemy at the specified position.
      * Initializes the enemy with animations, collision detection, pathfinding,
@@ -53,7 +58,7 @@ public class Enemy extends MovableGameObject {
      */
     public Enemy(float x,float y,int tileSize,int[][] mapData,String path,int frameWidth,int frameHeight) {
         super(x, y, frameWidth, frameHeight);
-        this.speed =85f;
+        this.speed = baseSpeed;
         this.facing =Direction.LEFT;
         this.lastX =x;
         this.lastY =y;
@@ -68,6 +73,50 @@ public class Enemy extends MovableGameObject {
         setCollisionBox(12, 12, 44, 22);
         loadAnimation(path, frameWidth, frameHeight);
     }
+
+    /**
+     * Sets the speed multiplier for this enemy.
+     * Multiplies the base speed by the given factor for difficulty scaling.
+     *
+     * @param multiplier The speed multiplier (e.g., 1.0 = normal, 1.5 = 50% faster)
+     */
+    public void setSpeedMultiplier(float multiplier) {
+        this.speedMultiplier = multiplier;
+        this.speed = baseSpeed * multiplier;
+        this.patrolSpeed = 45f * multiplier;
+        System.out.println("Enemy speed set to: " + speed + " (multiplier: " + multiplier + ")");
+    }
+
+    /**
+     * Sets the health multiplier for this enemy.
+     * Multiplies the base health by the given factor for difficulty scaling.
+     *
+     * @param multiplier The health multiplier (e.g., 1.0 = normal, 2.0 = double health)
+     */
+    public void setHealthMultiplier(float multiplier) {
+        this.healthMultiplier = multiplier;
+        this.health = baseHealth * multiplier;
+        System.out.println("Enemy health set to: " + health + " (multiplier: " + multiplier + ")");
+    }
+
+    /**
+     * Gets the current speed multiplier.
+     *
+     * @return The speed multiplier
+     */
+    public float getSpeedMultiplier() {
+        return speedMultiplier;
+    }
+
+    /**
+     * Gets the current health multiplier.
+     *
+     * @return The health multiplier
+     */
+    public float getHealthMultiplier() {
+        return healthMultiplier;
+    }
+
     /**
      * Updates the enemy's state each frame.
      * Calls the parent update method and executes movement logic.
@@ -238,9 +287,9 @@ public class Enemy extends MovableGameObject {
      * @param PlayerX Player's X position
      * @param delta Time elapsed since last frame in seconds
      */
-    public void chase(float EnemyX, float PlayerX, float delta){
-        this.speed=85f;
-        if(EnemyX>PlayerX){
+    public void chase(float EnemyX, float PlayerX,float delta) {
+        this.speed = baseSpeed * speedMultiplier;
+        if (EnemyX > PlayerX) {
             currentAnimation = floatingLeftAnim;
         }
         else{

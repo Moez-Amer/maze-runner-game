@@ -45,7 +45,7 @@ import static de.tum.cit.fop.maze.TiledToPropertiesConverter.*;
  */
 public class GameScreen implements Screen {
 
-    private final MazeRunnerGame game;
+    protected final MazeRunnerGame game;
     private final OrthographicCamera camera;
     private final BitmapFont font;
     private final Viewport viewport;
@@ -56,44 +56,44 @@ public class GameScreen implements Screen {
     private OrthogonalTiledMapRenderer mapRenderer;
 
     // Map data for game logic (collisions, etc.)
-    private int[][] mapData;
-    private int mapWidth;
-    private int mapHeight;
+    protected int[][] mapData;
+    protected int mapWidth;
+    protected int mapHeight;
     public static final int TILE_SIZE = 16;
 
     //enemies
-    private Array<Enemy> enemies;
+    protected Array<Enemy> enemies;
 
     // Player
-    private Player player;
+    protected Player player;
 
     // Debug visualization
     private ShapeRenderer shapeRenderer;
-    private boolean showCollisionBoxes = false;
+    protected boolean showCollisionBoxes = false;
 
     // Traps
     private ArrayList<DeathPitTrap> deathPitTraps;
     private ArrayList<KnifesTrap> knifesTraps;
     private float delay;
-    private Entry entry;
+    protected Entry entry;
 
     // Collectibles and HUD
     private ArrayList<Collectibles> collectibles;
-    private HUD hud;
+    protected HUD hud;
     private TextureAtlas uiAtlas;
     private OrthographicCamera hudCamera;
 
     // Voodoo doll for revive mechanic
-    private VoodooDoll voodooDoll;
+    protected VoodooDoll voodooDoll;
 
     // Kill streak system
-    private int killStreak;
-    private String killStreakText;
-    private float killStreakDisplayTimer;
-    private int previousPlayerLives;
+    protected int killStreak;
+    protected String killStreakText;
+    protected float killStreakDisplayTimer;
+    protected int previousPlayerLives;
     private static final float KILL_STREAK_DISPLAY_DURATION = 2.0f;
-    private Texture killStreakIconTexture;
-    private TextureRegion killStreakIcon;
+    protected Texture killStreakIconTexture;
+    protected TextureRegion killStreakIcon;
 
     // Properties-only mode: Textures for manual tile rendering
     private HashMap<Integer, TextureRegion> tileTextures;
@@ -118,7 +118,7 @@ public class GameScreen implements Screen {
     private boolean useTiledMap = false;
     private KeyBindings keys;
     // Track time between kills
-    private float timeSinceLastKill;
+    protected float timeSinceLastKill;
     private static final float KILL_STREAK_WINDOW = 3.0f; // 3.0 seconds to get the next kill
 
     // Developer console support
@@ -292,6 +292,10 @@ public class GameScreen implements Screen {
         if (tiledMap.getLayers().get("Knifes") != null) {
             tiledMap.getLayers().get("Knifes").setVisible(false);
         }
+        if (tiledMap.getLayers().get("Key") != null) {
+            tiledMap.getLayers().get("Key").setVisible(false);
+        }
+
 
         // Get map dimensions from the Tiled map
         mapWidth = tiledMap.getProperties().get("width", Integer.class);
@@ -545,7 +549,7 @@ public class GameScreen implements Screen {
     /**
      * Spawns collectibles randomly on the map.
      */
-    private void spawnCollectibles() {
+    protected void spawnCollectibles() {
         collectibles = new ArrayList<>();
         findKeysInMap();
 
@@ -624,7 +628,7 @@ public class GameScreen implements Screen {
         System.out.println("Spawned " + collectibles.size() + " collectibles");
     }
 
-    private void spawnCollectibleType(Collectibles.CollectibleType type, int count, int points,
+    protected void spawnCollectibleType(Collectibles.CollectibleType type, int count, int points,
                                       float width, float height,
                                       ArrayList<int[]> walkablePositions,
                                       float minDistance, java.util.Random random) {
@@ -667,7 +671,7 @@ public class GameScreen implements Screen {
         }
     }
 
-    private void updateCollectibles(float delta) {
+    protected void updateCollectibles(float delta) {
         float[] playerBox = player.getFeetCollisionBox();
         float px = playerBox[0], py = playerBox[1], pw = playerBox[2], ph = playerBox[3];
 
@@ -692,7 +696,7 @@ public class GameScreen implements Screen {
         }
     }
 
-    private void handleCollectiblePickup(Collectibles collectible) {
+    protected void handleCollectiblePickup(Collectibles collectible) {
         collectible.collect();
         player.addScore(collectible.getPoints()); // Add points to run
 
@@ -735,7 +739,7 @@ public class GameScreen implements Screen {
     /**
      * Renders the kill streak announcement text and icon on screen.
      */
-    private void renderKillStreakAnnouncement(SpriteBatch batch) {
+    protected void renderKillStreakAnnouncement(SpriteBatch batch) {
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 
@@ -787,7 +791,7 @@ public class GameScreen implements Screen {
     /**
      * Displays kill streak announcement based on current streak count.
      */
-    private void announceKillStreak(int streak) {
+    protected void announceKillStreak(int streak) {
         String announcement = "";
         switch (streak) {
             case 2:
@@ -828,7 +832,7 @@ public class GameScreen implements Screen {
     /**
      * Resets the kill streak (called when player takes damage).
      */
-    private void resetKillStreak() {
+    protected void resetKillStreak() {
         if (killStreak > 0) {
             System.out.println("Kill streak ended at " + killStreak);
             killStreak = 0;
@@ -839,7 +843,7 @@ public class GameScreen implements Screen {
      * Tracks tile exploration for achievements.
      * Records when player visits a new tile.
      */
-    private void trackTileExploration() {
+    protected void trackTileExploration() {
         // Get player's current tile position
         int tileX = (int) (player.getX() / TILE_SIZE);
         int tileY = (int) (player.getY() / TILE_SIZE);
@@ -857,7 +861,7 @@ public class GameScreen implements Screen {
     /**
      * Checks if the ghost player has collected their voodoo doll to revive.
      */
-    private void checkVoodooDollCollection() {
+    protected void checkVoodooDollCollection() {
         if (voodooDoll == null || !player.isGhostMode()) {
             return;
         }
@@ -1031,13 +1035,18 @@ public class GameScreen implements Screen {
         hudCamera.update();
         game.getSpriteBatch().setProjectionMatrix(hudCamera.combined);
         game.getSpriteBatch().begin();
-        hud.render(game.getSpriteBatch(), player);
+
+        if (this instanceof SurvivalGameScreen) {
+            SurvivalGameScreen survivalScreen = (SurvivalGameScreen) this;
+            hud.renderSurvival(game.getSpriteBatch(), player, survivalScreen.getWaveManager(), survivalScreen.getGameScreenTime());
+        } else {
+            hud.render(game.getSpriteBatch(), player);
+        }
 
         // Render kill streak announcement
         if (killStreakDisplayTimer > 0 && !killStreakText.isEmpty()) {
             renderKillStreakAnnouncement(game.getSpriteBatch());
         }
-
         game.getSpriteBatch().end();
 
         // Debug visualization
@@ -1052,7 +1061,7 @@ public class GameScreen implements Screen {
      * Renders map tiles manually from properties data.
      * Only used in properties-only mode.
      */
-    private void renderMapTiles() {
+    protected void renderMapTiles() {
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
         game.getSpriteBatch().begin();
 
@@ -1113,7 +1122,7 @@ public class GameScreen implements Screen {
      * Checks if player's sword attack hits any enemies.
      * Uses the enemy's damage hitbox (3 tiles tall) for detection.
      */
-    private void checkPlayerAttackHits() {
+    protected void checkPlayerAttackHits() {
         if (!player.isAttacking()) {
             return;
         }
@@ -1164,7 +1173,7 @@ public class GameScreen implements Screen {
      * Checks if the player has won the game.
      * Win condition: Player must have 1 key AND 3 scrolls AND reach the exit.
      */
-    private void checkWinCondition() {
+    protected void checkWinCondition() {
         if (!player.canExitMaze()) {
             return;
         }
@@ -1211,7 +1220,7 @@ public class GameScreen implements Screen {
      * Lose condition: Player's lives reach 0.
      * If they haven't used their revive yet, enters ghost mode.
      */
-    private void checkLoseCondition() {
+    protected void checkLoseCondition() {
         if (player.isDead() && !player.isGhostMode()) {
             // Check if player can use revive mechanic (once per level)
             if (!player.hasUsedRevive()) {
@@ -1231,7 +1240,7 @@ public class GameScreen implements Screen {
         }
     }
 
-    private void renderCollisionDebug() {
+    protected void renderCollisionDebug() {
 
         // Enable blending for transparency
         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -1401,7 +1410,7 @@ public class GameScreen implements Screen {
     /**
      * Centers the camera on the player's position with the required offset.
      */
-    private void centerCameraOnPlayer() {
+    protected void centerCameraOnPlayer() {
         if (player != null) {
             // Keeps the player centered + 40 pixel vertical offset
             camera.position.set(player.getX() + TILE_SIZE / 2f, player.getY() + TILE_SIZE / 2f + 40f, 0);
@@ -1454,5 +1463,77 @@ public class GameScreen implements Screen {
         enemy.setPlayer(player);
         this.enemies.add(enemy);
         System.out.println("Enemy spawned at (" + x + ", " + y + ")");
+    }
+
+    /**
+     * Gets the map width in tiles.
+     * @return The map width
+     */
+    public int getMapWidth() {
+        return mapWidth;
+    }
+
+    /**
+     * Gets the map height in tiles.
+     * @return The map height
+     */
+    public int getMapHeight() {
+        return mapHeight;
+    }
+
+    /**
+     * Gets the map data array.
+     * @return 2D array of tile types
+     */
+    public int[][] getMapData() {
+        return mapData;
+    }
+
+    /**
+     * Gets the enemies array.
+     * @return Array of all active enemies
+     */
+    public Array<Enemy> getEnemies() {
+        return enemies;
+    }
+
+    /**
+     * Adds an enemy to the game.
+     * @param enemy The enemy to add
+     */
+    public void addEnemy(Enemy enemy) {
+        this.enemies.add(enemy);
+    }
+
+    /**
+     * Gets the HUD instance.
+     * @return The HUD
+     */
+    public HUD getHUD() {
+        return hud;
+    }
+
+    /**
+     * Gets the game state.
+     * @return The game state
+     */
+    public GameState getGameState() {
+        return game.getGameState();
+    }
+
+    /**
+     * Gets the sprite batch from the main game.
+     * @return The sprite batch
+     */
+    public SpriteBatch getSpriteBatch() {
+        return game.getSpriteBatch();
+    }
+
+    /**
+     * Gets the main game instance.
+     * @return The game
+     */
+    public MazeRunnerGame getGame() {
+        return game;
     }
 }

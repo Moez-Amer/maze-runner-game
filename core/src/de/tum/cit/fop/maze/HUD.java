@@ -124,6 +124,81 @@ public class HUD {
     }
 
     /**
+     * Renders the survival mode HUD overlay.
+     * <p>
+     * Displays wave-specific information including:
+     * - Wave number and enemies remaining
+     * - Time survived
+     * - Lives and score
+     * - Difficulty multipliers (speed, health, score)
+     * </p>
+     *
+     * @param batch       The SpriteBatch used to draw the 2D elements
+     * @param player      The current player entity
+     * @param waveManager The wave manager containing wave information
+     * @param timeAlive   Total time survived in seconds
+     */
+    public void renderSurvival(SpriteBatch batch, Player player, WaveManager waveManager, float timeAlive) {
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
+
+        float topBarY = screenHeight - PADDING - HEART_SIZE;
+
+        renderLives(batch, player, PADDING, topBarY);
+
+        float nextX = PADDING + (player.getMaxLives() * HEART_SPACING) + 40;
+        String scoreValue = String.valueOf(player.getScore());
+        layout.setText(boldFont, scoreValue);
+
+        float iconSize = 40f;
+        float spacing = 10f;
+        float totalScoreWidth = iconSize + spacing + layout.width;
+        float scoreStartX = screenWidth - totalScoreWidth - PADDING;
+
+        if (scoreIconTexture != null) {
+            batch.setColor(Color.WHITE);
+            batch.draw(scoreIconTexture, scoreStartX, topBarY, iconSize, iconSize);
+        }
+
+        boldFont.setColor(Color.GOLD);
+        boldFont.draw(batch, scoreValue, scoreStartX + iconSize + spacing, screenHeight - PADDING - 10);
+        boldFont.setColor(Color.WHITE);
+
+        if (player.isGhostMode()) {
+            renderGhostModeTimer(batch, player, screenWidth, screenHeight);
+        }
+
+        if (showPopup) {
+            renderPopup(batch, screenWidth, screenHeight);
+        }
+
+
+        font.setColor(Color.YELLOW);
+
+        String waveText = "WAVE " + waveManager.getCurrentWave();
+        GlyphLayout waveLayout = new GlyphLayout(font, waveText);
+        font.draw(batch, waveText,
+                screenWidth - waveLayout.width - 20,
+                screenHeight - 80);
+
+        String enemyText = "Enemies: " + waveManager.getEnemiesRemaining() + "/" + waveManager.getTotalEnemiesInWave();
+        GlyphLayout enemyLayout = new GlyphLayout(font, enemyText);
+        font.draw(batch, enemyText,
+                screenWidth - enemyLayout.width - 20,
+                screenHeight - 110);
+
+        int minutes = (int) timeAlive / 60;
+        int seconds = (int) timeAlive % 60;
+        String timeText = String.format("Time: %d:%02d", minutes, seconds);
+        GlyphLayout timeLayout = new GlyphLayout(font, timeText);
+        font.draw(batch, timeText,
+                screenWidth - timeLayout.width - 20,
+                screenHeight - 140);
+
+        font.setColor(Color.WHITE);
+    }
+
+    /**
      * Draws the player's remaining lives using heart icons.
      *
      * @param batch  The SpriteBatch to draw with.
