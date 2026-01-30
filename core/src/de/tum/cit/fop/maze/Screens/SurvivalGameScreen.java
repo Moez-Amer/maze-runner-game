@@ -339,12 +339,6 @@ public class SurvivalGameScreen extends GameScreen {
 
                 player.setAttackHasHit(true);
 
-                if (player.wasLastAttackParry()) {
-                    game.getGameState().recordSuccessfulParry();
-                }
-
-                player.resetParryFlag();
-
                 if (enemy.isDead()) {
                     enemies.removeIndex(i);
                     game.getGameState().recordKill();

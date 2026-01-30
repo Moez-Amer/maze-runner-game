@@ -72,8 +72,8 @@ public class GameScreen implements Screen {
     protected boolean showCollisionBoxes = false;
 
     // Traps
-    private ArrayList<DeathPitTrap> deathPitTraps;
-    private ArrayList<KnifesTrap> knifesTraps;
+    private ArrayList<Trap> traps;
+
     private float delay;
     protected Entry entry;
 
@@ -1160,6 +1160,7 @@ public class GameScreen implements Screen {
                 enemy.takeDamage(damage);
                 player.setAttackHasHit(true);
 
+                
                 if (enemy.isDead()) {
                     enemies.removeIndex(i);
                     game.getGameState().recordKill();
