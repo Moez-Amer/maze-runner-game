@@ -18,7 +18,7 @@ import java.util.ArrayList;
  *
  */
 public class Enemy extends MovableGameObject {
-    private Animation<TextureRegion> floatingAnim, attackAnim, floatingLeftAnim, attackLeftAnim;
+    protected Animation<TextureRegion> floatingAnim, attackAnim, floatingLeftAnim, attackLeftAnim;
     private PathFinder pathFinder;
     private ArrayList<Node> path;
     private float pathTimer;

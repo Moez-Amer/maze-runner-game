@@ -167,6 +167,17 @@ public class GameScreen implements Screen {
                         }
                     }
                 }
+                else if (mapData[i][j] == 8) { // TYPE_BOSS
+                    float centeredX = (i * TILE_SIZE);
+                    float centeredY = (j * TILE_SIZE);
+
+                    FinalBoss boss = new FinalBoss(centeredX, centeredY, TILE_SIZE, mapData);
+                    this.enemies.add(boss);
+
+                    // Mark the ground as walkable sohe boss isn't stuck
+                    mapData[i][j] = 1;
+                    System.out.println("FINAL BOSS SPAWNED AT: " + i + "," + j);
+                }
             }
         }
         player.setEnemies(this.enemies);
