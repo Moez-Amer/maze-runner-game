@@ -22,6 +22,7 @@ public class TiledToPropertiesConverter {
     public static final int TYPE_KEY = 5;
     public static final int TYPE_ENTRY = 6;
     public static final int TYPE_KNIFE_TRAP = 7;
+    public static final int TYPE_BOSS = 8;
     public static void convert(String tmxFilePath, String outputPropertiesPath) throws Exception {
         // Parse the TMX file
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

@@ -168,6 +168,17 @@ public class GameScreen implements Screen {
                         }
                     }
                 }
+                else if (mapData[i][j] == 8) { // TYPE_BOSS
+                    float centeredX = (i * TILE_SIZE);
+                    float centeredY = (j * TILE_SIZE);
+
+                    FinalBoss boss = new FinalBoss(centeredX, centeredY, TILE_SIZE, mapData);
+                    this.enemies.add(boss);
+
+                    // Mark the ground as walkable sohe boss isn't stuck
+                    mapData[i][j] = 1;
+                    System.out.println("FINAL BOSS SPAWNED AT: " + i + "," + j);
+                }
             }
         }
         player.setEnemies(this.enemies);
@@ -487,19 +498,18 @@ public class GameScreen implements Screen {
      * Scans the mapData grid and creates trap instances.
      */
     private void findDeathPits_KnifesTraps() {
-        deathPitTraps = new ArrayList<>();
-        knifesTraps = new ArrayList<>();
+        traps = new ArrayList<>();
         for (int x = 0; x < mapWidth; x++) {
             for (int y = 0; y < mapHeight; y++) {
                 if (mapData[x][y] == TYPE_DEATHTRAP) {
-                    deathPitTraps.add(new DeathPitTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, entry));
+                    // Both subclasses are now treated as 'Trap' objects
+                    traps.add(new DeathPitTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, entry));
                 } else if (mapData[x][y] == TYPE_KNIFE_TRAP) {
                     delay = (x + y) * 0.05f;
-                    knifesTraps.add(new KnifesTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, delay));
+                    traps.add(new KnifesTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, delay));
                 }
             }
         }
-        System.out.println("Found " + deathPitTraps.size() + " death pits and " + knifesTraps.size() + " knife traps");
     }
 
     /**
@@ -600,7 +610,7 @@ public class GameScreen implements Screen {
         }
 
         int collectibleSize = TILE_SIZE; // 16 pixels
-        float minDistanceBetweenColl = 96.0f;
+        float minDistanceBetweenColl = 160.0f;
         java.util.Random random = new java.util.Random();
 
         // Spawn collectibles
@@ -671,7 +681,16 @@ public class GameScreen implements Screen {
         }
     }
 
-    protected void updateCollectibles(float delta) {
+    private void updateCollectibles(float delta) {
+        // Check if player is in ghost mode; if so, skip pickup logic entirely
+        if (player.isGhostMode()) {
+            // We still call update on collectibles so they continue to float/animate
+            for (Collectibles collectible : collectibles) {
+                collectible.update(delta);
+            }
+            return;
+        }
+
         float[] playerBox = player.getFeetCollisionBox();
         float px = playerBox[0], py = playerBox[1], pw = playerBox[2], ph = playerBox[3];
 
@@ -922,11 +941,8 @@ public class GameScreen implements Screen {
                 enemy.update(delta);
             }
             // Update traps
-            for (DeathPitTrap pitTrap : deathPitTraps) {
-                pitTrap.update();
-            }
-            for (KnifesTrap knifeTrap : knifesTraps) {
-                knifeTrap.update(delta);
+            for (Trap trap : traps) {
+                trap.update(delta);
             }
 
 
@@ -976,8 +992,7 @@ public class GameScreen implements Screen {
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
         game.getSpriteBatch().begin();
 
-        // Draw traps
-        for (KnifesTrap trap : knifesTraps) {
+        for (Trap trap : traps) {
             trap.render(game.getSpriteBatch());
         }
 
@@ -1139,31 +1154,22 @@ public class GameScreen implements Screen {
             Rectangle enemyDamageBox = enemy.getDamageHitBox();
 
             if (swordHitBox.overlaps(enemyDamageBox)) {
-                float damage = 1.0f * player.getDamageMultiplier();
+                // Updated: Damage is now calculated only by base multiplier and power boosts
+                float damage = 1.0f * (player.hasPowerBoost() ? 2.0f : 1.0f);
 
                 enemy.takeDamage(damage);
-
                 player.setAttackHasHit(true);
-
-                // Track successful parry before resetting flag
-                if (player.wasLastAttackParry()) {
-                    game.getGameState().recordSuccessfulParry();
-                }
-
-                player.resetParryFlag(); // Reset parry flag after dealing damage
 
                 if (enemy.isDead()) {
                     enemies.removeIndex(i);
-                    game.getGameState().recordKill(); // Track for Warrior Points
+                    game.getGameState().recordKill();
                     player.addScore(100);
-                    SaveManager.save(game.getGameState()); // Auto-save kills
+                    SaveManager.save(game.getGameState());
 
-                    // Increment kill streak and announce
                     killStreak++;
                     timeSinceLastKill = 0f;
                     announceKillStreak(killStreak);
                 }
-
                 break;
             }
         }

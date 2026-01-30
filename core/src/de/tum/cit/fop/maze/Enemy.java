@@ -17,7 +17,7 @@ import java.util.ArrayList;
  *
  */
 public class Enemy extends MovableGameObject {
-    private Animation<TextureRegion> floatingAnim, attackAnim, floatingLeftAnim, attackLeftAnim;
+    protected Animation<TextureRegion> floatingAnim, attackAnim, floatingLeftAnim, attackLeftAnim;
     private PathFinder pathFinder;
     private ArrayList<Node> path;
     private float pathTimer;
@@ -256,7 +256,6 @@ public class Enemy extends MovableGameObject {
     public void attack(float EnemyX, float PlayerX){
         if (EnemyX>PlayerX){
             currentAnimation = attackLeftAnim;
-
         }
         else{
             currentAnimation = attackAnim;
@@ -265,17 +264,11 @@ public class Enemy extends MovableGameObject {
         if (player != null && !player.isGhostMode()) {
             attackCooldown -= com.badlogic.gdx.Gdx.graphics.getDeltaTime();
             if (attackCooldown <= 0) {
-                boolean wasParried = player.takeDamage();
-                if (wasParried) {
-                    // Player successfully parried! Deal counter damage to enemy
-                    float counterDamage = 2.0f * player.getDamageMultiplier();
-                    takeDamage(counterDamage);
-                    System.out.println("Counter attack! Dealt " + counterDamage + " damage to enemy!");
-                }
+                // Simply apply damage to the player without checking for a parry return
+                player.takeDamage();
                 attackCooldown = ATTACK_INTERVAL;
             }
         }
-
     }
     /**
      * Handles chase behavior when enemy detects the player.

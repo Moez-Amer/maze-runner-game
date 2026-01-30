@@ -10,7 +10,15 @@ import com.badlogic.gdx.math.Rectangle;
 
 /**
  * Represents the player character in the maze game.
- * Handles player-specific logic: lives, keys, input, damage effects.
+ * <p>
+ * This class handles all player-specific logic, including:
+ * <ul>
+ * <li>Movement and collision detection</li>
+ * <li>Combat mechanics (attacking, taking damage)</li>
+ * <li>Inventory management (keys, scrolls)</li>
+ * <li>Skill integration (speed, power, health upgrades)</li>
+ * <li>Ghost mode (revival mechanic)</li>
+ * </ul>
  */
 public class Player extends MovableGameObject {
 
@@ -26,7 +34,6 @@ public class Player extends MovableGameObject {
     private int keyCount;
     private int scrollCount;
 
-    // Ghost mode (revive mechanic)
     private boolean isGhostMode;
     private float ghostModeTimer;
     private boolean hasUsedRevive;
@@ -46,12 +53,7 @@ public class Player extends MovableGameObject {
     private float damageTimer;
     private float fallingTimer;
 
-    // Parry mechanic
-    private boolean isParrying;
-    private float parryWindowTimer;
-    private boolean lastAttackWasParry;
-    private static final float PARRY_WINDOW_DURATION = 0.3f; // 300ms window to parry
-    private static final float PARRY_DAMAGE_MULTIPLIER = 3.0f; // 3x damage on parry
+
     private static final float DAMAGE_FLASH_DURATION = 1.0f;
     private static final float INVULNERABILITY_TIME = 1.5f;
     private static final float FALLING_DURATION = .5f;
@@ -78,29 +80,26 @@ public class Player extends MovableGameObject {
 
     /**
      * Constructs a new Player at the given position.
-     *
-     * @param x Starting X coordinate
-     * @param y Starting Y coordinate
-     * @param tileSize Size of each tile in pixels
-     * @param mapData Reference to the map data for collision detection
+     * Initializes player stats based on the current skill levels found in the GameState.
+     * * @param x Starting X coordinate in the world.
+     * @param y Starting Y coordinate in the world.
+     * @param tileSize Size of each tile in pixels (used for collision scaling).
+     * @param mapData Reference to the map data grid for collision detection.
+     * @param state The current GameState used to retrieve unlocked skill levels.
      */
     public Player(float x, float y, int tileSize, int[][] mapData, GameState state) {
         super(x, y, tileSize, tileSize);
 
-        // 1. Get the levels from the Map (default is 0)
         int vitLevel = state.getSkillLevel("Vitality");
         int swiftLevel = state.getSkillLevel("Swiftness");
         int warLevel = state.getSkillLevel("Warrior");
 
-        // 2. Vitality: Base 3 lives + 1 per level (Level 1 = 4 lives, Level 2 = 5 lives)
         this.maxLives = 3 + vitLevel;
 
-        // 3. Swiftness: Base Speed + 25% per level
         float speedMult = 1.0f + (0.25f * swiftLevel);
         this.currentWalkSpeed = 80f * speedMult;
         this.currentRunSpeed = 150f * speedMult;
 
-        // 4. Warrior: Base Damage + 50% per level
         this.damageMultiplier = 1.0f + (0.5f * warLevel);
 
         this.lives = this.maxLives;
@@ -120,16 +119,15 @@ public class Player extends MovableGameObject {
         this.isGhostMode = false;
         this.ghostModeTimer = 0f;
         this.hasUsedRevive = false;
-        this.isParrying = false;
-        this.parryWindowTimer = 0f;
-        this.lastAttackWasParry = false;
         setMapData(mapData, tileSize);
         setCollisionBox(16, 16, 40, 20);
         loadAnimations();
     }
 
     /**
-     * Loads all player animations from sprite files.
+     * Loads all player animations from internal asset files.
+     * Splits sprite sheets into frames and creates Animation objects for
+     * idle, running, and attacking states in all four directions.
      */
     private void loadAnimations() {
         int FRAME_WIDTH = 96;
@@ -224,15 +222,15 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Updates player state, handles input and movement.
-     *
-     * @param delta Time elapsed since last frame
+     * Updates the player's state for the current frame.
+     * Handles timers (damage, boosts, ghost mode), falling mechanics,
+     * and delegates input handling and animation updates.
+     * * @param delta Time elapsed since last frame in seconds.
      */
     @Override
     public void update(float delta) {
         super.update(delta);
 
-        //Fix frozen walking
         stateTime += delta;
 
         if (isDamaged) {
@@ -266,16 +264,8 @@ public class Player extends MovableGameObject {
         if (isGhostMode) {
             ghostModeTimer -= delta;
             if (ghostModeTimer <= 0) {
-                // Time ran out in ghost mode - game over
                 lives = 0;
                 isGhostMode = false;
-            }
-        }
-
-        if (parryWindowTimer > 0) {
-            parryWindowTimer -= delta;
-            if (parryWindowTimer <= 0) {
-                isParrying = false;
             }
         }
 
@@ -296,7 +286,6 @@ public class Player extends MovableGameObject {
             }
         }
         isMoving = false;
-        // We only process keys if we aren't busy attacking
         if (!isAttacking) {
             isMoving = handleInput(delta);
         }
@@ -304,9 +293,10 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Handles keyboard input for player movement.
-     *
-     * @param delta Time elapsed since last frame
+     * Handles keyboard input to control player movement and actions.
+     * Checks for attack, sprint, and directional keys.
+     * * @param delta Time elapsed since last frame in seconds.
+     * @return true if the player is currently moving, false otherwise.
      */
     private boolean handleInput(float delta) {
 
@@ -316,10 +306,6 @@ public class Player extends MovableGameObject {
             AudioManager.playAttackSound();
             stateTime = 0f;
             speed = 0;
-
-            // Activate parry window
-            isParrying = true;
-            parryWindowTimer = PARRY_WINDOW_DURATION;
 
             if (attackCombo == 1) {
                 attackCombo = 2;
@@ -333,7 +319,6 @@ public class Player extends MovableGameObject {
         float baseSpeed = isRunning ? currentRunSpeed : currentWalkSpeed;
         speed = speedBoostTimer > 0 ? baseSpeed * SPEED_BOOST_MULTIPLIER : baseSpeed;
 
-        // check movement keys
         boolean isUp    = (keys.isKeyPressed("Move Up"));
         boolean isDown  = (keys.isKeyPressed("Move Down"));
         boolean isLeft  = (keys.isKeyPressed("Move Left"));
@@ -342,7 +327,6 @@ public class Player extends MovableGameObject {
         if (!isUp && !isDown && !isLeft && !isRight) {
             return false;
         }
-        //speed = isRunning ? RUN_SPEED : WALK_SPEED;
 
         Direction moveDirection = null;
 
@@ -371,9 +355,9 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Updates the current animation based on movement state and direction.
-     *
-     * @param moving Whether the player is currently moving
+     * Selects and updates the current animation based on the player's state.
+     * Handles logic for falling, attacking, running, and idling in all directions.
+     * * @param moving Whether the player is currently moving.
      */
     private void updateAnimation(boolean moving) {
         if (isFalling) {
@@ -422,9 +406,15 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Renders the player with damage effect if applicable.
-     *
-     * @param batch SpriteBatch to draw with
+     * Renders the player sprite to the screen.
+     * applies visual effects such as:
+     * <ul>
+     * <li>Red flash when damaged</li>
+     * <li>Transparency and blue tint for Ghost Mode</li>
+     * <li>Shrinking and fading when falling into a pit</li>
+     * <li>Glowing auras for active boosts (Speed, Power, Shield)</li>
+     * </ul>
+     * * @param batch The SpriteBatch used for drawing.
      */
     @Override
     public void render(SpriteBatch batch) {
@@ -435,29 +425,23 @@ public class Player extends MovableGameObject {
             } else {
                 currentFrame = currentAnimation.getKeyFrame(stateTime);
             }
-            //  Color (RGB)
-            // Start with White (1, 1, 1)
             float r = 1f;
             float g = 1f;
             float b = 1f;
 
-            // If damaged, remove Green and Blue to make it RED (1, 0, 0)
             if (isDamaged && ((int)(damageTimer * 10) % 2 == 0)) {
                 g = 0f;
                 b = 0f;
             }
 
-            // Transparency (Alpha) and Size
             float alpha = 1.0f;
             float drawWidth = 96f;
             float drawHeight = 80f;
             float drawX = this.x;
             float drawY = this.y;
 
-            // Apply ghost mode transparency
             if (isGhostMode) {
                 alpha = 0.5f;
-                // Add slight blue tint for ghost effect
                 r = 0.8f;
                 g = 0.9f;
                 b = 1.0f;
@@ -466,15 +450,12 @@ public class Player extends MovableGameObject {
             if (isFalling) {
                 float progress = Math.min(fallingTimer / FALLING_DURATION, 1.0f);
 
-                // Calculate Fade (Alpha 1.0 -> 0.0)
                 alpha = 1.0f - progress;
 
-                // Calculate Shrink (Scale 1.0 -> 0.0)
                 float currentScale = 1.0f - progress;
                 float scaledWidth = drawWidth * currentScale;
                 float scaledHeight = drawHeight * currentScale;
 
-                // Center the sprite
                 drawX += (drawWidth - scaledWidth) / 2f;
                 drawY += (drawHeight - scaledHeight) / 2f;
 
@@ -485,47 +466,34 @@ public class Player extends MovableGameObject {
 
             batch.setColor(r, g, b, alpha);
 
-            // Draw aura effects for active boosts (behind the player)
             if (powerBoostTimer > 0 && !isDamaged) {
-                // Bright purple aura for power boost - multi-layer pulsing glow
                 float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 6);
-                // Outer glow layer
                 batch.setColor(0.6f, 0f, 0.8f, pulse * 0.4f);
                 batch.draw(currentFrame, drawX - 8, drawY - 8, drawWidth + 16, drawHeight + 16);
-                // Middle glow layer
                 batch.setColor(0.7f, 0.1f, 0.9f, pulse * 0.6f);
                 batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
-                // Inner bright layer
                 batch.setColor(0.8f, 0.3f, 1f, pulse * 0.8f);
                 batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
                 batch.setColor(r, g, b, alpha);
             }
 
             if (speedBoostTimer > 0) {
-                // Bright blue aura for speed boost - multi-layer pulsing glow
                 float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 8);
-                // Outer glow layer
                 batch.setColor(0f, 0.5f, 1f, pulse * 0.4f);
                 batch.draw(currentFrame, drawX - 8, drawY - 8, drawWidth + 16, drawHeight + 16);
-                // Middle glow layer
                 batch.setColor(0.2f, 0.6f, 1f, pulse * 0.6f);
                 batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
-                // Inner bright layer
                 batch.setColor(0.4f, 0.8f, 1f, pulse * 0.8f);
                 batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
                 batch.setColor(r, g, b, alpha);
             }
 
             if (shieldTimer > 0) {
-                // Bright green aura for shield - multi-layer pulsing glow
                 float pulse = 0.7f + 0.3f * (float) Math.sin(stateTime * 5);
-                // Outer glow layer
                 batch.setColor(0f, 0.8f, 0.2f, pulse * 0.4f);
                 batch.draw(currentFrame, drawX - 8, drawY - 8, drawWidth + 16, drawHeight + 16);
-                // Middle glow layer
                 batch.setColor(0.2f, 0.9f, 0.3f, pulse * 0.6f);
                 batch.draw(currentFrame, drawX - 5, drawY - 5, drawWidth + 10, drawHeight + 10);
-                // Inner bright layer
                 batch.setColor(0.4f, 1f, 0.5f, pulse * 0.8f);
                 batch.draw(currentFrame, drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
                 batch.setColor(r, g, b, alpha);
@@ -534,14 +502,13 @@ public class Player extends MovableGameObject {
             batch.draw(currentFrame, drawX, drawY, drawWidth, drawHeight);
         }
 
-        // Always reset to standard White for the rest of the game
         batch.setColor(Color.WHITE);
     }
 
     /**
-     * Gets the collision box position and size for feet-based collision.
-     * The collision box is at the bottom-center of the sprite where the feet are.
-     * @return float array: [feetX, feetY, feetWidth, feetHeight]
+     * Calculates the collision box for the player's feet.
+     * This smaller box is used for environment collisions to allow for pseudo-3D movement overlap.
+     * * @return A float array containing {x, y, width, height} of the feet collision box.
      */
     public float[] getFeetCollisionBox() {
         float feetWidth = 16;
@@ -550,14 +517,11 @@ public class Player extends MovableGameObject {
         float feetY = y + 20;
         return new float[]{feetX, feetY, feetWidth, feetHeight};
     }
+
     /**
-     * Attack hitbox calculator.
-     *
-     * Logic:
-     * - Uses the player's feet collision box as a stable anchor point (ignoring sprite padding)
-     * - Calculates dimensions (width/height) based on facing direction
-     *  3x2 box when the attack is up and down and 2x2 box attack when it is left and right
-     * @return Rectangle representing the active sword swing area for collision checks
+     * Calculates the hit box for the player's sword attack.
+     * The box dimensions and position change based on the player's facing direction.
+     * * @return A Rectangle representing the area where the sword deals damage.
      */
     public Rectangle getSwordHitBox() {
 
@@ -605,8 +569,9 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Makes the player take damage and lose a life.
-     * Returns true if damage was parried successfully.
+     * Attempts to apply damage to the player.
+     * Handles logic for invulnerability frames, and shield protection.
+     * * @return true if the damage was successfully parried, false otherwise.
      */
     public boolean takeDamage() {
         // Check god mode first
@@ -615,33 +580,17 @@ public class Player extends MovableGameObject {
         }
 
         if (isGhostMode) {
-            // Ghost mode players cannot take damage
             return false;
         }
-
-        // Check for successful parry
-        if (isParrying && parryWindowTimer > 0) {
-            System.out.println("PARRY! Perfect timing!");
-            isParrying = false;
-            parryWindowTimer = 0f;
-            lastAttackWasParry = true;
-            // Play special sound or visual effect for parry
-            AudioManager.playPickupKeySound(); // Using key sound as parry sound
-            return true; // Damage was parried
-        }
-
-        lastAttackWasParry = false;
 
         if (invulnerabilityTimer <= 0 && shieldTimer <= 0) {
             lives--;
             isDamaged = true;
-            // Play the standard hit sound effect
             AudioManager.playHitSound();
             damageTimer = 0f;
             invulnerabilityTimer = INVULNERABILITY_TIME;
         } else if (shieldTimer > 0) {
             System.out.println("Shield blocked damage!");
-            // Play the hit sound with shield protected effect
             if (shieldSoundTimer <= 0) {
                 AudioManager.playHitWithShieldSound();
                 shieldSoundTimer = 0.5f;
@@ -649,16 +598,15 @@ public class Player extends MovableGameObject {
         }
         return false;
     }
+
     /**
-     * Triggers the falling sequence.
-     * * Logic:
-     * - Sets isFalling flag to disable input
-     * - Stores respawn coordinates for use after animation ends
-     * * @param respawnX Target X coordinate after fall
-     * @param respawnY Target Y coordinate after fall
+     * Triggers the sequence for the player falling into a death pit trap.
+     * Disables control and sets the respawn location.
+     * * @param respawnX The X coordinate where the player will respawn.
+     * @param respawnY The Y coordinate where the player will respawn.
      */
     public void fallIntoHole(float respawnX, float respawnY) {
-        if(isFalling == true)return; // to not fall twice
+        if(isFalling == true)return;
         isFalling= true;
         fallingTimer=0f;
 
@@ -667,7 +615,7 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Adds a life to the player (up to max).
+     * Increments the player's life count, up to the maximum limit.
      */
     public void addLife() {
         if (lives < maxLives) {
@@ -675,77 +623,92 @@ public class Player extends MovableGameObject {
         }
     }
 
-
+    /**
+     * Adds points to the player's current session score.
+     * * @param p The amount of points to add.
+     */
     public void addScore(int p) { this.sessionScore += p; }
+
+    /**
+     * Gets the current session score.
+     * @return The score.
+     */
     public int getScore() { return sessionScore; }
 
 
     /**
-     * Collects a key.
+     * Increments the count of collected keys.
      */
     public void collectKey() {
         keyCount++;
     }
 
     /**
-     * Collects a scroll.
+     * Increments the count of collected scrolls.
      */
     public void collectScroll() {
         scrollCount++;
     }
 
+    /**
+     * Checks if the player has collected at least one key.
+     * @return true if key count >= 1.
+     */
     public boolean hasAllKeys(){
         return keyCount >= 1;
     }
 
+    /**
+     * Checks if the player has collected all required scrolls.
+     * @return true if scroll count >= 3.
+     */
     public boolean hasAllScrolls(){
         return scrollCount >= 3;
     }
 
+    /**
+     * Checks if the victory conditions (keys and scrolls) are met.
+     * @return true if the player can exit the maze.
+     */
     public boolean canExitMaze(){
         return hasAllKeys() && hasAllScrolls();
     }
 
     /**
-     * Checks if player is dead.
-     *
-     * @return true if lives <= 0
+     * Checks if the player is dead (lives <= 0).
+     * @return true if dead.
      */
     public boolean isDead() {
         return lives <= 0;
     }
 
     /**
-     * Checks if player is currently invulnerable.
-     *
-     * @return true if invulnerable
+     * Checks if the player is currently invulnerable to damage.
+     * @return true if invulnerable.
      */
     public boolean isInvulnerable() {
         return invulnerabilityTimer > 0;
     }
 
     /**
-     * Applies a speed boost for the specified duration.
-     *
-     * @param duration Duration of boost in seconds
+     * Activates a movement speed boost for a set duration.
+     * @param duration Duration in seconds.
      */
     public void applySpeedBoost(float duration) {
         this.speedBoostTimer = duration;
     }
 
     /**
-     * Applies a power boost for the specified duration.
-     *
-     * @param duration Duration of boost in seconds
+     * Activates a damage power boost for a set duration.
+     * @param duration Duration in seconds.
      */
     public void applyPowerBoost(float duration) {
         this.powerBoostTimer = duration;
     }
 
     /**
-     * Applies shield protection for the specified duration.
-     *
-     * @param duration Duration of shield in seconds
+     * Activates a protective shield for a set duration.
+     * @param duration Duration in seconds.
      */
     public void applyShield(float duration) {
         this.shieldTimer = duration;
@@ -753,36 +716,33 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Checks if speed boost is currently active.
-     *
-     * @return true if speed boost is active
+     * Checks if the speed boost is active.
+     * @return true if active.
      */
     public boolean hasSpeedBoost() {
         return speedBoostTimer > 0;
     }
 
     /**
-     * Checks if power boost is currently active.
-     *
-     * @return true if power boost is active
+     * Checks if the power boost is active.
+     * @return true if active.
      */
     public boolean hasPowerBoost() {
         return powerBoostTimer > 0;
     }
 
     /**
-     * Checks if shield protection is currently active.
-     *
-     * @return true if shield is active
+     * Checks if the shield is active.
+     * @return true if active.
      */
     public boolean hasShield() {
         return shieldTimer > 0;
     }
 
     /**
-     * Gets the damage multiplier based on active boosts and parry.
-     *
-     * @return Damage multiplier
+     * Calculates the player's current damage multiplier.
+     * Factors in Warrior skill level, power boosts.
+     * * @return The calculated damage multiplier.
      */
     public float getDamageMultiplier() {
         float totalDamage = damageMultiplier;
@@ -791,53 +751,93 @@ public class Player extends MovableGameObject {
             totalDamage += 1.0f;
         }
 
-        // Apply critical damage if last attack was a successful parry
-        if (lastAttackWasParry) {
-            totalDamage *= PARRY_DAMAGE_MULTIPLIER;
-        }
-
         return totalDamage;
     }
 
     /**
-     * Resets the parry flag after dealing damage.
+     * Checks if the current attack has already registered a hit.
+     * Used to prevent a single animation frame from dealing damage multiple times.
+     * @return true if the attack has hit.
      */
-    public void resetParryFlag() {
-        lastAttackWasParry = false;
-    }
+    public boolean hasAttackHit() {return attackHasHit;}
 
     /**
-     * Checks if the last attack was a successful parry.
-     * @return true if last attack was a parry
+     * Sets the flag indicating the current attack has registered a hit.
+     * @param hit The new state.
      */
-    public boolean wasLastAttackParry() {
-        return lastAttackWasParry;
-    }
-
-    public boolean hasAttackHit() {return attackHasHit;}
     public void setAttackHasHit(boolean hit) {this.attackHasHit = hit;}
+
+    /**
+     * Gets the current number of lives.
+     * @return Lives count.
+     */
     public int getLives() { return lives; }
+
+    /**
+     * Gets the maximum possible lives for the player (determined by Vitality skill).
+     * @return Max lives.
+     */
     public int getMaxLives() { return maxLives; }
+
+    /**
+     * Gets the current number of keys collected.
+     * @return Key count.
+     */
     public int getKeyCount() { return keyCount; }
+
+    /**
+     * Gets the current number of scrolls collected.
+     * @return Scroll count.
+     */
     public int getScrollCount() { return scrollCount; }
+
+    /**
+     * Checks if the player is currently sprinting.
+     * @return true if sprinting.
+     */
     public boolean isRunning() { return isRunning; }
+
+    /**
+     * Checks if the player is currently moving.
+     * @return true if moving.
+     */
     public boolean isMoving() {return isMoving;}
+
+    /**
+     * Checks if the player is currently performing an attack animation.
+     * @return true if attacking.
+     */
     public boolean isAttacking() {return isAttacking;}
 
-    // Ghost mode methods
+    /**
+     * Checks if the player is currently in Ghost Mode.
+     * @return true if in ghost mode.
+     */
     public boolean isGhostMode() { return isGhostMode; }
+
+    /**
+     * Gets the remaining time for Ghost Mode.
+     * @return Time in seconds.
+     */
     public float getGhostModeTimer() { return ghostModeTimer; }
+
+    /**
+     * Checks if the player has already used their one-time revive for the level.
+     * @return true if revive has been used.
+     */
     public boolean hasUsedRevive() { return hasUsedRevive; }
 
     /**
-     * Enters ghost mode after death.
-     * Player respawns at entry point and has limited time to reach soul orb.
+     * Activates Ghost Mode upon death.
+     * Respawns the player at the entry point with 0 lives and starts the revival timer.
+     * * @param entryX The X coordinate of the level entry point.
+     * @param entryY The Y coordinate of the level entry point.
      */
     public void enterGhostMode(float entryX, float entryY) {
         isGhostMode = true;
         ghostModeTimer = GHOST_MODE_DURATION;
         hasUsedRevive = true;
-        lives = 0; // Keep at 0 until revived
+        lives = 0;
         this.x = entryX;
         this.y = entryY;
         isDamaged = false;
@@ -845,14 +845,14 @@ public class Player extends MovableGameObject {
     }
 
     /**
-     * Revives the player after collecting the soul orb.
-     * Restores 1 life and exits ghost mode.
+     * Revives the player from Ghost Mode.
+     * Restores 1 life, grants brief invulnerability, and returns the player to normal gameplay.
      */
     public void revive() {
         isGhostMode = false;
         ghostModeTimer = 0f;
-        lives = 1; // Revive with 1 heart
-        invulnerabilityTimer = INVULNERABILITY_TIME; // Give brief invulnerability
+        lives = 1;
+        invulnerabilityTimer = INVULNERABILITY_TIME;
     }
     /**
      * Sets god mode status (for developer console).
