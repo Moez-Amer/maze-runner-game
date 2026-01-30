@@ -72,8 +72,7 @@ public class GameScreen implements Screen {
     private boolean showCollisionBoxes = false;
 
     // Traps
-    private ArrayList<DeathPitTrap> deathPitTraps;
-    private ArrayList<KnifesTrap> knifesTraps;
+    private ArrayList<Trap> traps;
     private float delay;
     private Entry entry;
 
@@ -483,19 +482,18 @@ public class GameScreen implements Screen {
      * Scans the mapData grid and creates trap instances.
      */
     private void findDeathPits_KnifesTraps() {
-        deathPitTraps = new ArrayList<>();
-        knifesTraps = new ArrayList<>();
+        traps = new ArrayList<>();
         for (int x = 0; x < mapWidth; x++) {
             for (int y = 0; y < mapHeight; y++) {
                 if (mapData[x][y] == TYPE_DEATHTRAP) {
-                    deathPitTraps.add(new DeathPitTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, entry));
+                    // Both subclasses are now treated as 'Trap' objects
+                    traps.add(new DeathPitTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, entry));
                 } else if (mapData[x][y] == TYPE_KNIFE_TRAP) {
                     delay = (x + y) * 0.05f;
-                    knifesTraps.add(new KnifesTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, delay));
+                    traps.add(new KnifesTrap(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, player, delay));
                 }
             }
         }
-        System.out.println("Found " + deathPitTraps.size() + " death pits and " + knifesTraps.size() + " knife traps");
     }
 
     /**
@@ -927,11 +925,8 @@ public class GameScreen implements Screen {
                 enemy.update(delta);
             }
             // Update traps
-            for (DeathPitTrap pitTrap : deathPitTraps) {
-                pitTrap.update();
-            }
-            for (KnifesTrap knifeTrap : knifesTraps) {
-                knifeTrap.update(delta);
+            for (Trap trap : traps) {
+                trap.update(delta);
             }
 
 
@@ -981,8 +976,7 @@ public class GameScreen implements Screen {
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
         game.getSpriteBatch().begin();
 
-        // Draw traps
-        for (KnifesTrap trap : knifesTraps) {
+        for (Trap trap : traps) {
             trap.render(game.getSpriteBatch());
         }
 
