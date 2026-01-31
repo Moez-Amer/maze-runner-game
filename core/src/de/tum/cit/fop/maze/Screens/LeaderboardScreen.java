@@ -3,6 +3,7 @@ package de.tum.cit.fop.maze.Screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
@@ -23,6 +24,8 @@ import java.util.List;
 public class LeaderboardScreen implements Screen {
     private final Stage stage;
     private final MazeRunnerGame game;
+    private final Texture background;
+    private final float bgZoom = 1.0f;
 
     /**
      * Constructs the LeaderboardScreen.
@@ -30,6 +33,7 @@ public class LeaderboardScreen implements Screen {
      */
     public LeaderboardScreen(MazeRunnerGame game) {
         this.game = game;
+        background = new Texture(Gdx.files.internal("LeadershipBG.png"));
         // Reuse game's SpriteBatch for rendering efficiency
         this.stage = new Stage(new ScreenViewport(), game.getSpriteBatch());
         rebuildUI();
@@ -128,6 +132,13 @@ public class LeaderboardScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
         stage.act(delta);
         stage.draw();
     }

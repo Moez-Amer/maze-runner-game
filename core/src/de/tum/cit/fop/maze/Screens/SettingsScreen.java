@@ -7,6 +7,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -30,6 +31,8 @@ public class SettingsScreen implements Screen {
     private final Stage stage;
     private final Screen previousScreen;
     private final KeyBindings keys;
+    private final Texture background;
+    private final float bgZoom = 1.5f;
 
     private boolean isListening = false;
     private String listeningAction = null;
@@ -46,6 +49,7 @@ public class SettingsScreen implements Screen {
         this.previousScreen = previousScreen;
         this.keys = KeyBindings.getKeyBindings();
         var camera = new OrthographicCamera();
+        background = new Texture(Gdx.files.internal("SettingsBG.png"));
         camera.zoom = 1.5f;
         stage = new Stage(new ScreenViewport(camera), game.getSpriteBatch());
         buildUI();
@@ -326,7 +330,13 @@ public class SettingsScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
         stage.act(Math.min(delta, 1/30f));
         stage.draw();
 

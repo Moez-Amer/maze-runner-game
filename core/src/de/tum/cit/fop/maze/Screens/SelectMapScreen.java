@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -20,12 +21,15 @@ import de.tum.cit.fop.maze.MazeRunnerGame;
 public class SelectMapScreen implements Screen {
     private final MazeRunnerGame game;
     private final Stage stage;
+    private final Texture background;
+    private final float bgZoom = 1.0f;
 
     public SelectMapScreen(MazeRunnerGame game) {
         this.game = game;
         var camera = new OrthographicCamera();
         // zoom = 1.0 means 1:1 scale. Increasing this makes the UI look smaller.
         camera.zoom = 1.0f;
+        background = new Texture(Gdx.files.internal("SelectLevelBG.jpg"));
         this.stage = new Stage(new ScreenViewport(camera), game.getSpriteBatch());
 
         Table table = new Table();
@@ -110,6 +114,13 @@ public class SelectMapScreen implements Screen {
     @Override public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
         stage.act(delta);
         stage.draw();
     }

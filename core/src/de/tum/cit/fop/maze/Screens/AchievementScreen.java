@@ -35,6 +35,8 @@ import de.tum.cit.fop.maze.MazeRunnerGame;
 public class AchievementScreen implements Screen {
     /** The stage that contains all UI actors for this screen. */
     private final Stage stage;
+    private final Texture background;
+    private final float bgZoom = 1.0f;
 
     /** Reference to the main game instance. */
     private final MazeRunnerGame game;
@@ -62,6 +64,7 @@ public class AchievementScreen implements Screen {
     public AchievementScreen(MazeRunnerGame game) {
         this.game = game;
         this.stage = new Stage(new ScreenViewport(), game.getSpriteBatch());
+        background = new Texture(Gdx.files.internal("AchievmentsBG.png"));
 
         // Generate a 1x1 semi-transparent black pixel for the background
         createBackground();
@@ -210,7 +213,6 @@ public class AchievementScreen implements Screen {
                 progressLabel.setColor(Color.LIGHT_GRAY);
                 row.add(progressLabel).padBottom(15).row();
             } else {
-                // Add spacing for unlocked achievements to maintain consistent row height
                 row.add().height(10).row();
             }
 
@@ -268,6 +270,13 @@ public class AchievementScreen implements Screen {
     @Override public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
         stage.act(delta);
         stage.draw();
     }

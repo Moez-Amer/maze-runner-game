@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -26,6 +27,8 @@ public class VictoryScreen implements Screen {
     private final MazeRunnerGame game;
     private final Stage stage;
     private final OrthographicCamera camera;
+    private final Texture background;
+    private final float bgZoom = 1.0f;
 
     /**
      * Constructs the victory screen with UI elements.
@@ -40,6 +43,7 @@ public class VictoryScreen implements Screen {
         stage = new Stage(new ScreenViewport(), game.getSpriteBatch());
         Gdx.input.setInputProcessor(stage);
 
+        background = new Texture(Gdx.files.internal("VictoryFinal.png"));
         Table table = new Table();
         table.setFillParent(true);
         stage.addActor(table);
@@ -106,9 +110,15 @@ public class VictoryScreen implements Screen {
             game.goToMenu();
         }
 
-        // Dark green theme for victory
-        Gdx.gl.glClearColor(0.1f, 0.4f, 0.1f, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
 
         stage.act(Math.min(delta, 1 / 30f));
         stage.draw();
@@ -133,5 +143,6 @@ public class VictoryScreen implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
+        background.dispose();
     }
 }

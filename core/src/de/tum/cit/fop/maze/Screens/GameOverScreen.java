@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -24,6 +25,8 @@ public class GameOverScreen implements Screen {
     private final Stage stage;
     private final OrthographicCamera camera;
     private final String mapPath;
+    private final Texture background;
+    private final float bgZoom = 1.0f;
 
     /**
      * Constructs the game over screen with UI elements.
@@ -38,6 +41,7 @@ public class GameOverScreen implements Screen {
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false);
+        background = new Texture(Gdx.files.internal("DefeatFinal.png"));
 
         stage = new Stage(new ScreenViewport(), game.getSpriteBatch());
         Gdx.input.setInputProcessor(stage);
@@ -116,7 +120,13 @@ public class GameOverScreen implements Screen {
 
         Gdx.gl.glClearColor(0.5f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
         stage.act(Math.min(delta, 1 / 30f));
         stage.draw();
     }
