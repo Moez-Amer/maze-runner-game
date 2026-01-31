@@ -22,17 +22,17 @@ public class SurvivalGameScreen extends GameScreen {
     private ArrayList<Vector2> occupiedPositions;
     private static final float MIN_SPAWN_DISTANCE = TILE_SIZE * 5; // 5 tiles minimum spacing
 
-    public SurvivalGameScreen(MazeRunnerGame game, String mapPath) {
+    public SurvivalGameScreen(MazeRunnerGame game, String mapPath, long seed) {
         super(game, mapPath);
 
         System.out.println("Map dimensions: " + mapWidth + "x" + mapHeight);
 
-        this.random = new Random();
+        this.random = new Random(seed);
         this.occupiedPositions = new ArrayList<>();
 
         ArrayList<Vector2> spawnLocations = extractSpawnLocations();
 
-        this.waveManager = new WaveManager(spawnLocations);
+        this.waveManager = new WaveManager(spawnLocations, this.random);
         this.timeAlive = 0f;
         this.hasSpawnedCurrentWave = false;
 

@@ -20,13 +20,13 @@ public class WaveManager {
     private Random random;
     private ArrayList<Vector2> spawnLocations;
 
-    public WaveManager(ArrayList<Vector2> spawnLocations) {
+    public WaveManager(ArrayList<Vector2> spawnLocations, Random random) {
         this.currentWave = 0;
         this.enemiesRemainingInWave = 0;
         this.totalEnemiesInWave = 0;
         this.waveTransitionTimer = 0f;
         this.isTransitioning = false;
-        this.random = new Random();
+        this.random = random;
         this.spawnLocations = spawnLocations;
 
         System.out.println("WaveManager created with " + spawnLocations.size() + " spawn locations");
