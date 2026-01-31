@@ -3,11 +3,14 @@ package de.tum.cit.fop.maze.Screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import de.tum.cit.fop.maze.GameState;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 import de.tum.cit.fop.maze.SaveManager;
@@ -17,9 +20,9 @@ import de.tum.cit.fop.maze.SaveManager;
  * <p>
  * This screen provides three upgrade branches:
  * <ul>
- *   <li><b>COMBAT</b> - Upgrades the Power Ring for increased damage</li>
- *   <li><b>AGILITY</b> - Upgrades Swift Boots for increased movement speed</li>
- *   <li><b>SURVIVAL</b> - Upgrades Tank Armor for increased health</li>
+ * <li><b>COMBAT</b> - Upgrades the Power Ring for increased damage</li>
+ * <li><b>AGILITY</b> - Upgrades Swift Boots for increased movement speed</li>
+ * <li><b>SURVIVAL</b> - Upgrades Tank Armor for increased health</li>
  * </ul>
  * Each upgrade requires spending skill points earned through gameplay.
  * Upgrade costs increase exponentially with each level (cost = 2 * 2^level).
@@ -35,6 +38,15 @@ public class SkillTreeScreen implements Screen {
     /** Reference to the main game instance. */
     private final MazeRunnerGame game;
 
+    /** Background texture for the screen. */
+    private final Texture background;
+
+    /** Semi-transparent dark texture used as panel background behind each branch. */
+    private final Texture panelTexture;
+
+    /** Zoom factor for the background image. */
+    private final float bgZoom = 1.5f;
+
     /**
      * Constructs a new SkillTreeScreen.
      * <p>
@@ -45,22 +57,22 @@ public class SkillTreeScreen implements Screen {
      */
     public SkillTreeScreen(MazeRunnerGame game) {
         this.game = game;
-        stage = new Stage(new ScreenViewport());
+        var camera = new OrthographicCamera();
+        camera.zoom = 1.5f;
+        Viewport viewport = new ScreenViewport(camera);
+        stage = new Stage(viewport, game.getSpriteBatch());
+
+        background = new Texture(Gdx.files.internal("MarketBG.png"));
+        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        pixmap.setColor(0f, 0f, 0f, 0.6f);
+        pixmap.fill();
+        panelTexture = new Texture(pixmap);
+        pixmap.dispose();
         rebuildUI();
     }
 
     /**
      * Rebuilds the complete UI for the skill tree screen.
-     * <p>
-     * This method:
-     * <ul>
-     *   <li>Clears the current stage</li>
-     *   <li>Displays current skill point totals for all three categories</li>
-     *   <li>Creates three upgrade branches (Combat, Agility, Survival)</li>
-     *   <li>Updates button states based on available points</li>
-     *   <li>Adds a return button to go back to the main menu</li>
-     * </ul>
-     * Called initially and after each upgrade to refresh the display.
      */
     private void rebuildUI() {
         stage.clear();
@@ -70,26 +82,21 @@ public class SkillTreeScreen implements Screen {
         Table root = new Table();
         root.setFillParent(true);
         stage.addActor(root);
-
-        root.add(new Label("SKILL MARKETPLACE", game.getSkin(), "title")).colspan(3).padBottom(30).row();
-
-        Table pointsTable = new Table();
+        root.add(new Label("SKILL MARKETPLACE", game.getSkin(), "title")).colspan(3).padBottom(15).row();
 
         Label warLabel = new Label("Warrior Pts: " + state.warriorPoints, game.getSkin());
         warLabel.setColor(com.badlogic.gdx.graphics.Color.PURPLE);
 
         Label swiftLabel = new Label("Swiftness Pts: " + state.swiftnessPoints, game.getSkin());
-        swiftLabel.setColor(new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f)); // Dark blue
+        swiftLabel.setColor(new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f));
 
         Label vitLabel = new Label("Vitality Pts: " + state.vitalityPoints, game.getSkin());
         vitLabel.setColor(com.badlogic.gdx.graphics.Color.GREEN);
 
-        pointsTable.add(warLabel).pad(15);
-        pointsTable.add(swiftLabel).pad(15);
-        pointsTable.add(vitLabel).pad(15);
-
-        root.add(pointsTable).colspan(3).padBottom(50).row();
-
+        root.add(warLabel).padBottom(10).expandX();
+        root.add(swiftLabel).padBottom(10).expandX();
+        root.add(vitLabel).padBottom(10).expandX();
+        root.row();
         Table combatBranch = createContinuousBranch(state, "COMBAT", "Warrior", "Power Ring", "+50% Dmg per Lvl", "warrior", com.badlogic.gdx.graphics.Color.PURPLE, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon19.png");
         Table agilityBranch = createContinuousBranch(state, "AGILITY", "Swiftness", "Swiftness Ring", "+25% Speed per Lvl", "swiftness", new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f), "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon18.png");
         Table survivalBranch = createContinuousBranch(state, "SURVIVAL", "Vitality", "Health Ring", "+1 Heart per Lvl", "vitality", com.badlogic.gdx.graphics.Color.GREEN, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon17.png");
@@ -98,7 +105,6 @@ public class SkillTreeScreen implements Screen {
         root.add(agilityBranch).top().pad(20);
         root.add(survivalBranch).top().pad(20);
         root.row();
-
         TextButton back = new TextButton("Return to Menu", game.getSkin());
         back.addListener(new ChangeListener() {
             @Override
@@ -106,42 +112,24 @@ public class SkillTreeScreen implements Screen {
                 game.goToMenu();
             }
         });
-        root.add(back).colspan(3).padTop(60).width(400).height(80);
+        root.add(back).colspan(3).padTop(60).width(350).height(55);
     }
 
     /**
      * Creates a vertical UI branch for a specific skill upgrade type.
-     * <p>
-     * Each branch contains:
-     * <ul>
-     *   <li>An icon representing the skill (64x64 pixels)</li>
-     *   <li>A colored title label</li>
-     *   <li>The skill name with current level</li>
-     *   <li>A description of the upgrade effect</li>
-     *   <li>An upgrade button showing the cost in skill points</li>
-     * </ul>
-     * The upgrade button is disabled if the player doesn't have enough points.
-     * Cost increases exponentially: cost = 2 * 2^currentLevel
-     *
-     * @param state the current game state containing skill levels and points
-     * @param title the visual title of the branch (e.g., "COMBAT")
-     * @param skillKey the key used in the skill map to track this skill's level
-     * @param name the display name of the skill (e.g., "Upgrade Power Ring")
-     * @param description a short description of the skill effect (e.g., "+50% Dmg per Lvl")
-     * @param type the type of point currency used ("warrior", "swiftness", or "vitality")
-     * @param color the color theme for this branch's text and buttons
-     * @param iconPath the file path to the icon image for this skill
-     * @return a Table containing all UI elements for this skill branch
      */
     private Table createContinuousBranch(GameState state, String title, final String skillKey, String name, String description, final String type, com.badlogic.gdx.graphics.Color color, String iconPath) {
         Table branch = new Table();
+        branch.setBackground(new TextureRegionDrawable(new com.badlogic.gdx.graphics.g2d.TextureRegion(panelTexture)));
 
-        // Add icon at the top
+        Table inner = new Table();
+        inner.pad(15);
+
         if (iconPath != null && !iconPath.isEmpty()) {
             try {
                 Texture iconTexture = new Texture(Gdx.files.internal(iconPath));
                 Image icon = new Image(iconTexture);
-                branch.add(icon).size(64, 64).padBottom(15).row();
+                inner.add(icon).size(48, 48).padBottom(8).row();
             } catch (Exception e) {
                 System.err.println("Failed to load skill icon: " + iconPath);
             }
@@ -149,22 +137,24 @@ public class SkillTreeScreen implements Screen {
 
         Label titleLabel = new Label(title, game.getSkin(), "bold");
         titleLabel.setColor(color);
-        branch.add(titleLabel).padBottom(20).row();
+        inner.add(titleLabel).padBottom(8).row();
 
         int currentLevel = state.getSkillLevel(skillKey);
-
         final int cost = 2 * (int)Math.pow(2, currentLevel);
 
-        branch.add(new Label(name + " (Lvl " + currentLevel + ")", game.getSkin())).padBottom(5).row();
+        Label nameLabel = new Label(name + " (Lvl " + currentLevel + ")", game.getSkin());
+        nameLabel.setFontScale(0.85f);
+        inner.add(nameLabel).padBottom(4).row();
 
         Label descLabel = new Label(description, game.getSkin());
-        descLabel.setFontScale(0.8f);
+        descLabel.setFontScale(0.75f);
         descLabel.setColor(com.badlogic.gdx.graphics.Color.LIGHT_GRAY);
-        branch.add(descLabel).padBottom(15).row();
+        inner.add(descLabel).padBottom(10).row();
 
         int playerPts = type.equals("warrior") ? state.warriorPoints : type.equals("swiftness") ? state.swiftnessPoints : state.vitalityPoints;
 
         TextButton buy = new TextButton("Upgrade (" + cost + " pts)", game.getSkin());
+        buy.getLabelCell().padLeft(15).padRight(15);
 
         if (playerPts < cost) {
             buy.setDisabled(true);
@@ -181,79 +171,45 @@ public class SkillTreeScreen implements Screen {
                 else state.vitalityPoints -= cost;
 
                 state.skillLevels.put(skillKey, currentLevel + 1);
-
                 SaveManager.save(state);
                 rebuildUI();
             }
         });
 
-        branch.add(buy).size(400, 80);
+        inner.add(buy).width(280).height(50);
 
+        branch.add(inner);
         return branch;
     }
 
-    /**
-     * Renders the skill tree screen.
-     * <p>
-     * Clears the screen with a dark blue-gray background and updates/draws all stage actors.
-     *
-     * @param delta the time in seconds since the last render call
-     */
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.2f, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act();
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
+        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
     }
 
-    /**
-     * Called when this screen becomes the current screen.
-     * <p>
-     * Currently does nothing as initialization is handled in the constructor.
-     */
-    @Override public void show() {}
+    @Override public void show() { Gdx.input.setInputProcessor(stage); }
 
-    /**
-     * Called when the screen is resized.
-     * <p>
-     * Updates the stage's viewport to match the new screen dimensions.
-     *
-     * @param width the new screen width in pixels
-     * @param height the new screen height in pixels
-     */
     @Override public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
-    /**
-     * Called when the game is paused (typically on Android).
-     * <p>
-     * Currently does nothing as no pause-specific logic is needed.
-     */
     @Override public void pause() {}
-
-    /**
-     * Called when the game is resumed from a paused state (typically on Android).
-     * <p>
-     * Currently does nothing as no resume-specific logic is needed.
-     */
     @Override public void resume() {}
-
-    /**
-     * Called when this screen is no longer the current screen.
-     * <p>
-     * Currently does nothing as no cleanup is needed when hiding.
-     */
     @Override public void hide() {}
 
-    /**
-     * Disposes of all resources used by this screen.
-     * <p>
-     * Cleans up the stage and all its actors to prevent memory leaks.
-     * This method should be called when the screen is no longer needed.
-     */
     @Override public void dispose() {
         stage.dispose();
+        background.dispose();
+        panelTexture.dispose();
     }
 }
