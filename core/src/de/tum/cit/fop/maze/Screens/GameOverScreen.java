@@ -61,7 +61,12 @@ public class GameOverScreen implements Screen {
         retryButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.goToGame(mapPath);
+
+                if(mapPath.contains("survival")){
+                    game.goToSurvival();
+                }else {
+                    game.goToGame(mapPath);
+                }
             }
         });
 

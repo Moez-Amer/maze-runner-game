@@ -427,16 +427,16 @@ public class GameScreen implements Screen {
         mainlevbuildTexture = new Texture(Gdx.files.internal("mainlevbuild.png"));
 
         // Ground texture at pixel (736, 208) - 16x16
-        groundTexture = new TextureRegion(mainlevbuildTexture, 736, 208, TILE_SIZE, TILE_SIZE);
+        groundTexture = new TextureRegion(mainlevbuildTexture, 736, 320, TILE_SIZE, TILE_SIZE);
 
         // Wall texture at pixel (336, 16) - 16x16
-        tileTextures.put(TYPE_WALL, new TextureRegion(mainlevbuildTexture, 336, 16, TILE_SIZE, TILE_SIZE));
+        tileTextures.put(TYPE_WALL, new TextureRegion(mainlevbuildTexture, 151, 224, TILE_SIZE, TILE_SIZE));
 
         // Exit texture - full rectangle from (640,0) to (704,80) = 64x80 pixels
-        exitTexture = new TextureRegion(mainlevbuildTexture, 640, 0, 64, 80);
+        exitTexture = new TextureRegion(mainlevbuildTexture, 880, 32, 64, 80);
 
         // Entrance texture - full rectangle from (720,48) to (752,80) = 32x32 pixels
-        entranceTexture = new TextureRegion(mainlevbuildTexture, 720, 48, 32, 32);
+        entranceTexture = new TextureRegion(mainlevbuildTexture, 736, 64, 32, 32);
 
         // Death trap texture (black/void area)
         tileTextures.put(TYPE_DEATHTRAP, new TextureRegion(mainlevbuildTexture, 0, 0, TILE_SIZE, TILE_SIZE));
@@ -1084,12 +1084,11 @@ public class GameScreen implements Screen {
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
         game.getSpriteBatch().begin();
 
-        // Calculate visible tile range
-        int startX = Math.max(0, (int) ((camera.position.x - camera.viewportWidth / 2) / TILE_SIZE) - 1);
-        int startY = Math.max(0, (int) ((camera.position.y - camera.viewportHeight / 2) / TILE_SIZE) - 1);
-        int endX = Math.min(mapWidth - 1, (int) ((camera.position.x + camera.viewportWidth / 2) / TILE_SIZE) + 1);
-        int endY = Math.min(mapHeight - 1, (int) ((camera.position.y + camera.viewportHeight / 2) / TILE_SIZE) + 1);
-
+        // Render ALL tiles
+        int startX = 0;
+        int startY = 0;
+        int endX = mapWidth - 1;
+        int endY = mapHeight - 1;
         // Render visible tiles
         for (int x = startX; x <= endX; x++) {
             for (int y = startY; y <= endY; y++) {
