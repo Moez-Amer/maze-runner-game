@@ -69,16 +69,19 @@ public class MenuScreen implements Screen {
 
         addButton(table, "Achievements", () -> {
             game.goToAchievements();
-        }, 0.6f); // Set a delay between Leaderboard and Settings
+        }, 0.6f);
+
+        addButton(table, "Watch Trailer", () -> {
+            game.watchTrailer();
+        }, 0.7f);
 
         addButton(table, "Settings", () -> {
             game.goToSettings(this);
-        }, 0.7f);
+        }, 0.8f);
 
         addButton(table,"Exit",()->{
             Gdx.app.exit();
-        },0.8f);
-
+        },0.9f);
 
     }
 

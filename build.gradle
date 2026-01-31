@@ -1,5 +1,5 @@
 buildscript {
-    
+
 
     repositories {
         mavenLocal()
@@ -9,7 +9,7 @@ buildscript {
         google()
     }
     dependencies {
-        
+
 
     }
 }
@@ -27,6 +27,7 @@ allprojects {
         aiVersion = '1.8.2'
         gdxControllersVersion = '2.2.1'
         gdxNativefilechooserVersion = '2.3.0'
+        gdxVideoVersion = '1.3.4'
     }
 
     repositories {
@@ -56,6 +57,7 @@ project(":desktop") {
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
         implementation "games.spooky.gdx:gdx-nativefilechooser-desktop-lwjgl:$gdxNativefilechooserVersion"
+        implementation "com.badlogicgames.gdx-video:gdx-video-lwjgl3:$gdxVideoVersion"
     }
 }
 
@@ -67,5 +69,6 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         implementation "games.spooky.gdx:gdx-nativefilechooser:$gdxNativefilechooserVersion"
+        implementation "com.badlogicgames.gdx-video:gdx-video:$gdxVideoVersion"
     }
 }

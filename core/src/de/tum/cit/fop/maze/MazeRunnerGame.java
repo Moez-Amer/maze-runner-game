@@ -27,6 +27,9 @@ import games.spooky.gdx.nativefilechooser.NativeFileChooser;
  */
 public class MazeRunnerGame extends Game {
 
+    private static final String TRAILER_VIDEO = "trailer.webm";
+    private boolean trailerPlayed = false;
+
     private GameState gameState;
 
     // Screens
@@ -67,10 +70,54 @@ public class MazeRunnerGame extends Game {
         // Initialize developer console
         developerConsole = new DeveloperConsole(this);
 
-        // Fulfills the requirement to sign in/select profile on startup
-        goToProfileSelection();
-        //goToMenu();
+        if (!trailerPlayed) {
+            trailerPlayed = true;
+            playTrailerVideo();
+        } else {
+            goToProfileSelection();
+        }
     }
+
+    /**
+     * NEW: Plays the trailer video, then goes to profile selection.
+     */
+    private void playTrailerVideo() {
+        AudioManager.stopMusic();
+
+        setScreen(new CutsceneVideoScreen(
+                this,
+                TRAILER_VIDEO,
+                () -> {
+                    goToProfileSelection();
+                },
+                true
+        ));
+    }
+
+    /**
+     * NEW: Resets the trailer flag so it plays again on next launch.
+     * Call this if you want to see the trailer again (e.g., from a menu button).
+     */
+    public void resetTrailer() {
+        trailerPlayed = false;
+    }
+
+    /**
+     * NEW: Play trailer from menu (for "Watch Trailer" button).
+     */
+    public void watchTrailer() {
+        AudioManager.stopMusic();
+
+        setScreen(new CutsceneVideoScreen(
+                this,
+                TRAILER_VIDEO,
+                () -> {
+                    goToMenu();
+                },
+                true
+        ));
+    }
+
 
     /** Returns the global game state for the active player. */
     public GameState getGameState() { return gameState; }
