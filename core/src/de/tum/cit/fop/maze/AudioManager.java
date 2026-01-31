@@ -14,11 +14,13 @@ import java.util.HashMap;
 public class AudioManager {
 
     private static Sound pickupSound;
+    private static Sound potionPickupSound;
     private static Sound pickupKeySound;
     private static Sound hitSound;
     private static Sound hitWithShieldSound;
     private static Sound attackSound;
     private static Sound gotoTheNextLevelSound;
+    private static Sound reaperSound;
 
     private static Music gameOverMusic;
     private static Music victoryMusic;
@@ -40,16 +42,18 @@ public class AudioManager {
         if (loaded) return;
 
         pickupSound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/Pickup.wav"));
+        potionPickupSound = Gdx.audio.newSound(Gdx.files.internal("audio/sfx/potionPickup.wav"));
         pickupKeySound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/PickupKey.wav"));
         hitSound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/Hit.wav"));
         hitWithShieldSound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/HitWithShield.wav"));
+        reaperSound = Gdx.audio.newSound(Gdx.files.internal("audio/sfx/ReaperSound.wav"));
         attackSound =Gdx.audio.newSound(Gdx.files.internal("audio/sfx/Attack.wav"));
         gotoTheNextLevelSound=Gdx.audio.newSound(Gdx.files.internal("audio/sfx/GotoNextLevel.wav"));
         gameOverMusic=Gdx.audio.newMusic(Gdx.files.internal("audio/sfx/Gameover.wav"));
         victoryMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/Victory.wav"));
-        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/MenuMusic.mp3"));
+        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/MenuMusic.wav"));
         menuMusic.setLooping(true);
-        gameMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/GameMusic.mp3"));
+        gameMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/GameMusic.wav"));
         gameMusic.setLooping(true);
 
         loadSettings();
@@ -134,6 +138,19 @@ public class AudioManager {
             pickupSound.play(getSFXVol());
         }
     }
+
+    /**
+     * Plays the sound effect for picking up a potion (Speed, Power, or Shield).
+     * This uses the potionPickup.wav asset and scales the volume based on
+     * the combined Main and SFX volume settings.
+     */
+    public static void playPotionPickupSound() {
+        if (potionPickupSound != null) {
+            potionPickupSound.play(getSFXVol());
+        }
+    }
+
+
     /**
      * Plays the specific key pickup sound effect.
      */
@@ -252,6 +269,15 @@ public class AudioManager {
         }
     }
 
+    /**
+     * Plays the reaper chase sound once.
+     */
+    public static void playReaperSound() {
+        if (reaperSound != null) {
+            reaperSound.play(getSFXVol());
+        }
+    }
+
     public static void stopMusic() {
         if(gameMusic != null){
             gameMusic.stop();
@@ -271,6 +297,7 @@ public class AudioManager {
 
     public static void dispose() {
         if (pickupSound != null) pickupSound.dispose();
+        if (potionPickupSound != null) potionPickupSound.dispose();
         if (pickupKeySound != null) pickupKeySound.dispose();
         if (hitSound != null) hitSound.dispose();
         if (hitWithShieldSound != null) hitWithShieldSound.dispose();
@@ -280,5 +307,6 @@ public class AudioManager {
         if (menuMusic != null) menuMusic.dispose();
         if (gameMusic != null) gameMusic.dispose();
         if (gameOverMusic != null) gameOverMusic.dispose();
+        loaded = false;
     }
 }

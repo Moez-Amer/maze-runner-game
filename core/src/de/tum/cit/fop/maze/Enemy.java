@@ -36,13 +36,17 @@ public class Enemy extends MovableGameObject {
     private static final float ATTACK_INTERVAL = 1.0f;
     private int patrolDirectionX = 1;
     private int patrolDirectionY = 0;
-    private float patrolSpeed = 45f;
+    private float patrolSpeed = 25f;
     private float baseSpeed = 85f;
     private static final int[][] DIAGONAL_DIRECTIONS={{1, 1},{-1, 1},{-1, -1},{1, -1}};
     private int currentDirectionIndex = 0;
 
     private float speedMultiplier = 1.0f;
     private float healthMultiplier = 1.0f;
+
+    private long reaperSoundId = -1;
+    private boolean isPlayingReaperSound = false;
+    private boolean hasPlayedReaperSound = false;
 
     /**
      * Constructs a new Enemy at the specified position.
@@ -241,9 +245,21 @@ public class Enemy extends MovableGameObject {
         }
 
         switch (state){
-            case ATTACK -> attack(enemyFeet[0],playerFeet[0]);
-            case CHASE -> chase(enemyFeet[0],playerFeet[0],delta);
-            case PATROL -> patrol(enemyFeet[0],playerFeet[0],delta);
+            case ATTACK -> {
+                hasPlayedReaperSound = false;
+                attack(enemyFeet[0],playerFeet[0]);
+            }
+            case CHASE -> {
+                if (!hasPlayedReaperSound) {
+                    AudioManager.playReaperSound();
+                    hasPlayedReaperSound = true;
+                }
+                chase(enemyFeet[0],playerFeet[0],delta);
+            }
+            case PATROL -> {
+                hasPlayedReaperSound = false;
+                patrol(enemyFeet[0],playerFeet[0],delta);
+            }
         }
     }
     /**
@@ -438,9 +454,9 @@ public class Enemy extends MovableGameObject {
             this.path = pathFinder.smoothPath(path);
         }
     }
-    private void startFollowingThePath(float delta){
+    private void startFollowingThePath(float delta) {
         if (this.path != null && !this.path.isEmpty()) {
-            float[]enemyFeet = getFeetCollisionBox();
+            float[] enemyFeet = getFeetCollisionBox();
             Node nextNode = this.path.get(0);
             float targetX = nextNode.x * 16;
             float targetY = nextNode.y * 16;
@@ -452,8 +468,8 @@ public class Enemy extends MovableGameObject {
             float distance = (float) Math.sqrt(dx * dx + dy * dy);
 
             if (distance > 3f) {
-                float normalizedDx = dx /distance ;
-                float normalizedDy = dy /distance;
+                float normalizedDx = dx / distance;
+                float normalizedDy = dy / distance;
 
                 float moveX = normalizedDx * speed * delta;
                 float moveY = normalizedDy * speed * delta;
@@ -499,6 +515,7 @@ public class Enemy extends MovableGameObject {
             }
         }
     }
+
 
 
 

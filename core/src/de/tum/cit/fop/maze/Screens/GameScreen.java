@@ -204,7 +204,7 @@ public class GameScreen implements Screen {
             @Override
             public void onAchievementUnlocked(Achievement achievement) {
                 hud.showAchievementPopup(achievement);
-                AudioManager.playPickupKeySound();
+                AudioManager.playPickupSound();
             }
         });
         // --------------------------------
@@ -721,7 +721,11 @@ public class GameScreen implements Screen {
 
         if (collectible.getType() == Collectibles.CollectibleType.KEY || collectible.getType() == Collectibles.CollectibleType.SCROLL) {
             // Play a more distinct sound for quest-critical items (keys and scrolls)
-            AudioManager.playPickupKeySound();
+            AudioManager.playPickupSound();}
+        else if (collectible.getType() == Collectibles.CollectibleType.SPEED_BOOSTER ||
+                    collectible.getType() == Collectibles.CollectibleType.POWER_BOOSTER ||
+                    collectible.getType() == Collectibles.CollectibleType.SHIELD) {
+                AudioManager.playPotionPickupSound();
         } else {
             // Play the standard pickup sound for general items
             AudioManager.playPickupSound();
@@ -894,7 +898,7 @@ public class GameScreen implements Screen {
         if (px < vx + vw && px + pw > vx && py < vy + vh && py + ph > vy) {
             voodooDoll.collect();
             player.revive();
-            AudioManager.playPickupKeySound(); // Play special sound for revive
+            AudioManager.playPickupSound(); // Play special sound for revive
             System.out.println("Player revived with 1 life!");
         }
     }
