@@ -55,7 +55,7 @@ public class MenuScreen implements Screen {
             game.goToSelectMap();
         },0.2f);
 
-        addButton(table,"SURVIVAL MODE", ()-> {
+        addButton(table,"Survival Mode", ()-> {
             game.goToSurvival();
         },0.3f);
 

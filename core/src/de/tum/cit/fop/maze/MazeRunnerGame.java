@@ -167,7 +167,8 @@ public class MazeRunnerGame extends Game {
         }
 
         AudioManager.playGameMusic();
-        SurvivalGameScreen survivalScreen = new SurvivalGameScreen(this, "maps/survival.properties");
+        long randomSeed = System.currentTimeMillis();
+        SurvivalGameScreen survivalScreen = new SurvivalGameScreen(this, "maps/survival.properties", randomSeed);
 
         if (developerConsole != null) {
             developerConsole.setGameScreen(survivalScreen);
