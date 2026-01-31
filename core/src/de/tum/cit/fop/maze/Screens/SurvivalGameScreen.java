@@ -387,6 +387,7 @@ public class SurvivalGameScreen extends GameScreen {
                 int finalTime = (int) timeAlive;
 
                 game.getGameState().updateSurvivalScore(finalScore, finalWave, finalTime);
+                de.tum.cit.fop.maze.SaveManager.save(game.getGameState());
 
                 System.out.println("\n=== SURVIVAL MODE GAME OVER ===");
                 System.out.println("Wave: " + finalWave);

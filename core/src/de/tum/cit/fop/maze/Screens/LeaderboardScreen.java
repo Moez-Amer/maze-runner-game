@@ -11,23 +11,35 @@ import de.tum.cit.fop.maze.GameState;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 import de.tum.cit.fop.maze.SaveManager;
 
-// Added missing imports
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Screen responsible for displaying the Survival Mode Leaderboard.
+ * It scans all local player profiles to rank players based on their highest
+ * survival scores, wave reached, and time survived.
+ */
 public class LeaderboardScreen implements Screen {
     private final Stage stage;
     private final MazeRunnerGame game;
-    private String selectedLevel = "maps/level-1.properties";
 
+    /**
+     * Constructs the LeaderboardScreen.
+     * * @param game The main game instance used to access skins and navigation.
+     */
     public LeaderboardScreen(MazeRunnerGame game) {
         this.game = game;
-        // Reuse game's SpriteBatch for efficiency
+        // Reuse game's SpriteBatch for rendering efficiency
         this.stage = new Stage(new ScreenViewport(), game.getSpriteBatch());
         rebuildUI();
     }
 
+    /**
+     * Rebuilds the UI components.
+     * This method fetches all player profiles from the SaveManager, sorts them
+     * by survival score, and constructs the Hall of Fame table.
+     */
     private void rebuildUI() {
         stage.clear();
         Table table = new Table();
@@ -35,79 +47,112 @@ public class LeaderboardScreen implements Screen {
         stage.addActor(table);
 
         // Title Row
-        table.add(new Label("HALL OF FAME", game.getSkin(), "title")).colspan(2).padBottom(20).row();
-
-        // Level Selector Row
-        Table levelSelect = new Table();
-        String[] levels = {"maps/level-1.properties", "maps/level-2.properties", "maps/level-3.properties", "maps/level-4.properties", "maps/level-5.properties"};
-        for (final String lvl : levels) {
-            String num = lvl.replaceAll("\\D+", "");
-            TextButton btn = new TextButton("Lvl " + num, game.getSkin());
-            if (lvl.equals(selectedLevel)) btn.setColor(com.badlogic.gdx.graphics.Color.GOLD);
-            btn.addListener(new ChangeListener() {
-                @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
-                    selectedLevel = lvl;
-                    rebuildUI();
-                }
-            });
-            levelSelect.add(btn).width(120).height(40).pad(5);
-        }
-        table.add(levelSelect).colspan(2).padBottom(20).row();
+        table.add(new Label("SURVIVAL HALL OF FAME", game.getSkin(), "title")).colspan(4).padBottom(20).row();
 
         // Data Loading and Sorting
         List<PlayerScore> scores = new ArrayList<>();
+        // Iterate through all found profile names in local storage
         for (String name : SaveManager.getAllProfileNames()) {
             GameState gs = SaveManager.loadProfile(name);
-            if (gs.levelHighScores.containsKey(selectedLevel)) {
-                scores.add(new PlayerScore(name, gs.levelHighScores.get(selectedLevel)));
+            // Only include players who have established a survival record
+            if (gs.getSurvivalBestScore() > 0) {
+                scores.add(new PlayerScore(
+                        name,
+                        gs.getSurvivalBestScore(),
+                        gs.getSurvivalBestWave(),
+                        gs.getSurvivalLongestTime()
+                ));
             }
         }
+
+        // Sort descending: Highest score at the top
         Collections.sort(scores, (a, b) -> b.score - a.score);
 
-        // Display Score Table
+        // Display Score Table Headers
         Table scoreTable = new Table();
-        scoreTable.add(new Label("PLAYER", game.getSkin(), "bold")).padRight(100);
-        scoreTable.add(new Label("SCORE", game.getSkin(), "bold")).row();
+        scoreTable.add(new Label("PLAYER", game.getSkin(), "bold")).padRight(40).left();
+        scoreTable.add(new Label("SCORE", game.getSkin(), "bold")).padRight(40).right();
+        scoreTable.add(new Label("WAVE", game.getSkin(), "bold")).padRight(40).right();
+        scoreTable.add(new Label("TIME", game.getSkin(), "bold")).right().row();
 
+        // Populate Table with Top 10
         int rank = 1;
         for (PlayerScore ps : scores) {
-            scoreTable.add(new Label(rank + ". " + ps.name, game.getSkin())).left();
-            scoreTable.add(new Label("" + ps.score, game.getSkin())).right().row();
-            if (++rank > 10) break; // Display top 10
+            scoreTable.add(new Label(rank + ". " + ps.name, game.getSkin())).padRight(40).left();
+            scoreTable.add(new Label("" + ps.score, game.getSkin())).padRight(40).right();
+            scoreTable.add(new Label("" + ps.wave, game.getSkin())).padRight(40).right();
+            scoreTable.add(new Label(ps.time + "s", game.getSkin())).right().row();
+
+            if (++rank > 10) break;
         }
 
-        // FIX: colspan(2) ensures the leaderboard list is centered
-        table.add(scoreTable).colspan(2).padBottom(40).row();
+        // Add the scrollable/list table to the main layout
+        table.add(scoreTable).colspan(4).padBottom(40).row();
 
+        // Back Button to return to Menu
         TextButton back = new TextButton("Back", game.getSkin());
         back.addListener(new ChangeListener() {
-            @Override public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) { game.goToMenu(); }
+            @Override
+            public void changed(ChangeEvent event, com.badlogic.gdx.scenes.scene2d.Actor actor) {
+                game.goToMenu();
+            }
         });
 
-        // FIX: colspan(2) ensures the back button is centered
-        table.add(back).colspan(2).width(200);
+        table.add(back).colspan(4).width(200);
     }
 
+    /**
+     * Static helper class to encapsulate player survival data for ranking.
+     */
     private static class PlayerScore {
-        String name; int score;
-        PlayerScore(String n, int s) { name = n; score = s; }
+        String name;
+        int score;
+        int wave;
+        int time;
+
+        /**
+         * @param n Player name
+         * @param s Highest survival score reached
+         * @param w Highest wave reached
+         * @param t Longest time survived in seconds
+         */
+        PlayerScore(String n, int s, int w, int t) {
+            this.name = n;
+            this.score = s;
+            this.wave = w;
+            this.time = t;
+        }
     }
 
-    @Override public void render(float delta) {
+    @Override
+    public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act(delta);
         stage.draw();
     }
 
-    @Override public void show() {
-        // Essential for mouse input
+    @Override
+    public void show() {
+        // Required to enable mouse/touch interaction
         Gdx.input.setInputProcessor(stage);
     }
 
-    @Override public void resize(int w, int h) { stage.getViewport().update(w, h, true); }
-    @Override public void hide() { Gdx.input.setInputProcessor(null); }
-    @Override public void dispose() { stage.dispose(); }
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    @Override
+    public void hide() {
+        Gdx.input.setInputProcessor(null);
+    }
+
+    @Override
+    public void dispose() {
+        stage.dispose();
+    }
+
     @Override public void pause() {}
     @Override public void resume() {}
 }
