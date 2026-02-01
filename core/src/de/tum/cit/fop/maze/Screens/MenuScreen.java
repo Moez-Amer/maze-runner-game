@@ -67,15 +67,11 @@ public class MenuScreen implements Screen {
         table.setFillParent(true);
         stage.addActor(table);
 
-        table.add(new Label("Hello World from the Menu!", game.getSkin(), "title")).padBottom(80).row();
-
-        addButton(table,"Start New Game", ()-> {
-            game.goToGame("maps/level-1.properties");
-        },0.1f);
+        table.add(new Label("WIZARD HUNT", game.getSkin(), "title")).padBottom(80).row();
 
         addButton(table,"Select Level", ()-> {
             game.goToSelectMap();
-        },0.2f);
+        },0.1f);
 
         addButton(table,"Survival Mode", ()-> {
             game.goToSurvival();

@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import de.tum.cit.fop.maze.AudioManager;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 import de.tum.cit.fop.maze.SaveManager;
 
@@ -68,7 +69,8 @@ public class ProfileSelectionScreen implements Screen {
         table.setFillParent(true);
         stage.addActor(table);
 
-        table.add(new Label("WHO IS PLAYING?", game.getSkin(), "title")).padBottom(30).row();
+        table.add(new Label("WIZARD HUNT", game.getSkin(), "title")).padBottom(10).row();
+        table.add(new Label("WHO IS PLAYING?", game.getSkin())).padBottom(30).row();
 
         // 1. New Player Section
         final TextField nameField = new TextField("", game.getSkin());
@@ -126,7 +128,10 @@ public class ProfileSelectionScreen implements Screen {
      * Registers the {@link Stage} as the active input processor so that
      * the text field accepts typed characters and buttons receive clicks.
      */
-    @Override public void show() { Gdx.input.setInputProcessor(stage); }
+    @Override public void show() {
+        Gdx.input.setInputProcessor(stage);
+        AudioManager.playMenuMusic();
+    }
 
     /**
      * Updates the stage viewport when the window is resized.
