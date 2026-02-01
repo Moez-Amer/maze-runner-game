@@ -69,9 +69,13 @@ public class MenuScreen implements Screen {
 
         table.add(new Label("WIZARD HUNT", game.getSkin(), "title")).padBottom(80).row();
 
+        addButton(table,"Start New Game", ()-> {
+            game.goToGame("maps/level-1.properties");
+        },0.1f);
+
         addButton(table,"Select Level", ()-> {
             game.goToSelectMap();
-        },0.1f);
+        },0.2f);
 
         addButton(table,"Survival Mode", ()-> {
             game.goToSurvival();
