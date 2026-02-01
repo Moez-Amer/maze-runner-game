@@ -6,20 +6,61 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * Manages wave progression and difficulty scaling for Survival Mode.
- * Calculates how many enemies spawn and how difficult they are.
+ * Orchestrates wave progression and difficulty scaling for Survival Mode.
+ * <p>
+ * Each wave defines how many enemies will spawn and how their base
+ * stats are multiplied.  Enemy count grows exponentially
+ * ({@code 3 × 2^(wave-1)}), while speed and health scale linearly
+ * and exponentially respectively, ensuring that later waves become
+ * progressively harder.  A short transition delay between waves gives
+ * the player a brief respite before the next group arrives.
+ * </p>
+ * <p>
+ * The manager does not spawn enemies itself; it exposes the current
+ * multipliers and the remaining enemy count so that the owning
+ * survival-mode screen can poll them every frame and act accordingly.
+ * </p>
+ *
+ * <h3>Difficulty formulae</h3>
+ * <ul>
+ *   <li><b>Enemy count</b> – {@code 3 × 2^(wave-1)} (wave 1 is capped at 3).</li>
+ *   <li><b>Speed multiplier</b> – {@code 1.0 + (wave-1) × 0.15} (linear ramp).</li>
+ *   <li><b>Health multiplier</b> – {@code 1.2^(wave-1)} (exponential ramp).</li>
+ *   <li><b>Score multiplier</b> – {@code 1.0 + (wave-1) × 0.25} (linear ramp).</li>
+ * </ul>
  */
 public class WaveManager {
+    /** The 1-based index of the wave currently in progress or about to start. */
     private int currentWave;
+    /** Number of enemies that still need to be killed to complete the current wave. */
     private int enemiesRemainingInWave;
+    /** Total number of enemies that were spawned (or will be spawned) in this wave. */
     private int totalEnemiesInWave;
+    /** Accumulates time during the inter-wave transition. */
     private float waveTransitionTimer;
+    /** {@code true} while the transition delay between two waves is counting down. */
     private boolean isTransitioning;
 
+    /** Duration in seconds of the pause between waves. */
     private static final float WAVE_TRANSITION_DELAY = 2.0f;
+    /** Shared {@link Random} instance used for spawn-location selection. */
     private Random random;
+    /** Pool of world-space spawn points available for enemy placement. */
     private ArrayList<Vector2> spawnLocations;
 
+    /**
+     * Constructs a WaveManager with the given spawn-point pool.
+     * The manager starts at wave 0 with no enemies remaining; call
+     * {@link #startWave(int)} to begin the first wave.
+     *
+     * @param spawnLocations A list of world-space {@link Vector2} positions
+     *                       where enemies may be placed.  Must not be empty;
+     *                       if it is, {@link #getRandomSpawnPosition} will
+     *                       return the origin.
+     * @param random         A {@link Random} instance used to select from the
+     *                       spawn-location pool.  Passing a seeded instance
+     *                       allows deterministic replay.
+     */
     public WaveManager(ArrayList<Vector2> spawnLocations, Random random) {
         this.currentWave = 0;
         this.enemiesRemainingInWave = 0;
@@ -33,7 +74,15 @@ public class WaveManager {
     }
 
     /**
-     * Starts a new wave.
+     * Initialises and activates the specified wave.
+     * <p>
+     * The enemy count for wave 1 is hard-coded to 3.  For every
+     * subsequent wave the count doubles: {@code 3 × 2^(waveNumber-1)}.
+     * The transition flag is cleared and the transition timer is reset
+     * so that the owning screen can begin spawning enemies immediately.
+     * </p>
+     *
+     * @param waveNumber The 1-based wave index to start.
      */
     public void startWave(int waveNumber) {
         this.currentWave = waveNumber;
@@ -51,6 +100,18 @@ public class WaveManager {
         System.out.println(">>> Wave " + currentWave + " started with " + totalEnemiesInWave + " enemies");
     }
 
+    /**
+     * Advances the wave-manager state by one frame.
+     * <p>
+     * If a transition is in progress the method accumulates {@code delta}
+     * into the transition timer.  When the timer reaches
+     * {@link #WAVE_TRANSITION_DELAY} the next wave is started
+     * automatically via {@link #startWave}.  When no transition is
+     * active this method is a no-op.
+     * </p>
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     public void update(float delta) {
         if (isTransitioning) {
             waveTransitionTimer += delta;
@@ -60,6 +121,15 @@ public class WaveManager {
         }
     }
 
+    /**
+     * Notifies the manager that one enemy has been killed.
+     * <p>
+     * The remaining-enemy counter is decremented.  When it reaches zero
+     * the wave is marked as complete and the inter-wave transition
+     * countdown begins.  If the transition is already underway (e.g.
+     * due to a race with a late enemy death) the call is a no-op.
+     * </p>
+     */
     public void onEnemyKilled() {
         enemiesRemainingInWave--;
         if (enemiesRemainingInWave <= 0 && !isTransitioning) {
@@ -70,7 +140,11 @@ public class WaveManager {
     }
 
     /**
-     * Gets random spawn position from available locations.
+     * Selects a spawn position uniformly at random from the pool of
+     * available {@link #spawnLocations}.
+     *
+     * @return A {@link Vector2} chosen at random, or {@code (0, 0)} if
+     *         the spawn-location list is empty.
      */
     public Vector2 getRandomSpawnPosition() {
         if (spawnLocations.isEmpty()) {
@@ -79,34 +153,88 @@ public class WaveManager {
         return spawnLocations.get(random.nextInt(spawnLocations.size()));
     }
 
+    /**
+     * Calculates the speed multiplier that should be applied to every
+     * enemy spawned in the current wave.  The multiplier increases by
+     * 0.15 per wave, starting at 1.0 for wave 1.
+     *
+     * @return The speed multiplier for the current wave.
+     */
     public float getSpeedMultiplier() {
         return 1.0f + (currentWave - 1) * 0.15f;
     }
 
+    /**
+     * Calculates the health multiplier that should be applied to every
+     * enemy spawned in the current wave.  The multiplier grows
+     * exponentially at a base of 1.2 per wave, starting at 1.0 for
+     * wave 1.
+     *
+     * @return The health multiplier for the current wave.
+     */
     public float getHealthMultiplier() {
         return (float) Math.pow(1.2, currentWave - 1);
     }
 
+    /**
+     * Calculates the score multiplier applied to points awarded for
+     * each enemy kill in the current wave.  The multiplier increases
+     * by 0.25 per wave, starting at 1.0 for wave 1.
+     *
+     * @return The score multiplier for the current wave.
+     */
     public float getScoreMultiplier() {
         return 1.0f + (currentWave - 1) * 0.25f;
     }
 
+    /**
+     * Returns the 1-based index of the wave currently in progress.
+     *
+     * @return The current wave number.
+     */
     public int getCurrentWave() {
         return currentWave;
     }
 
+    /**
+     * Returns the number of enemies that still need to be killed to
+     * complete the current wave.
+     *
+     * @return The remaining enemy count.
+     */
     public int getEnemiesRemaining() {
         return enemiesRemainingInWave;
     }
 
+    /**
+     * Returns the total number of enemies that were (or will be)
+     * spawned in the current wave.
+     *
+     * @return The total enemy count for this wave.
+     */
     public int getTotalEnemiesInWave() {
         return totalEnemiesInWave;
     }
 
+    /**
+     * Indicates whether the manager is currently in the inter-wave
+     * transition pause.  During this period no new enemies should be
+     * spawned by the owning screen.
+     *
+     * @return {@code true} if a transition delay is counting down.
+     */
     public boolean isTransitioning() {
         return isTransitioning;
     }
 
+    /**
+     * Returns the time remaining on the current inter-wave transition.
+     * If no transition is in progress the value is {@code 0}.  The
+     * owning screen can display this as a countdown to the next wave.
+     *
+     * @return Seconds remaining until the next wave starts, or {@code 0}
+     *         if no transition is active.
+     */
     public float getTransitionTimeRemaining() {
         return isTransitioning ? Math.max(0, WAVE_TRANSITION_DELAY - waveTransitionTimer) : 0f;
     }
