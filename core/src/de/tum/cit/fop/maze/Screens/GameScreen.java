@@ -152,7 +152,7 @@ public class GameScreen implements Screen {
 
         for (int j = 0; j < mapHeight; j++) {
             for (int i = 0; i < mapWidth; i++) {
-                if (mapData[i][j] == 4){
+                if (mapData[i][j] == TYPE_ENEMY){
                     float centeredX= (i*TILE_SIZE);
                     float centeredY= (j*TILE_SIZE);
                     Enemy enemy = new Enemy(centeredX,centeredY,TILE_SIZE,mapData, "Enemy_Assets/Undead executioner puppet/png/",100,100);
@@ -163,12 +163,12 @@ public class GameScreen implements Screen {
                             int checkX=i+xOffSet;
                             int checkY=j+yOffSet;
                             if (checkX<mapWidth&&checkY<mapHeight){
-                                mapData[checkX][checkY]=1;
+                                mapData[checkX][checkY]=TYPE_PATH;
                             }
                         }
                     }
                 }
-                else if (mapData[i][j] == 8) { // TYPE_BOSS
+                else if (mapData[i][j] == TYPE_BOSS) { // TYPE_BOSS
                     float centeredX = (i * TILE_SIZE);
                     float centeredY = (j * TILE_SIZE);
 
@@ -176,7 +176,7 @@ public class GameScreen implements Screen {
                     this.enemies.add(boss);
 
                     // Mark the ground as walkable sohe boss isn't stuck
-                    mapData[i][j] = 1;
+                    mapData[i][j] = TYPE_PATH;
                     System.out.println("FINAL BOSS SPAWNED AT: " + i + "," + j);
                 }
             }
@@ -222,7 +222,7 @@ public class GameScreen implements Screen {
 
         for (int x = 0; x < mapWidth; x++) {
             for (int y = 0; y < mapHeight; y++) {
-                if (mapData[x][y] == de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_EXIT) {
+                if (mapData[x][y] == TYPE_EXIT) {
                     this.exitPosition = new com.badlogic.gdx.math.Vector2(x * TILE_SIZE + TILE_SIZE / 2f, y * TILE_SIZE + TILE_SIZE / 2f);
                     break;
                 }
@@ -539,7 +539,7 @@ public class GameScreen implements Screen {
             for (int y = 0; y < mapHeight; y++) {
                 // Check if the tile is a KEY (Type 5)
                 // You can use TiledToPropertiesConverter.TYPE_KEY or just 5
-                if (mapData[x][y] == de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_KEY) {
+                if (mapData[x][y] == TYPE_KEY) {
 
                     // Spawn the key exactly at this tile's position
                     collectibles.add(new Collectibles(
@@ -1194,7 +1194,7 @@ public class GameScreen implements Screen {
 
         for (int x = 0; x < mapWidth; x++) {
             for (int y = 0; y < mapHeight; y++) {
-                if (mapData[x][y] == TiledToPropertiesConverter.TYPE_EXIT) {
+                if (mapData[x][y] == TYPE_EXIT) {
                     float tileX = x * TILE_SIZE;
                     float tileY = y * TILE_SIZE;
 

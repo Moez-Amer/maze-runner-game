@@ -3,6 +3,8 @@ package de.tum.cit.fop.maze;
 import java.lang.reflect.Array;
 import java.util.*;
 
+import static de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_WALL;
+
 /**
  * Implements A* pathfinding algorithm for maze navigation.
  * This class creates a grid of nodes from map data and finds optimal paths
@@ -32,7 +34,7 @@ public class PathFinder {
         for(int x =0; x<mapWidth ; x++){
             for(int y =0; y<mapHeight; y++){
                 Node node =new Node(x,y);
-                if (mapData[x][y]!=0){
+                if (mapData[x][y]!=TYPE_WALL){
                     node.setWalkable(true);
                 }
                 nodeGrid[x][y]= node;

@@ -6,6 +6,10 @@ import com.badlogic.gdx.utils.Array;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Rectangle;import com.badlogic.gdx.math.Rectangle;import com.badlogic.gdx.math.Rectangle;
+
+import static de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_PATH;
+import static de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_WALL;
+
 public abstract class MovableGameObject extends GameObject {
     protected Array<Enemy> enemies;
     protected Player player;
@@ -82,10 +86,10 @@ public abstract class MovableGameObject extends GameObject {
         }
 
         // 3. Wall Tile Check
-        boolean isTileWalkable = mapData[tileX1][tileY1] != 0 &&
-                mapData[tileX2][tileY1] != 0 &&
-                mapData[tileX1][tileY2] != 0 &&
-                mapData[tileX2][tileY2] != 0;
+        boolean isTileWalkable = mapData[tileX1][tileY1] != TYPE_WALL &&
+                mapData[tileX2][tileY1] != TYPE_WALL &&
+                mapData[tileX1][tileY2] != TYPE_WALL &&
+                mapData[tileX2][tileY2] != TYPE_WALL;
 
         if (!isTileWalkable) return false;
 

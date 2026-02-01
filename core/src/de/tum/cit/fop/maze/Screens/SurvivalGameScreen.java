@@ -6,6 +6,8 @@ import de.tum.cit.fop.maze.*;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static de.tum.cit.fop.maze.TiledToPropertiesConverter.*;
+
 /**
  * Survival Mode Game Screen
  * Extends GameScreen and uses identical update/render logic.
@@ -73,7 +75,7 @@ public class SurvivalGameScreen extends GameScreen {
         int locationsCount = 0;
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
-                if (mapData[x][y] != 1) {
+                if (mapData[x][y] != TYPE_PATH) {
                     continue;
                 }
 
@@ -96,7 +98,7 @@ public class SurvivalGameScreen extends GameScreen {
                             break;
                         }
 
-                        if (mapData[nx][ny] != 1 && mapData[nx][ny] != 6) {
+                        if (mapData[nx][ny] != TYPE_PATH && mapData[nx][ny] != TYPE_ENTRY) {
                             allNeighborsSafe = false;
                             break;
                         }

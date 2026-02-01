@@ -15,13 +15,13 @@ public class TiledToPropertiesConverter {
     
     // Game object types for the properties file
     public static final int TYPE_WALL = 0;
-    public static final int TYPE_PATH = 1;
+    public static final int TYPE_ENTRY = 1;
     public static final int TYPE_EXIT = 2;
-    public static final int TYPE_DEATHTRAP = 3;
+    public static final int TYPE_KNIFE_TRAP = 3;
     public static final int TYPE_ENEMY = 4;
     public static final int TYPE_KEY = 5;
-    public static final int TYPE_ENTRY = 6;
-    public static final int TYPE_KNIFE_TRAP = 7;
+    public static final int TYPE_DEATHTRAP = 6;
+    public static final int TYPE_PATH = 7;
     public static final int TYPE_BOSS = 8;
     public static void convert(String tmxFilePath, String outputPropertiesPath) throws Exception {
         // Parse the TMX file
@@ -73,7 +73,9 @@ public class TiledToPropertiesConverter {
                 processKnifesLayer(tiles, gameMap, width, height);
             } else if (layerName.contains("enemy") || layerName.contains("monster")) {
                 processEnemyLayer(tiles, gameMap, width, height);
-            } else if (layerName.contains("key") || layerName.contains("item") || layerName.contains("collect")) {
+            } else if (layerName.contains("boss")) {
+                processBossLayer(tiles, gameMap, width, height);
+            }else if (layerName.contains("key") || layerName.contains("item") || layerName.contains("collect")) {
                 processKeyLayer(tiles, gameMap, width, height);
             }
         }
@@ -195,6 +197,17 @@ public class TiledToPropertiesConverter {
             
             if (tiles[i] != 0) {
                 gameMap[x][y] = TYPE_ENEMY;
+                System.out.println("Enemy found at: " + x + "," + y);
+            }
+        }
+    }
+    private static void processBossLayer(int[] tiles, int[][] gameMap, int width, int height) {
+        for (int i = 0; i < tiles.length; i++) {
+            int x = i % width;
+            int y = height - 1 - (i / width);
+
+            if (tiles[i] != 0) {
+                gameMap[x][y] = TYPE_BOSS;
                 System.out.println("Enemy found at: " + x + "," + y);
             }
         }
