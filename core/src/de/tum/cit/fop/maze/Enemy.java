@@ -11,10 +11,17 @@ import java.util.ArrayList;
 
 /**
  * Represents an enemy character in the maze game.
+ * <p>
  * Enemies can patrol designated areas, chase the player when detected,
  * and attack when in close proximity. They use A* pathfinding for navigation
- * and implement collision avoidance with other enemies.
- *
+ * and implement collision avoidance with other enemies. Behaviour is driven
+ * by a three-state machine:
+ * <ul>
+ * <li>PATROL – wanders in diagonal directions until the player is detected</li>
+ * <li>CHASE – actively navigates toward the player via A* pathfinding</li>
+ * <li>ATTACK – close enough to deal damage on a timed interval</li>
+ * </ul>
+ * </p>
  */
 public class Enemy extends MovableGameObject {
     protected Animation<TextureRegion> floatingAnim, attackAnim, floatingLeftAnim, attackLeftAnim;
@@ -52,13 +59,14 @@ public class Enemy extends MovableGameObject {
      * Constructs a new Enemy at the specified position.
      * Initializes the enemy with animations, collision detection, pathfinding,
      * and generates random patrol points around the spawn location.
-     * @param x The initial X coordinate in pixels
-     * @param y The initial Y coordinate in pixels
-     * @param tileSize The size of each tile in the game world
-     * @param mapData 2D array representing the walkable/non-walkable tiles
-     * @param path The file path to the enemy sprite sheets
-     * @param frameWidth Width of each animation frame in pixels
-     * @param frameHeight Height of each animation frame in pixels
+     *
+     * @param x          The initial X coordinate in pixels.
+     * @param y          The initial Y coordinate in pixels.
+     * @param tileSize   The size of each tile in the game world.
+     * @param mapData    2D array representing the walkable/non-walkable tiles.
+     * @param path       The file path to the enemy sprite sheets.
+     * @param frameWidth Width of each animation frame in pixels.
+     * @param frameHeight Height of each animation frame in pixels.
      */
     public Enemy(float x,float y,int tileSize,int[][] mapData,String path,int frameWidth,int frameHeight) {
         super(x, y, frameWidth, frameHeight);
@@ -82,7 +90,7 @@ public class Enemy extends MovableGameObject {
      * Sets the speed multiplier for this enemy.
      * Multiplies the base speed by the given factor for difficulty scaling.
      *
-     * @param multiplier The speed multiplier (e.g., 1.0 = normal, 1.5 = 50% faster)
+     * @param multiplier The speed multiplier (e.g., 1.0 = normal, 1.5 = 50% faster).
      */
     public void setSpeedMultiplier(float multiplier) {
         this.speedMultiplier = multiplier;
@@ -95,7 +103,7 @@ public class Enemy extends MovableGameObject {
      * Sets the health multiplier for this enemy.
      * Multiplies the base health by the given factor for difficulty scaling.
      *
-     * @param multiplier The health multiplier (e.g., 1.0 = normal, 2.0 = double health)
+     * @param multiplier The health multiplier (e.g., 1.0 = normal, 2.0 = double health).
      */
     public void setHealthMultiplier(float multiplier) {
         this.healthMultiplier = multiplier;
@@ -106,7 +114,7 @@ public class Enemy extends MovableGameObject {
     /**
      * Gets the current speed multiplier.
      *
-     * @return The speed multiplier
+     * @return The speed multiplier.
      */
     public float getSpeedMultiplier() {
         return speedMultiplier;
@@ -115,7 +123,7 @@ public class Enemy extends MovableGameObject {
     /**
      * Gets the current health multiplier.
      *
-     * @return The health multiplier
+     * @return The health multiplier.
      */
     public float getHealthMultiplier() {
         return healthMultiplier;
@@ -123,8 +131,10 @@ public class Enemy extends MovableGameObject {
 
     /**
      * Updates the enemy's state each frame.
-     * Calls the parent update method and executes movement logic.
-     * @param delta Time elapsed since last frame in seconds
+     * Calls the parent update method, decrements the damage flash timer,
+     * and executes the main movement logic.
+     *
+     * @param delta Time elapsed since last frame in seconds.
      */
     @Override
     public void update(float delta) {
@@ -135,6 +145,7 @@ public class Enemy extends MovableGameObject {
         }
         movementLogic(delta);
     }
+
     /**
      * Applies separation force to prevent enemies from overlapping.
      * Uses a simple repulsion force when enemies get too close to each other,
@@ -158,35 +169,37 @@ public class Enemy extends MovableGameObject {
             }
         }
     }
+
     /**
      * Loads and initializes all animation frames for the enemy.
      * Creates animations for floating/idle and attacking states,
      * both facing left and right directions.
      *
-     * @param path Base path to the sprite sheet files
-     * @param frameWidth Width of each frame in pixels
-     * @param frameHeight Height of each frame in pixels
+     * @param path       Base path to the sprite sheet files.
+     * @param frameWidth Width of each frame in pixels.
+     * @param frameHeight Height of each frame in pixels.
      */
     public void loadAnimation(String path, int frameWidth, int frameHeight) {
-            Texture idle = new Texture(Gdx.files.internal(path + "idleN.png"));
-            Texture attack = new Texture(Gdx.files.internal(path + "attacking.png"));
-            TextureRegion[][] idleFrames = TextureRegion.split(idle, frameWidth, frameHeight);
-            TextureRegion[][] attackFrames = TextureRegion.split(attack, frameWidth, frameHeight);
-            floatingAnim = new Animation<>(0.2f, idleFrames[0]);
-            floatingLeftAnim = new Animation<>(0.2f, flipFrames(idleFrames[0]));
-            TextureRegion[] attackR = mergeRows(attackFrames[0], attackFrames[1]);
-            attackAnim = new Animation<>(0.2f, attackR);
-            attackLeftAnim = new Animation<>(0.2f, flipFrames(attackR));
-            Animation[] all = {floatingAnim, floatingLeftAnim, attackAnim, attackLeftAnim};
-            for (Animation a : all) if (a != null) a.setPlayMode(Animation.PlayMode.LOOP);
-            currentAnimation = floatingAnim;
+        Texture idle = new Texture(Gdx.files.internal(path + "idleN.png"));
+        Texture attack = new Texture(Gdx.files.internal(path + "attacking.png"));
+        TextureRegion[][] idleFrames = TextureRegion.split(idle, frameWidth, frameHeight);
+        TextureRegion[][] attackFrames = TextureRegion.split(attack, frameWidth, frameHeight);
+        floatingAnim = new Animation<>(0.2f, idleFrames[0]);
+        floatingLeftAnim = new Animation<>(0.2f, flipFrames(idleFrames[0]));
+        TextureRegion[] attackR = mergeRows(attackFrames[0], attackFrames[1]);
+        attackAnim = new Animation<>(0.2f, attackR);
+        attackLeftAnim = new Animation<>(0.2f, flipFrames(attackR));
+        Animation[] all = {floatingAnim, floatingLeftAnim, attackAnim, attackLeftAnim};
+        for (Animation a : all) if (a != null) a.setPlayMode(Animation.PlayMode.LOOP);
+        currentAnimation = floatingAnim;
     }
+
     /**
      * Flips an array of texture regions horizontally.
      * Used to create left-facing animations from right-facing sprites.
      *
-     * @param original Array of texture regions to flip
-     * @return New array with horizontally flipped texture regions
+     * @param original Array of texture regions to flip.
+     * @return New array with horizontally flipped texture regions.
      */
     private TextureRegion[] flipFrames(TextureRegion[] original) {
         TextureRegion[] flipped = new TextureRegion[original.length];
@@ -196,12 +209,14 @@ public class Enemy extends MovableGameObject {
         }
         return flipped;
     }
+
     /**
      * Merges two arrays of texture regions into one.
      * Used to combine multiple rows of animation frames from a sprite sheet.
-     * @param r1 First array of texture regions
-     * @param r2 Second array of texture regions
-     * @return Combined array containing all frames from both inputs
+     *
+     * @param r1 First array of texture regions.
+     * @param r2 Second array of texture regions.
+     * @return Combined array containing all frames from both inputs.
      */
     private TextureRegion[] mergeRows(TextureRegion[] r1, TextureRegion[] r2) {
         TextureRegion[] combined = new TextureRegion[r1.length + r2.length];
@@ -209,12 +224,14 @@ public class Enemy extends MovableGameObject {
         System.arraycopy(r2, 0, combined, r1.length, r2.length);
         return combined;
     }
+
     /**
      * Main logic for enemy movement and behavior.
      * Determines the enemy's state based on distance to player and
-     * delegates to appropriate behavior method (patrol, chase, or attack).
+     * delegates to the appropriate behavior method (patrol, chase, or attack).
+     * Ghost-mode players are ignored and the enemy defaults to patrolling.
      *
-     * @param delta Time elapsed since last frame in seconds
+     * @param delta Time elapsed since last frame in seconds.
      */
     private void movementLogic(float delta){
         if (player == null||pathFinder==null){
@@ -262,12 +279,14 @@ public class Enemy extends MovableGameObject {
             }
         }
     }
+
     /**
      * Handles attack behavior when enemy is very close to player.
-     * Sets the appropriate attack animation based on relative position to player.
+     * Sets the appropriate attack animation based on relative position to player
+     * and deals damage on a timed cooldown interval.
      *
-     * @param EnemyX Enemy's X position
-     * @param PlayerX Player's X position
+     * @param EnemyX  Enemy's X position.
+     * @param PlayerX Player's X position.
      */
     public void attack(float EnemyX, float PlayerX){
         if (EnemyX>PlayerX){
@@ -286,15 +305,16 @@ public class Enemy extends MovableGameObject {
             }
         }
     }
+
     /**
      * Handles chase behavior when enemy detects the player.
      * Uses A* pathfinding to navigate toward the player, recalculating
-     * the path periodically or when stuck. Implements smooth movement
-     * with wall sliding and collision handling.
+     * the path periodically or when the enemy becomes stuck. Implements smooth
+     * movement with wall sliding and collision handling.
      *
-     * @param EnemyX Enemy's X position
-     * @param PlayerX Player's X position
-     * @param delta Time elapsed since last frame in seconds
+     * @param EnemyX  Enemy's X position.
+     * @param PlayerX Player's X position.
+     * @param delta   Time elapsed since last frame in seconds.
      */
     public void chase(float EnemyX, float PlayerX,float delta) {
         this.speed = baseSpeed * speedMultiplier;
@@ -328,19 +348,21 @@ public class Enemy extends MovableGameObject {
             float targetX = playerCenterX ;
 
 
-        calculatePathTo(playerCenterX,playerCenterY);
+            calculatePathTo(playerCenterX,playerCenterY);
         }
         startFollowingThePath(delta);
 
         applySeparation();
     }
+
     /**
      * Handles patrol behavior with wall-bounce logic.
-     * Enemy moves in diagonal directions until hitting a wall, then bounces.
+     * Enemy moves in diagonal directions until hitting a wall, then bounces
+     * to the next diagonal direction in the cycle.
      *
-     * @param EnemyX Enemy's X position
-     * @param PlayerX Player's X position
-     * @param delta Time elapsed since last frame in seconds
+     * @param EnemyX  Enemy's X position.
+     * @param PlayerX Player's X position.
+     * @param delta   Time elapsed since last frame in seconds.
      */
     public void patrol(float EnemyX, float PlayerX, float delta) {
         this.speed = patrolSpeed;
@@ -376,7 +398,7 @@ public class Enemy extends MovableGameObject {
 
     /**
      * Changes patrol direction when hitting a wall.
-     * Cycles through diagonal directions: (1,1) -> (-1,1) -> (-1,-1) -> (1,-1) -> repeat
+     * Cycles through diagonal directions: (1,1) -> (-1,1) -> (-1,-1) -> (1,-1) -> repeat.
      */
     private void changePatrolDirection() {
         currentDirectionIndex = (currentDirectionIndex + 1) % DIAGONAL_DIRECTIONS.length;
@@ -384,11 +406,12 @@ public class Enemy extends MovableGameObject {
         patrolDirectionY = DIAGONAL_DIRECTIONS[currentDirectionIndex][1];
 
     }
+
     /**
      * Gets the damage hitbox for the enemy.
      * This is 3 tiles tall, positioned directly above the feet collision box.
      *
-     * @return Rectangle representing the area where enemy can take damage
+     * @return A Rectangle representing the area where the enemy can take damage.
      */
     public Rectangle getDamageHitBox() {
         float[] feetBox = getFeetCollisionBox();
@@ -407,9 +430,10 @@ public class Enemy extends MovableGameObject {
     }
 
     /**
-     * Applies damage to the enemy.
+     * Applies damage to the enemy and triggers the damage flash effect.
+     * If health drops to 0 or below the enemy is marked as dead.
      *
-     * @param damage Amount of damage to apply
+     * @param damage Amount of damage to apply.
      */
     public void takeDamage(float damage) {
         health -= damage;
@@ -425,11 +449,21 @@ public class Enemy extends MovableGameObject {
     /**
      * Checks if the enemy is dead.
      *
-     * @return true if enemy health is 0 or below
+     * @return true if enemy health is 0 or below.
      */
     public boolean isDead() {
         return isDead;
     }
+
+    /**
+     * Renders the enemy sprite to the screen.
+     * Applies a red-flash tint while the damage flash timer is active.
+     * The flash alternates on and off at 10 Hz by sampling the integer part
+     * of damageFlashTimer * 10. The colour is always reset to white after
+     * the draw call so that subsequent sprites in the same batch are unaffected.
+     *
+     * @param batch The SpriteBatch that is currently open for drawing.
+     */
     @Override
     public void render(SpriteBatch batch) {
         if (currentAnimation != null) {
@@ -446,6 +480,17 @@ public class Enemy extends MovableGameObject {
             batch.setColor(com.badlogic.gdx.graphics.Color.WHITE); // Reset color
         }
     }
+
+    /**
+     * Uses the A* path-finder to compute a smoothed path from this enemy's
+     * current feet position to the given target coordinates. After the raw
+     * path is returned the first node (the enemy's own starting tile) is
+     * removed, and the remaining nodes are passed through smoothPath to
+     * produce a shorter sequence of waypoints with fewer unnecessary turns.
+     *
+     * @param targetX The X-coordinate of the destination in world pixels.
+     * @param targetY The Y-coordinate of the destination in world pixels.
+     */
     public void  calculatePathTo(float targetX, float targetY){
         float [] enemyFeet= getFeetCollisionBox();
         this.path = pathFinder.findPath(enemyFeet[0], enemyFeet[1], targetX, targetY);
@@ -454,6 +499,20 @@ public class Enemy extends MovableGameObject {
             this.path = pathFinder.smoothPath(path);
         }
     }
+
+    /**
+     * Advances the enemy along the pre-computed path by one frame.
+     * Each frame the method inspects the first Node in the path (the next
+     * waypoint) and moves the enemy toward it at the current speed. When the
+     * enemy is within 3 pixels of the waypoint it is removed and the next one
+     * becomes the target. If the full diagonal move is blocked, the dominant
+     * axis is tried first, then the secondary axis alone (axis-priority sliding).
+     * If neither axis is free the current waypoint is skipped entirely to avoid
+     * the enemy locking in place. After movement the facing direction is updated
+     * to match the dominant axis of the displacement vector to the waypoint.
+     *
+     * @param delta Time elapsed since the previous frame, in seconds.
+     */
     private void startFollowingThePath(float delta) {
         if (this.path != null && !this.path.isEmpty()) {
             float[] enemyFeet = getFeetCollisionBox();
@@ -515,8 +574,4 @@ public class Enemy extends MovableGameObject {
             }
         }
     }
-
-
-
-
 }
