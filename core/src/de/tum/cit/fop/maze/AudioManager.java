@@ -8,8 +8,10 @@ import com.badlogic.gdx.utils.Json;
 import java.util.HashMap;
 
 /**
- * Manager class for handling all game sound effects and background music.
- * Provides static methods to play specific sounds from anywhere in the game.
+ * Manager class for handling all game sound effects (SFX) and background music (BGM).
+ * This class provides a centralized, static interface to manage audio assets,
+ * handle volume settings (Main, Music, SFX), and persist audio preferences to local storage.
+ * It ensures that audio resources are loaded once and properly disposed of to prevent memory leaks.
  */
 public class AudioManager {
 
@@ -35,8 +37,9 @@ public class AudioManager {
     private static boolean loaded = false;
 
     /**
-     * Loads all sound and music assets from the internal storage and restores saved settings.
-     * Must be called once during game initialization.
+     * Loads all audio assets from the internal storage and restores saved volume settings.
+     * This method initializes {@link Sound} and {@link Music} objects for the entire game.
+     * It should be called once during the game's startup (e.g., in {@link MazeRunnerGame#create()}).
      */
     public static void load() {
         if (loaded) return;
@@ -64,56 +67,41 @@ public class AudioManager {
 
     /**
      * Sets the main (master) volume level and updates currently playing music.
-     *
      * @param vol The new volume level (0.0 to 1.0).
      */
     public static void setMainVolume(float vol) {
         mainVolume = vol;
         updateMusicVolume();
     }
-    /**
-     * Returns the current main volume level.
-     *
-     * @return The main volume (0.0 to 1.0).
-     */
+    /** @return The current master volume (0.0 to 1.0). */
     public static float getMainVolume() {
         return mainVolume;
     }
     /**
-     * Sets the background music volume multiplier and updates currently playing music.
-     *
+     * Sets the background music (BGM) volume multiplier.
      * @param vol The new music volume multiplier (0.0 to 1.0).
      */
     public static void setMusicVolume(float vol) {
         musicVolume = vol;
         updateMusicVolume();
     }
-    /**
-     * Returns the current music volume multiplier.
-     *
-     * @return The music volume (0.0 to 1.0).
-     */
+    /** @return The current music volume multiplier (0.0 to 1.0). */
     public static float getMusicVolume() {
         return musicVolume;
     }
     /**
      * Sets the sound effects (SFX) volume multiplier.
-     *
      * @param volume The new SFX volume multiplier (0.0 to 1.0).
      */
     public static void setSFXVolume(float volume) {
         sfxVolume = volume;
     }
-    /**
-     * Returns the current sound effects volume multiplier.
-     *
-     * @return The SFX volume (0.0 to 1.0).
-     */
+    /** @return The current SFX volume multiplier (0.0 to 1.0). */
     public static float getSFXVolume() {
         return sfxVolume;
     }
     /**
-     * updates the volume of all music tracks based on Main and Music volume settings.
+     * Synchronizes the volume of all active music tracks based on Main and Music settings.
      */
     private static void updateMusicVolume() {
         float vol = mainVolume * musicVolume;
@@ -209,9 +197,7 @@ public class AudioManager {
         }
     }
 
-    /**
-     * Stops game music and starts looping the main menu music.
-     */
+    /** Stops any active gameplay music and starts the main menu music. */
     public static void playMenuMusic() {
         if (gameMusic != null && gameMusic.isPlaying()) {
             gameMusic.stop();
@@ -221,8 +207,8 @@ public class AudioManager {
         }
 
     }
-    /**
-     * Stops menu music and starts looping the gameplay music.
+    /** * Stops all other music and starts the gameplay music.
+     * This ensures no music overlap when entering a level.
      */
     public static void playGameMusic() {
         // Stop ALL music first to prevent overlaps
@@ -241,7 +227,7 @@ public class AudioManager {
         }
     }
     /**
-     * Saves the current volume settings to a local JSON file.
+     * Serializes and saves the current volume settings to "audio.json" in local storage.
      */
     public static void saveSettings() {
         try {
@@ -258,7 +244,7 @@ public class AudioManager {
         }
     }
     /**
-     * Loads volume settings from the local JSON file if it exists.
+     * Loads volume settings from "audio.json". If the file is missing, defaults to 1.0f.
      */
     public static void loadSettings() {
         try {
@@ -278,14 +264,16 @@ public class AudioManager {
     }
 
     /**
-     * Plays the reaper chase sound once.
+     * Plays the reaper/chase sound effect.
+     * This sound is triggered when an {@link Enemy} starts chasing the player.
+     * * @return The ID of the sound instance, which can be used to stop or modify the sound later.
      */
     public static void playReaperSound() {
         if (reaperSound != null) {
             reaperSound.play(getSFXVol());
         }
     }
-
+    /** Stops all currently playing music tracks. */
     public static void stopMusic() {
         if(gameMusic != null){
             gameMusic.stop();
@@ -302,7 +290,10 @@ public class AudioManager {
         }
     }
 
-
+    /**
+     * Disposes of all loaded audio resources to free up memory.
+     * This method must be called when the game is closed to prevent memory leaks.
+     */
     public static void dispose() {
         if (pickupSound != null) pickupSound.dispose();
         if (potionPickupSound != null) potionPickupSound.dispose();
