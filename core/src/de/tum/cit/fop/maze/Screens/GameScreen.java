@@ -153,8 +153,8 @@ public class GameScreen implements Screen {
         for (int j = 0; j < mapHeight; j++) {
             for (int i = 0; i < mapWidth; i++) {
                 if (mapData[i][j] == TYPE_ENEMY){
-                    float centeredX= (i*TILE_SIZE);
-                    float centeredY= (j*TILE_SIZE);
+                    float centeredX= (i*TILE_SIZE)-TILE_SIZE;
+                    float centeredY= (j*TILE_SIZE)-TILE_SIZE;
                     Enemy enemy = new Enemy(centeredX,centeredY,TILE_SIZE,mapData, "Enemy_Assets/Undead executioner puppet/png/",100,100);
                     this.enemies.add(enemy);
                     // ... existing path marking logic ...
