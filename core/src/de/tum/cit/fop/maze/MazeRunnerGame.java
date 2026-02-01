@@ -201,6 +201,7 @@ public class MazeRunnerGame extends Game {
      */
     public void goToPause(GameScreen currentGameScreen) {
         AudioManager.stopMusic();
+        AudioManager.playMenuMusic();
         this.setScreen(new PauseScreen(this, currentGameScreen));
     }
     /**

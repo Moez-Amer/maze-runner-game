@@ -92,6 +92,7 @@ public PauseScreen( MazeRunnerGame game,GameScreen currentGameScreen) {
         stage.draw();
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            AudioManager.playGameMusic();
             game.setScreen(currentGameScreen);
         }
     }
