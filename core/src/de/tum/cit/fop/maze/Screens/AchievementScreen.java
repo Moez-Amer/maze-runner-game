@@ -88,14 +88,12 @@ public class AchievementScreen implements Screen {
         pixmap.dispose();
         rowBackground = new TextureRegionDrawable(new TextureRegion(rowBgTexture));
 
-        // Create wider scrollbar background (20px wide)
         Pixmap scrollBarPixmap = new Pixmap(20, 1, Pixmap.Format.RGBA8888);
         scrollBarPixmap.setColor(0.3f, 0.3f, 0.3f, 0.8f);
         scrollBarPixmap.fill();
         scrollBarTexture = new Texture(scrollBarPixmap);
         scrollBarPixmap.dispose();
 
-        // Create wider scroll knob (18px wide)
         Pixmap scrollKnobPixmap = new Pixmap(18, 1, Pixmap.Format.RGBA8888);
         scrollKnobPixmap.setColor(0.6f, 0.6f, 0.6f, 0.9f);
         scrollKnobPixmap.fill();

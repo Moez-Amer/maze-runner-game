@@ -32,10 +32,9 @@ public class Enemy extends MovableGameObject {
     private float lastX, lastY;
     private enum State {PATROL,ATTACK,CHASE};
     private State state ;
-    private ArrayList<Node> patrolPoints;
     int TILE_SIZE=16;
     private float health = 3.0f;
-    private float baseHealth = 2.0f;  // Store original health for multiplier calculations
+    private float baseHealth = 2.0f;
     private boolean isDead = false;
     private float damageFlashTimer = 0f;
     private static final float DAMAGE_FLASH_DURATION = 0.3f;
@@ -51,8 +50,6 @@ public class Enemy extends MovableGameObject {
     private float speedMultiplier = 1.0f;
     private float healthMultiplier = 1.0f;
 
-    private long reaperSoundId = -1;
-    private boolean isPlayingReaperSound = false;
     private boolean hasPlayedReaperSound = false;
 
     /**

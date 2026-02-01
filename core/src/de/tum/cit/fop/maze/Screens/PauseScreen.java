@@ -40,10 +40,8 @@ import de.tum.cit.fop.maze.MazeRunnerGame;
 public class PauseScreen implements Screen {
     private final Stage stage;
     private final MazeRunnerGame game;
-    /** The game screen that was active when the pause was triggered. */
     private final GameScreen currentGameScreen;
     private final ShapeRenderer shapeRenderer;
-    /** Colour applied to the full-screen overlay rectangle. */
     private static final Color OVERLAY_COLOR= new Color(0,0,0,0.6f);
 
     /**
@@ -195,19 +193,16 @@ public class PauseScreen implements Screen {
         );
     }
 
-    /** No-op; no per-frame state needs to be suspended. */
     @Override
     public void pause() {
 
     }
 
-    /** No-op; no per-frame state needs to be resumed. */
     @Override
     public void resume() {
 
     }
 
-    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override
     public void hide() {
 

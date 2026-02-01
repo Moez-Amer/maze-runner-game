@@ -40,23 +40,9 @@ public class VictoryScreen implements Screen {
     private final Stage stage;
     private final OrthographicCamera camera;
     private final Texture background;
-    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.0f;
-    /** The map path of the level that was just completed; used to derive the next level. */
     private final String currentMapPath;
 
-    /**
-     * Constructs the VictoryScreen without map-path tracking.
-     * The "Next Level" button will not appear because the current map
-     * is unknown.  Use the three-argument constructor when the caller
-     * can supply the completed map path.
-     *
-     * @param game  The main {@link MazeRunnerGame} instance.
-     * @param score The final score achieved by the player.
-     */
-    public VictoryScreen(MazeRunnerGame game, int score) {
-        this(game, score, null);
-    }
 
     /**
      * Constructs the VictoryScreen with full level-progression support.
@@ -238,11 +224,9 @@ public class VictoryScreen implements Screen {
         stage.getViewport().update(width, height, true);
     }
 
-    /** No-op; no per-frame state needs to be suspended. */
     @Override
     public void pause() {}
 
-    /** No-op; no per-frame state needs to be resumed. */
     @Override
     public void resume() {}
 

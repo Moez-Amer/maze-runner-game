@@ -33,19 +33,14 @@ import de.tum.cit.fop.maze.SaveManager;
  * </p>
  */
 public class SkillTreeScreen implements Screen {
-    /** The stage that contains all UI actors for this screen. */
     private final Stage stage;
 
-    /** Reference to the main game instance. */
     private final MazeRunnerGame game;
 
-    /** Background texture for the screen. */
     private final Texture background;
 
-    /** Semi-transparent dark texture used as panel background behind each branch. */
     private final Texture panelTexture;
 
-    /** Zoom factor for the background image. */
     private final float bgZoom = 1.5f;
 
     /**
@@ -282,13 +277,10 @@ public class SkillTreeScreen implements Screen {
         stage.getViewport().update(width, height, true);
     }
 
-    /** No-op; no per-frame state needs to be suspended. */
     @Override public void pause() {}
 
-    /** No-op; no per-frame state needs to be resumed. */
     @Override public void resume() {}
 
-    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override public void hide() {}
 
     /**

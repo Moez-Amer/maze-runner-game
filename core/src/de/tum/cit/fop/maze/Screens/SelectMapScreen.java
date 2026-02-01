@@ -34,7 +34,6 @@ public class SelectMapScreen implements Screen {
     private final MazeRunnerGame game;
     private final Stage stage;
     private final Texture background;
-    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.0f;
 
     /**
@@ -62,7 +61,6 @@ public class SelectMapScreen implements Screen {
         table.setFillParent(true);
         stage.addActor(table);
 
-        // Title
         table.add(new Label("SELECT LEVEL", game.getSkin(), "title")).padBottom(30).colspan(2).row();
 
         GameState state = game.getGameState();
@@ -83,7 +81,6 @@ public class SelectMapScreen implements Screen {
             addCompactLevelRow(table, btnText, scoreText, () -> game.goToGame(path), 0.05f * i, completed);
         }
 
-        // Back Button
         addSmallMenuButton(table, "Return to Menu", game::goToMenu, 0.4f);
     }
 
@@ -125,7 +122,6 @@ public class SelectMapScreen implements Screen {
             public void changed(ChangeEvent event, Actor actor) { action.run(); }
         });
 
-        // Forced Fade-in Animation
         button.getColor().a = 0;
         scoreLabel.getColor().a = 0;
         button.addAction(Actions.sequence(Actions.delay(delay), Actions.fadeIn(0.4f)));
@@ -197,13 +193,10 @@ public class SelectMapScreen implements Screen {
      */
     @Override public void resize(int w, int h) { stage.getViewport().update(w, h, true); }
 
-    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override public void hide() {}
 
-    /** No-op; no per-frame state needs to be suspended. */
     @Override public void pause() {}
 
-    /** No-op; no per-frame state needs to be resumed. */
     @Override public void resume() {}
 
     /**

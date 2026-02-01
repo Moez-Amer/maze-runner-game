@@ -36,7 +36,6 @@ public class MenuScreen implements Screen {
     private final Stage stage;
     private final MazeRunnerGame game;
     private final Texture background;
-    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.5f;
 
     /**
@@ -151,26 +150,19 @@ public class MenuScreen implements Screen {
         background.dispose();
     }
 
-    /**
-     * Registers the {@link Stage} as the active input processor so that
-     * button clicks and hover events are received.
-     */
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
     }
 
-    /** No-op; no per-frame state needs to be suspended. */
     @Override
     public void pause() {
     }
 
-    /** No-op; no per-frame state needs to be resumed. */
     @Override
     public void resume() {
     }
 
-    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override
     public void hide() {
     }

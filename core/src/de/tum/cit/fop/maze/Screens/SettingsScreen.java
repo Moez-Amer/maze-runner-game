@@ -44,20 +44,13 @@ public class SettingsScreen implements Screen {
 
     private final MazeRunnerGame game;
     private final Stage stage;
-    /** The screen that was active before Settings was opened; Back returns here. */
     private final Screen previousScreen;
     private final KeyBindings keys;
     private final Texture background;
-    /** A 1×1 semi-transparent black texture used as the background for key-name panels. */
     private final Texture panelTexture;
-    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.5f;
-
-    /** {@code true} while the screen is waiting for a key press to complete a rebind. */
     private boolean isListening = false;
-    /** The action name being rebound during listening mode, or {@code null} otherwise. */
     private String listeningAction = null;
-    /** The "Change" button that triggered listening mode; its label is toggled during the capture. */
     private TextButton listeningButton = null;
 
     /**
@@ -373,12 +366,48 @@ public class SettingsScreen implements Screen {
      * anonymous class.
      */
     private interface VolumeChange {
-        /**
-         * Called whenever the associated slider value changes.
-         *
-         * @param volume The new normalised volume in the range 0.0 – 1.0.
-         */
+
         void set(float volume);
+    }
+
+
+
+    /**
+     * Registers the {@link Stage} as the active input processor so that
+     * buttons and sliders receive events.
+     */
+    @Override
+    public void show() {
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    /**
+     * Renders one frame of the settings screen.
+     * <p>
+     * The background is drawn centred at the configured zoom and the
+     * Scene2D stage is rendered on top.  When not in listening mode an
+     * ESC key press navigates back to {@link #previousScreen}.
+     * </p>
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
+    @Override
+    public void render(float delta) {
+        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        game.getSpriteBatch().begin();
+        float width = Gdx.graphics.getWidth() * bgZoom;
+        float height = Gdx.graphics.getHeight() * bgZoom;
+        float x = (Gdx.graphics.getWidth() - width) / 2;
+        float y = (Gdx.graphics.getHeight() - height) / 2;
+        game.getSpriteBatch().draw(background, x, y, width, height);
+        game.getSpriteBatch().end();
+        stage.act(Math.min(delta, 1/30f));
+        stage.draw();
+
+        if (!isListening && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            game.setScreen(previousScreen);
+        }
     }
 
     /**
@@ -434,45 +463,6 @@ public class SettingsScreen implements Screen {
 
         table.add(button).width(300).padTop(20).row();
     }
-
-    /**
-     * Registers the {@link Stage} as the active input processor so that
-     * buttons and sliders receive events.
-     */
-    @Override
-    public void show() {
-        Gdx.input.setInputProcessor(stage);
-    }
-
-    /**
-     * Renders one frame of the settings screen.
-     * <p>
-     * The background is drawn centred at the configured zoom and the
-     * Scene2D stage is rendered on top.  When not in listening mode an
-     * ESC key press navigates back to {@link #previousScreen}.
-     * </p>
-     *
-     * @param delta Time elapsed since the previous frame in seconds.
-     */
-    @Override
-    public void render(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        game.getSpriteBatch().begin();
-        float width = Gdx.graphics.getWidth() * bgZoom;
-        float height = Gdx.graphics.getHeight() * bgZoom;
-        float x = (Gdx.graphics.getWidth() - width) / 2;
-        float y = (Gdx.graphics.getHeight() - height) / 2;
-        game.getSpriteBatch().draw(background, x, y, width, height);
-        game.getSpriteBatch().end();
-        stage.act(Math.min(delta, 1/30f));
-        stage.draw();
-
-        if (!isListening && Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.setScreen(previousScreen);
-        }
-    }
-
     /**
      * Updates the stage viewport when the window is resized.
      *
@@ -484,11 +474,9 @@ public class SettingsScreen implements Screen {
         stage.getViewport().update(width, height, true);
     }
 
-    /** No-op; no per-frame state needs to be suspended. */
     @Override
     public void pause() {}
 
-    /** No-op; no per-frame state needs to be resumed. */
     @Override
     public void resume() {}
 

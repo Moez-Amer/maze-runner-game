@@ -27,17 +27,12 @@ import static de.tum.cit.fop.maze.TiledToPropertiesConverter.*;
 public class SurvivalGameScreen extends GameScreen {
 
     private WaveManager waveManager;
-    /** Total seconds the player has survived; paused while in ghost mode. */
     private float timeAlive;
-    /** {@code true} once the current wave's enemies have all been spawned. */
     private boolean hasSpawnedCurrentWave;
-    /** Number of enemies to spawn for the wave that was most recently started. */
     private int totalEnemiesSpawnedThisWave;
     private Random random;
 
-    /** Tracks world-space positions already occupied by enemies this wave. */
     private ArrayList<Vector2> occupiedPositions;
-    /** Minimum pixel distance between any two enemies at spawn time (5 tiles). */
     private static final float MIN_SPAWN_DISTANCE = TILE_SIZE * 5;
 
     /**
@@ -414,7 +409,7 @@ public class SurvivalGameScreen extends GameScreen {
     }
 
     /**
-     * No-op override: survival mode has no exit tile to reach, so the
+     * survival mode has no exit tile to reach, so the
      * parent's win-condition check is deliberately suppressed.
      */
     @Override
@@ -436,9 +431,7 @@ public class SurvivalGameScreen extends GameScreen {
     @Override
     protected void checkLoseCondition() {
         if (player.isDead() && !player.isGhostMode()) {
-            // Check if can use revive
             if (!player.hasUsedRevive()) {
-                // Spawn voodoo doll at death location
                 float[] playerBox = player.getFeetCollisionBox();
                 float deathX = playerBox[0];
                 float deathY = playerBox[1];
@@ -463,23 +456,10 @@ public class SurvivalGameScreen extends GameScreen {
         }
     }
 
-    /**
-     * Returns the {@link WaveManager} so that the HUD or other
-     * external systems can query the current wave number and enemy
-     * counts.
-     *
-     * @return The active {@link WaveManager}.
-     */
+
     public WaveManager getWaveManager() {
         return waveManager;
     }
-
-    /**
-     * Returns the total seconds the player has survived in this run.
-     * The timer is paused while the player is in ghost mode.
-     *
-     * @return Elapsed survival time in seconds.
-     */
     public float getGameScreenTime() {
         return timeAlive;
     }

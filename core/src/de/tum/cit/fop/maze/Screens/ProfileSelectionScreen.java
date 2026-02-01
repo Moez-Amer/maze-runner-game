@@ -31,7 +31,6 @@ public class ProfileSelectionScreen implements Screen {
     private final Stage stage;
     private final MazeRunnerGame game;
     private final Texture background;
-    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.5f;
 
     /**
@@ -72,7 +71,6 @@ public class ProfileSelectionScreen implements Screen {
         table.add(new Label("WIZARD HUNT", game.getSkin(), "title")).padBottom(10).row();
         table.add(new Label("WHO IS PLAYING?", game.getSkin())).padBottom(30).row();
 
-        // 1. New Player Section
         final TextField nameField = new TextField("", game.getSkin());
         TextButton createButton = new TextButton("New Profile", game.getSkin());
         createButton.addListener(new ChangeListener() {
@@ -87,7 +85,6 @@ public class ProfileSelectionScreen implements Screen {
         table.add(nameField).width(300).padBottom(10).row();
         table.add(createButton).width(300).padBottom(40).row();
 
-        // 2. Existing Players Section
         table.add(new Label("Previous Players:", game.getSkin())).padBottom(10).row();
         for (String name : SaveManager.getAllProfileNames()) {
             TextButton playerBtn = new TextButton(name, game.getSkin());
@@ -141,13 +138,10 @@ public class ProfileSelectionScreen implements Screen {
      */
     @Override public void resize(int width, int height) { stage.getViewport().update(width, height, true); }
 
-    /** No-op; no per-frame state needs to be suspended. */
     @Override public void pause() {}
 
-    /** No-op; no per-frame state needs to be resumed. */
     @Override public void resume() {}
 
-    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override public void hide() {}
 
     /**

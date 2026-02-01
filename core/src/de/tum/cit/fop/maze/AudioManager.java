@@ -30,7 +30,10 @@ public class AudioManager {
     private static float mainVolume = 1.0f;
     private static float musicVolume = 1.0f;
     private static float sfxVolume = 1.0f;
+
+    // Flag to ensure assets are only loaded once to prevent multiple music instances
     private static boolean loaded = false;
+
     /**
      * Loads all sound and music assets from the internal storage and restores saved settings.
      * Must be called once during game initialization.
@@ -55,6 +58,7 @@ public class AudioManager {
 
         loadSettings();
         updateMusicVolume();
+        // Mark as loaded to prevent future redundant initializations
         loaded = true;
     }
 
@@ -67,6 +71,11 @@ public class AudioManager {
         mainVolume = vol;
         updateMusicVolume();
     }
+    /**
+     * Returns the current main volume level.
+     *
+     * @return The main volume (0.0 to 1.0).
+     */
     public static float getMainVolume() {
         return mainVolume;
     }
@@ -79,12 +88,27 @@ public class AudioManager {
         musicVolume = vol;
         updateMusicVolume();
     }
+    /**
+     * Returns the current music volume multiplier.
+     *
+     * @return The music volume (0.0 to 1.0).
+     */
     public static float getMusicVolume() {
         return musicVolume;
     }
+    /**
+     * Sets the sound effects (SFX) volume multiplier.
+     *
+     * @param volume The new SFX volume multiplier (0.0 to 1.0).
+     */
     public static void setSFXVolume(float volume) {
         sfxVolume = volume;
     }
+    /**
+     * Returns the current sound effects volume multiplier.
+     *
+     * @return The SFX volume (0.0 to 1.0).
+     */
     public static float getSFXVolume() {
         return sfxVolume;
     }
@@ -201,6 +225,7 @@ public class AudioManager {
      * Stops menu music and starts looping the gameplay music.
      */
     public static void playGameMusic() {
+        // Stop ALL music first to prevent overlaps
         if (menuMusic != null) {
             menuMusic.stop();
         }

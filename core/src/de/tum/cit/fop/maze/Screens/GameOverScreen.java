@@ -81,18 +81,15 @@ public class GameOverScreen implements Screen {
         table.setFillParent(true);
         stage.addActor(table);
 
-        // Labels
         Label titleLabel = new Label("GAME OVER", game.getSkin(), "title");
-        Label scoreLabel = new Label("Points Earned: " + score, game.getSkin()); // Requirement: Display score
+        Label scoreLabel = new Label("Points Earned: " + score, game.getSkin());
         Label defeatLabel = new Label("You Died...", game.getSkin());
 
-        // Buttons
         TextButton retryButton = new TextButton("Try Again", game.getSkin());
-        TextButton marketButton = new TextButton("Visit Marketplace", game.getSkin()); // Requirement: Skill point usage
+        TextButton marketButton = new TextButton("Visit Marketplace", game.getSkin());
         TextButton menuButton = new TextButton("Main Menu", game.getSkin());
         TextButton quitButton = new TextButton("Quit Game", game.getSkin());
 
-        // Listeners
         retryButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -108,7 +105,7 @@ public class GameOverScreen implements Screen {
         marketButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.goToMarketplace(); // Transition to Skill Tree
+                game.goToMarketplace();
             }
         });
 
@@ -128,10 +125,10 @@ public class GameOverScreen implements Screen {
 
         // UI Layout
         table.add(titleLabel).padBottom(20).row();
-        table.add(scoreLabel).padBottom(20).row(); // Display session score
+        table.add(scoreLabel).padBottom(20).row();
         table.add(defeatLabel).padBottom(60).row();
         table.add(retryButton).width(300).padBottom(15).row();
-        table.add(marketButton).width(300).padBottom(15).row(); // Link to marketplace
+        table.add(marketButton).width(300).padBottom(15).row();
         table.add(menuButton).width(300).padBottom(15).row();
         table.add(quitButton).width(300);
     }

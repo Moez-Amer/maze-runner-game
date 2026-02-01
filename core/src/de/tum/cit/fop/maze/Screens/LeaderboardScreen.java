@@ -51,7 +51,6 @@ public class LeaderboardScreen implements Screen {
     public LeaderboardScreen(MazeRunnerGame game) {
         this.game = game;
         background = new Texture(Gdx.files.internal("Leadership2.png"));
-        // Reuse game's SpriteBatch for rendering efficiency
         this.stage = new Stage(new ScreenViewport(), game.getSpriteBatch());
         rebuildUI();
     }
@@ -81,15 +80,11 @@ public class LeaderboardScreen implements Screen {
         table.getColor().a = 0;
         table.addAction(Actions.fadeIn(1.0f));
 
-        // Title Row
         table.add(new Label("HALL OF FAME", game.getSkin(), "title")).colspan(4).padBottom(20).row();
 
-        // Data Loading and Sorting
         List<PlayerScore> scores = new ArrayList<>();
-        // Iterate through all found profile names in local storage
         for (String name : SaveManager.getAllProfileNames()) {
             GameState gs = SaveManager.loadProfile(name);
-            // Only include players who have established a survival record
             if (gs.getSurvivalBestScore() > 0) {
                 scores.add(new PlayerScore(
                         name,
@@ -100,17 +95,14 @@ public class LeaderboardScreen implements Screen {
             }
         }
 
-        // Sort descending: Highest score at the top
         Collections.sort(scores, (a, b) -> b.score - a.score);
 
-        // Display Score Table Headers
         Table scoreTable = new Table();
         scoreTable.add(new Label("PLAYER", game.getSkin(), "bold")).padRight(40).left();
         scoreTable.add(new Label("SCORE", game.getSkin(), "bold")).padRight(40).right();
         scoreTable.add(new Label("WAVE", game.getSkin(), "bold")).padRight(40).right();
         scoreTable.add(new Label("TIME", game.getSkin(), "bold")).right().row();
 
-        // Populate Table with Top 10
         int rank = 1;
         for (PlayerScore ps : scores) {
             scoreTable.add(new Label(rank + ". " + ps.name, game.getSkin())).padRight(40).left();
@@ -121,10 +113,8 @@ public class LeaderboardScreen implements Screen {
             if (++rank > 10) break;
         }
 
-        // Add the scrollable/list table to the main layout
         table.add(scoreTable).colspan(4).padBottom(40).row();
 
-        // Back Button to return to Menu
         TextButton back = new TextButton("Back", game.getSkin());
         back.addListener(new ChangeListener() {
             @Override
@@ -141,13 +131,9 @@ public class LeaderboardScreen implements Screen {
      * Survival Mode statistics for sorting and display.
      */
     private static class PlayerScore {
-        /** The player's profile name as stored on disk. */
         String name;
-        /** The highest score the player has achieved in any survival run. */
         int score;
-        /** The highest wave the player has reached in any survival run. */
         int wave;
-        /** The longest time (in seconds) the player has survived in any run. */
         int time;
 
         /**
@@ -195,7 +181,6 @@ public class LeaderboardScreen implements Screen {
      */
     @Override
     public void show() {
-        // Required to enable mouse/touch interaction
         Gdx.input.setInputProcessor(stage);
     }
 
