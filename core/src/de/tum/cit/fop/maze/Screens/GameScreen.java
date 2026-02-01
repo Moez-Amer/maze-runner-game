@@ -680,7 +680,14 @@ public class GameScreen implements Screen {
             }
         }
     }
-
+    /**
+     * Updates the state of all active collectibles and handles collision detection with the player.
+     * <p>
+     * If the player is in Ghost Mode, pickup logic is bypassed, but animation updates continue.
+     * Otherwise, it checks for intersections between the player's collision box and each collectible.
+     *
+     * @param delta Time elapsed since the last frame in seconds.
+     */
     private void updateCollectibles(float delta) {
         // Check if player is in ghost mode; if so, skip pickup logic entirely
         if (player.isGhostMode()) {
@@ -714,7 +721,15 @@ public class GameScreen implements Screen {
             }
         }
     }
-
+    /**
+     * Processes the logic for picking up a specific collectible.
+     * <p>
+     * This method updates the player's score, triggers appropriate sound effects via {@link AudioManager},
+     * and applies specific effects (e.g., speed boosts, health recovery, key collection) based on the item type.
+     * It also records the collection event in the {@link GameState} for achievement tracking.
+     *
+     * @param collectible The collectible object that the player has encountered.
+     */
     protected void handleCollectiblePickup(Collectibles collectible) {
         collectible.collect();
         player.addScore(collectible.getPoints()); // Add points to run
@@ -760,7 +775,13 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Renders the kill streak announcement text and icon on screen.
+     * Renders the kill streak announcement text and accompanying icon on the screen.
+     * <p>
+     * Applies dynamic scaling and color shifts (White -> Red -> Orange -> Gold) based on
+     * the current {@code killStreak} count. The announcement fades and grows over its
+     * display duration for visual impact.
+     *
+     * @param batch The SpriteBatch used to render the HUD elements.
      */
     protected void renderKillStreakAnnouncement(SpriteBatch batch) {
         float screenWidth = Gdx.graphics.getWidth();
@@ -812,7 +833,12 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Displays kill streak announcement based on current streak count.
+     * Determines and sets the announcement text for a kill streak milestone.
+     * <p>
+     * Based on the provided streak integer, it selects a phrase ranging from
+     * "DOUBLE KILL!" to "LEGENDARY!" and resets the display timer.
+     *
+     * @param streak The number of consecutive kills achieved within the time window.
      */
     protected void announceKillStreak(int streak) {
         String announcement = "";
@@ -853,7 +879,10 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Resets the kill streak (called when player takes damage).
+     * Resets the current kill streak to zero.
+     * <p>
+     * This method is triggered when the player takes damage, ending any active combat bonus.
+     * It logs the final streak count to the console before resetting.
      */
     protected void resetKillStreak() {
         if (killStreak > 0) {
@@ -863,8 +892,11 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Tracks tile exploration for achievements.
-     * Records when player visits a new tile.
+     * Calculates the player's current tile position and tracks map exploration.
+     * <p>
+     * If the player enters a tile coordinate that has not been visited before,
+     * it is added to {@code visitedTiles} and recorded in {@link GameState} for
+     * exploration-based achievements.
      */
     protected void trackTileExploration() {
         // Get player's current tile position
@@ -882,7 +914,11 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Checks if the ghost player has collected their voodoo doll to revive.
+     * Checks for collision between the ghost player and their {@link VoodooDoll}.
+     * <p>
+     * If the player is in Ghost Mode and successfully reaches the doll's location,
+     * the {@link Player#revive()} sequence is triggered, restoring a life and
+     * ending Ghost Mode.
      */
     protected void checkVoodooDollCollection() {
         if (voodooDoll == null || !player.isGhostMode()) {
@@ -902,7 +938,22 @@ public class GameScreen implements Screen {
             System.out.println("Player revived with 1 life!");
         }
     }
-
+    /**
+     * The main rendering and logic loop for the gameplay screen.
+     * <p>
+     * This method performs the following tasks in order:
+     * <ul>
+     * <li>Handles global input (Escape for pause, camera zoom, debug toggles).</li>
+     * <li>Updates game logic (Player, Enemies, Traps, Collectibles) if the console is not paused.</li>
+     * <li>Manages kill streak timers and win/loss condition checks.</li>
+     * <li>Renders the map (Tiled or manual) and all game objects in world coordinates.</li>
+     * <li>Calculates and renders the objective navigation arrow pointing towards the exit.</li>
+     * <li>Renders the HUD and UI overlays (Kill streak announcements, Achievement popups).</li>
+     * <li>Optionally renders debug collision boxes if enabled.</li>
+     * </ul>
+     *
+     * @param delta Time elapsed since the last frame in seconds.
+     */
     @Override
     public void render(float delta) {
         // Check for escape key press to go back to the pause
@@ -1077,8 +1128,11 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Renders map tiles manually from properties data.
-     * Only used in properties-only mode.
+     * Manually renders the individual map tiles using textures defined in the properties.
+     * <p>
+     * This method is exclusively used in "Properties-only" mode. It iterates through the
+     * {@code mapData} grid and draws ground, wall, and trap textures. It also handles
+     * rendering the multi-tile entrance and exit structures as single visual units.
      */
     protected void renderMapTiles() {
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
@@ -1137,8 +1191,11 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Checks if player's sword attack hits any enemies.
-     * Uses the enemy's damage hitbox (3 tiles tall) for detection.
+     * Resolves combat logic by checking if the player's attack hitbox overlaps with any enemy.
+     * <p>
+     * If a hit is detected, damage is calculated based on the player's current power boosts
+     * and applied to the enemy. If the enemy dies, the {@link GameState} is updated,
+     * the score is added, and the kill streak is incremented.
      */
     protected void checkPlayerAttackHits() {
         if (!player.isAttacking()) {
@@ -1180,8 +1237,11 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Checks if the player has won the game.
-     * Win condition: Player must have 1 key AND 3 scrolls AND reach the exit.
+     * Evaluates if the victory conditions have been met.
+     * <p>
+     * To win, the player must have collected the required keys and scrolls, and then
+     * step onto an exit tile. Upon victory, the current high score is updated via
+     * {@link SaveManager} and the game transitions to the victory screen.
      */
     protected void checkWinCondition() {
         if (!player.canExitMaze()) {
@@ -1226,9 +1286,11 @@ public class GameScreen implements Screen {
     }
 
     /**
-     * Checks if the player has lost the game.
-     * Lose condition: Player's lives reach 0.
-     * If they haven't used their revive yet, enters ghost mode.
+     * Evaluates if the defeat conditions have been met.
+     * <p>
+     * If the player's health reaches zero, the method checks if a revival via Ghost Mode
+     * is available. If so, a {@link VoodooDoll} is spawned; otherwise, the game
+     * transitions to the game-over screen.
      */
     protected void checkLoseCondition() {
         if (player.isDead() && !player.isGhostMode()) {
@@ -1249,7 +1311,13 @@ public class GameScreen implements Screen {
             }
         }
     }
-
+    /**
+     * Renders visual representations of hitboxes and collision areas for debugging.
+     * <p>
+     * Uses a {@link ShapeRenderer} to draw filled rectangles for impassable tiles and
+     * outlines for entity feet boxes and attack ranges. This is triggered by the
+     * "Debug" key binding.
+     */
     protected void renderCollisionDebug() {
 
         // Enable blending for transparency
@@ -1361,7 +1429,16 @@ public class GameScreen implements Screen {
 
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
-
+    /**
+     * Updates the screen's dimensions when the game window is resized.
+     * <p>
+     * This method ensures the {@link Viewport} recalculates the world scaling,
+     * updates the HUD camera to match the new resolution, and keeps the camera
+     * centered on the player. It also resizes the developer console if it is active.
+     *
+     * @param width  The new window width in pixels.
+     * @param height The new window height in pixels.
+     */
     @Override
     public void resize(int width, int height) {
         // This tells the viewport to recalculate based on new window dimensions
@@ -1378,19 +1455,34 @@ public class GameScreen implements Screen {
             game.getConsole().resize(width, height);
         }
     }
-
+    /**
+     * Called when the game window is paused (e.g., losing focus).
+     * Implementation currently handled by state-specific pause logic.
+     */
     @Override
     public void pause() {}
-
+    /**
+     * Called when the game window is resumed from a paused state.
+     */
     @Override
     public void resume() {}
-
+    /**
+     * Called when this screen becomes the active screen for the {@link MazeRunnerGame}.
+     */
     @Override
     public void show() {}
-
+    /**
+     * Called when this screen is no longer the active screen.
+     */
     @Override
     public void hide() {}
-
+    /**
+     * Disposes of all resources loaded by this screen to prevent memory leaks.
+     * <p>
+     * This includes cleaning up the Tiled map (in hybrid mode), UI atlases,
+     * texture regions for manual rendering, HUD components, and static
+     * resources like the {@link VoodooDoll} texture.
+     */
     @Override
     public void dispose() {
         // Dispose Tiled map resources (hybrid mode only)
@@ -1410,7 +1502,11 @@ public class GameScreen implements Screen {
 
         VoodooDoll.dispose();
     }
-
+    /**
+     * Gets the file path of the current map properties file.
+     *
+     * @return The map path string.
+     */
     public String getMapPath() {
         return mapPath;
     }
