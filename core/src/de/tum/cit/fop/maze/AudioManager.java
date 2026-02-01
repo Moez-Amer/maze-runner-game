@@ -8,8 +8,10 @@ import com.badlogic.gdx.utils.Json;
 import java.util.HashMap;
 
 /**
- * Manager class for handling all game sound effects and background music.
- * Provides static methods to play specific sounds from anywhere in the game.
+ * Manager class for handling all game sound effects (SFX) and background music (BGM).
+ * This class provides a centralized, static interface to manage audio assets,
+ * handle volume settings (Main, Music, SFX), and persist audio preferences to local storage.
+ * It ensures that audio resources are loaded once and properly disposed of to prevent memory leaks.
  */
 public class AudioManager {
 
@@ -35,8 +37,9 @@ public class AudioManager {
     private static boolean loaded = false;
 
     /**
-     * Loads all sound and music assets from the internal storage and restores saved settings.
-     * Must be called once during game initialization.
+     * Loads all audio assets from the internal storage and restores saved volume settings.
+     * This method initializes {@link Sound} and {@link Music} objects for the entire game.
+     * It should be called once during the game's startup (e.g., in {@link MazeRunnerGame#create()}).
      */
     public static void load() {
         if (loaded) return;
@@ -221,8 +224,8 @@ public class AudioManager {
         }
 
     }
-    /**
-     * Stops menu music and starts looping the gameplay music.
+    /** * Stops all other music and starts the gameplay music.
+     * This ensures no music overlap when entering a level.
      */
     public static void playGameMusic() {
         // Stop ALL music first to prevent overlaps
@@ -241,7 +244,7 @@ public class AudioManager {
         }
     }
     /**
-     * Saves the current volume settings to a local JSON file.
+     * Serializes and saves the current volume settings to "audio.json" in local storage.
      */
     public static void saveSettings() {
         try {
@@ -258,7 +261,7 @@ public class AudioManager {
         }
     }
     /**
-     * Loads volume settings from the local JSON file if it exists.
+     * Loads volume settings from "audio.json". If the file is missing, defaults to 1.0f.
      */
     public static void loadSettings() {
         try {
@@ -278,14 +281,15 @@ public class AudioManager {
     }
 
     /**
-     * Plays the reaper chase sound once.
+     * Plays the reaper/chase sound effect.
+     * Triggered when an {@link Enemy} starts chasing the player.
      */
     public static void playReaperSound() {
         if (reaperSound != null) {
             reaperSound.play(getSFXVol());
         }
     }
-
+    /** Stops all currently playing music tracks. */
     public static void stopMusic() {
         if(gameMusic != null){
             gameMusic.stop();
@@ -302,7 +306,10 @@ public class AudioManager {
         }
     }
 
-
+    /**
+     * Disposes of all audio resources to free memory.
+     * Must be called in {@link MazeRunnerGame#dispose()} to avoid memory leaks.
+     */
     public static void dispose() {
         if (pickupSound != null) pickupSound.dispose();
         if (potionPickupSound != null) potionPickupSound.dispose();
