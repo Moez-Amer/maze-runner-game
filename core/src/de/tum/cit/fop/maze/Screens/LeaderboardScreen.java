@@ -18,9 +18,21 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Screen responsible for displaying the Survival Mode Leaderboard.
- * It scans all local player profiles to rank players based on their highest
- * survival scores, wave reached, and time survived.
+ * Hall-of-Fame screen that ranks all local player profiles by their
+ * best Survival Mode performance.
+ * <p>
+ * On construction the screen queries {@link SaveManager} for every
+ * saved profile, extracts each player's highest survival score, the
+ * wave they reached, and the longest time they survived, and sorts
+ * the results in descending score order.  Only the top ten entries
+ * are displayed.  Profiles that have never completed a survival run
+ * (score &le; 0) are excluded from the ranking.
+ * </p>
+ * <p>
+ * The table fades in over one second using a Scene2D
+ * {@link Actions#fadeIn(float)} action.  A single "Back" button at
+ * the bottom returns the player to the main menu.
+ * </p>
  */
 public class LeaderboardScreen implements Screen {
     private final Stage stage;
@@ -29,8 +41,12 @@ public class LeaderboardScreen implements Screen {
     private final float bgZoom = 1.0f;
 
     /**
-     * Constructs the LeaderboardScreen.
-     * * @param game The main game instance used to access skins and navigation.
+     * Constructs the LeaderboardScreen and populates the Hall of Fame
+     * table immediately so that it is ready to render on the first frame.
+     *
+     * @param game The main {@link MazeRunnerGame} instance, used to access
+     *             the shared skin for label and button styling and to
+     *             provide the navigation helper {@link MazeRunnerGame#goToMenu}.
      */
     public LeaderboardScreen(MazeRunnerGame game) {
         this.game = game;
@@ -41,9 +57,21 @@ public class LeaderboardScreen implements Screen {
     }
 
     /**
-     * Rebuilds the UI components.
-     * This method fetches all player profiles from the SaveManager, sorts them
-     * by survival score, and constructs the Hall of Fame table.
+     * Clears the stage and reconstructs the entire leaderboard UI.
+     * <p>
+     * The method performs four steps in order:
+     * <ol>
+     *   <li>All existing actors are removed from the {@link Stage}.</li>
+     *   <li>Every local profile is loaded via {@link SaveManager} and
+     *       those with a positive survival score are collected into a
+     *       list of {@link PlayerScore} records.</li>
+     *   <li>The list is sorted in descending score order.</li>
+     *   <li>A {@link Table} is populated with column headers and up to
+     *       ten data rows, then a fade-in action is applied.</li>
+     * </ol>
+     * Calling this method while the screen is visible will instantly
+     * refresh the leaderboard with the latest saved data.
+     * </p>
      */
     private void rebuildUI() {
         stage.clear();
@@ -109,19 +137,26 @@ public class LeaderboardScreen implements Screen {
     }
 
     /**
-     * Static helper class to encapsulate player survival data for ranking.
+     * Immutable value object that bundles a single player's best
+     * Survival Mode statistics for sorting and display.
      */
     private static class PlayerScore {
+        /** The player's profile name as stored on disk. */
         String name;
+        /** The highest score the player has achieved in any survival run. */
         int score;
+        /** The highest wave the player has reached in any survival run. */
         int wave;
+        /** The longest time (in seconds) the player has survived in any run. */
         int time;
 
         /**
-         * @param n Player name
-         * @param s Highest survival score reached
-         * @param w Highest wave reached
-         * @param t Longest time survived in seconds
+         * Constructs a PlayerScore record.
+         *
+         * @param n Player profile name.
+         * @param s Highest survival score reached.
+         * @param w Highest wave reached.
+         * @param t Longest time survived in seconds.
          */
         PlayerScore(String n, int s, int w, int t) {
             this.name = n;
@@ -131,6 +166,13 @@ public class LeaderboardScreen implements Screen {
         }
     }
 
+    /**
+     * Renders one frame of the leaderboard screen.
+     * The background image is drawn first at the configured zoom, centred
+     * on the window, and then the Scene2D stage is updated and drawn on top.
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -146,27 +188,50 @@ public class LeaderboardScreen implements Screen {
         stage.draw();
     }
 
+    /**
+     * Registers the {@link Stage} as the active input processor so that
+     * the "Back" button and any future interactive elements receive
+     * touch and mouse events.
+     */
     @Override
     public void show() {
         // Required to enable mouse/touch interaction
         Gdx.input.setInputProcessor(stage);
     }
 
+    /**
+     * Updates the stage viewport when the window is resized so that
+     * the centred table layout scales correctly.
+     *
+     * @param width  The new window width in pixels.
+     * @param height The new window height in pixels.
+     */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
+    /**
+     * Clears the global input processor when this screen is hidden so
+     * that input events are not routed to a disposed stage.
+     */
     @Override
     public void hide() {
         Gdx.input.setInputProcessor(null);
     }
 
+    /**
+     * Releases the Scene2D {@link Stage} and all actors and actions
+     * it owns.
+     */
     @Override
     public void dispose() {
         stage.dispose();
     }
 
+    /** No-op; no per-frame state needs to be suspended. */
     @Override public void pause() {}
+
+    /** No-op; no per-frame state needs to be resumed. */
     @Override public void resume() {}
 }

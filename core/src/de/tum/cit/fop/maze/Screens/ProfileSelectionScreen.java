@@ -13,12 +13,45 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 import de.tum.cit.fop.maze.SaveManager;
 
+/**
+ * Profile-selection screen shown before the main menu when the game
+ * needs to know which player is playing.
+ * <p>
+ * The screen is divided into two sections.  The upper section lets a
+ * new player type a name into a {@link TextField} and click
+ * "New Profile" to create a fresh save.  The lower section enumerates
+ * every profile that already exists on disk (via
+ * {@link SaveManager#getAllProfileNames}) and presents each one as a
+ * clickable button so that returning players can resume their progress
+ * without retyping their name.
+ * </p>
+ */
 public class ProfileSelectionScreen implements Screen {
     private final Stage stage;
     private final MazeRunnerGame game;
     private final Texture background;
+    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.5f;
 
+    /**
+     * Constructs the ProfileSelectionScreen and assembles the full UI.
+     * <p>
+     * The layout is built inside a single centred {@link Table}:
+     * <ol>
+     *   <li>A title label ("WHO IS PLAYING?").</li>
+     *   <li>A name {@link TextField} and a "New Profile"
+     *       {@link TextButton} wired to create the profile when the
+     *       field is non-empty.</li>
+     *   <li>A "Previous Players" heading followed by one button per
+     *       existing profile returned by {@link SaveManager}.</li>
+     * </ol>
+     * </p>
+     *
+     * @param game The main {@link MazeRunnerGame} instance, used to
+     *             access the shared skin and the
+     *             {@link MazeRunnerGame#setProfileAndContinue} navigation
+     *             helper.
+     */
     public ProfileSelectionScreen(MazeRunnerGame game) {
         this.game = game;
 
@@ -66,6 +99,14 @@ public class ProfileSelectionScreen implements Screen {
         }
     }
 
+    /**
+     * Renders one frame of the profile-selection screen.
+     * The background is drawn centred at the configured zoom and the
+     * Scene2D stage is rendered on top so that the text field and
+     * buttons receive focus and display correctly.
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -80,11 +121,34 @@ public class ProfileSelectionScreen implements Screen {
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
     }
+
+    /**
+     * Registers the {@link Stage} as the active input processor so that
+     * the text field accepts typed characters and buttons receive clicks.
+     */
     @Override public void show() { Gdx.input.setInputProcessor(stage); }
+
+    /**
+     * Updates the stage viewport when the window is resized.
+     *
+     * @param width  The new window width in pixels.
+     * @param height The new window height in pixels.
+     */
     @Override public void resize(int width, int height) { stage.getViewport().update(width, height, true); }
+
+    /** No-op; no per-frame state needs to be suspended. */
     @Override public void pause() {}
+
+    /** No-op; no per-frame state needs to be resumed. */
     @Override public void resume() {}
+
+    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override public void hide() {}
+
+    /**
+     * Releases the Scene2D {@link Stage} and the background
+     * {@link Texture}.
+     */
     @Override public void dispose() {
         stage.dispose();
         background.dispose();
