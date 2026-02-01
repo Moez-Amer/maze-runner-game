@@ -79,7 +79,7 @@ public class KeyBindings {
         bindings.put("Move Right", Input.Keys.RIGHT);
         bindings.put("Attack", Input.Keys.SPACE);
         bindings.put("Sprint", Input.Keys.SHIFT_LEFT);
-        bindings.put("Debug", Input.Keys.K);
+        bindings.put("Debug", Input.Keys.U);
         bindings.put("Open Console", Input.Keys.TAB);
         System.out.println("Default bindings set");
     }

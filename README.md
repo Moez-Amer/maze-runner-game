@@ -164,16 +164,17 @@ java TiledToPropertiesConverter <input.tmx> <output.properties>
 
 ## 🎯 Game Controls
 
-| Key | Action |
-|-----|--------|
-| `W` / `↑` | Move Up |
-| `A` / `←` | Move Left |
-| `S` / `↓` | Move Down |
-| `D` / `→` | Move Right |
-| `SPACE` | Attack |
-| `ESC` | Pause Game |
-| `TAB` | Developer Console |
-| `1-3` | Use Potions |
+| Key     | Action              |
+|---------|---------------------|
+| `↑`     | Move Up             |
+| `←`     | Move Left           |
+| `↓`     | Move Down           |
+| `→`     | Move Right          |
+| `SPACE` | Attack              |
+| `ESC`   | Pause Game          |
+| `TAB`   | Developer Console   |
+| `U`     | Debug Visualization |
+
 
 Controls are fully remappable in the Settings menu.
 
@@ -214,7 +215,7 @@ Controls are fully remappable in the Settings menu.
 - Story-driven narrative elements
 - Skippable for returning players
 
-###  Extensive Developer Console
+### 🔍 Extensive Developer Console
 Press `TAB` in-game to access powerful debug commands:
 - `help` - List all commands
 - `give_item <item>` - Add items to inventory
@@ -249,6 +250,10 @@ Press `TAB` in-game to access powerful debug commands:
   - Survival high scores
   - Statistics (kills, deaths, time played)
 
+### 👁️ Debug Visualization Mode
+- **Real-time Hitbox Overlay**: Press U to instantly toggle visible collision boxes for players, enemies, and walls.
+- **Object Tracking**: Visualize the interaction boundaries of every world object to ensure perfect mechanical precision.
+- **Developer Insight**: A custom-built tool designed to assist in testing physics and refining the gameplay experience across all five maps.
 ---
 
 ## 👥 Team: oops;itcompiles

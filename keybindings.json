@@ -33,6 +33,6 @@ Move Right: {
 }
 Debug: {
 	class: java.lang.String
-	value: K
+	value: U
 }
 }
