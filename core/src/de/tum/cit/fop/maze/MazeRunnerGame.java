@@ -146,6 +146,7 @@ public class MazeRunnerGame extends Game {
             menuScreen = null;
         }
 
+        AudioManager.stopMusic();
         AudioManager.playGameMusic();
         GameScreen newGameScreen = new GameScreen(this, mapPath);
 
@@ -166,6 +167,7 @@ public class MazeRunnerGame extends Game {
             getScreen().dispose();
         }
 
+        AudioManager.stopMusic();
         AudioManager.playGameMusic();
         long randomSeed = System.currentTimeMillis();
         SurvivalGameScreen survivalScreen = new SurvivalGameScreen(this, "maps/survival.properties", randomSeed);
@@ -276,6 +278,7 @@ public class MazeRunnerGame extends Game {
         getScreen().dispose();
         spriteBatch.dispose();
         skin.dispose();
+        AudioManager.dispose();
         if (developerConsole != null) {
             developerConsole.dispose();
         }

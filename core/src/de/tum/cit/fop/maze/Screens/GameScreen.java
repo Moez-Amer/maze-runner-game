@@ -1405,8 +1405,6 @@ public class GameScreen implements Screen {
         // Dispose properties-only mode resources
         if (mainlevbuildTexture != null) mainlevbuildTexture.dispose();
 
-        AudioManager.dispose();
-
         if (arrowTexture != null) arrowTexture.dispose();
         if (killStreakIconTexture != null) killStreakIconTexture.dispose();
 

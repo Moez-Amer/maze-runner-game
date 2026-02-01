@@ -225,9 +225,17 @@ public class AudioManager {
      * Stops menu music and starts looping the gameplay music.
      */
     public static void playGameMusic() {
+        // Stop ALL music first to prevent overlaps
         if (menuMusic != null) {
             menuMusic.stop();
         }
+        if (victoryMusic != null) {
+            victoryMusic.stop();
+        }
+        if (gameOverMusic != null) {
+            gameOverMusic.stop();
+        }
+        // Now start game music
         if (gameMusic != null && !gameMusic.isPlaying()) {
             gameMusic.play();
         }
