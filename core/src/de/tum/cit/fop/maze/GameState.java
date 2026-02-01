@@ -26,16 +26,16 @@ public class GameState {
     public int warriorPoints = 0;
     public int swiftnessPoints = 0;
     public int vitalityPoints = 0;
-    public int enemiesKilledCounter = 0;       // Total lifetime kills
-    public float distanceSprintedCounter = 0;  // Total lifetime distance
-    public int heartsCollectedCounter = 0;     // Total lifetime hearts
-    public int tilesExploredCounter = 0;       // Total lifetime tiles explored
-    public int keysCollectedCounter = 0;       // Total lifetime keys collected
+    public int enemiesKilledCounter = 0;
+    public float distanceSprintedCounter = 0;
+    public int heartsCollectedCounter = 0;
+    public int tilesExploredCounter = 0;
+    public int keysCollectedCounter = 0;
     public int scrollsCollectedCounter = 0;
-    public int coinsCollectedCounter = 0;      // Total lifetime coins collected
-    public int potionsUsedCounter = 0;         // Total lifetime potions used
-    public int perfectMazesCounter = 0;        // Total lifetime perfect mazes (no damage)
-    public int mazesCompletedCounter = 0;      // Total lifetime mazes completed
+    public int coinsCollectedCounter = 0;
+    public int potionsUsedCounter = 0;
+    public int perfectMazesCounter = 0;
+    public int mazesCompletedCounter = 0;
     public int killsProgress = 0;
     public float sprintProgress = 0;
     public int heartsProgress = 0;
@@ -66,15 +66,13 @@ public class GameState {
      * awarded and the progress counter resets to 0.
      */
     public void recordKill() {
-        // 1. Update Total (For Achievements) - continuously grows 1, 2, 3, 4, 5...
         enemiesKilledCounter++;
         achievementManager.onEvent(this, "enemiesKilled", enemiesKilledCounter);
 
-        // 2. Update Progress (For Skill Points) - resets 1, 2 -> 0
         killsProgress++;
         if (killsProgress >= 2) {
             warriorPoints++;
-            killsProgress = 0; // Only reset the progress tracker, not the total!
+            killsProgress = 0;
         }
     }
 
@@ -89,11 +87,8 @@ public class GameState {
      * @param distance The distance sprinted this frame, in pixels.
      */
     public void recordSprinting(float distance) {
-        // 1. Update Total
         distanceSprintedCounter += distance;
         achievementManager.onEvent(this, "distanceSprinted", distanceSprintedCounter);
-
-        // 2. Update Progress
         sprintProgress += distance;
         if (sprintProgress >= 2000) {
             swiftnessPoints++;
@@ -110,11 +105,9 @@ public class GameState {
      * resets to 0.
      */
     public void recordHeartPickup() {
-        // 1. Update Total
         heartsCollectedCounter++;
         achievementManager.onEvent(this, "heartsCollected", heartsCollectedCounter);
 
-        // 2. Update Progress
         heartsProgress++;
         if (heartsProgress >= 2) {
             vitalityPoints++;
@@ -230,29 +223,16 @@ public class GameState {
         }
     }
 
-    /**
-     * Gets the best score achieved in survival mode.
-     *
-     * @return The highest score.
-     */
+
     public int getSurvivalBestScore() {
         return survivalBestScore;
     }
 
-    /**
-     * Gets the highest wave reached in survival mode.
-     *
-     * @return The highest wave number.
-     */
     public int getSurvivalBestWave() {
         return survivalBestWave;
     }
 
-    /**
-     * Gets the longest time survived in survival mode.
-     *
-     * @return The longest survival time in seconds.
-     */
+
     public int getSurvivalLongestTime() {
         return survivalLongestTime;
     }

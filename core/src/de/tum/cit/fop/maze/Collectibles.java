@@ -24,21 +24,17 @@ public class Collectibles extends GameObject {
         SCROLL
     }
 
-    // Static textures shared across all collectible instances
     private static TextureRegion heartTexture;
     private static TextureRegion keyTexture;
     private static TextureRegion speedTexture;
     private static TextureRegion potionTexture;
     private static TextureRegion shieldTexture;
     private static TextureRegion scrollTexture;
-    
-    // Instance variables
     private final int points;
     private final CollectibleType type;
     private boolean collected;
     private TextureRegion texture;
     
-    // Animation variables
     private float floatOffset;
     private float floatTimer;
     private static final float FLOAT_SPEED = 3f;
@@ -51,28 +47,21 @@ public class Collectibles extends GameObject {
      * @param uiAtlas The UI texture atlas (not used anymore, kept for compatibility)
      */
     public static void loadTextures(TextureAtlas uiAtlas) {
-        // Load heart from undead loot icons - Icon 12
         Texture heartTextureFile = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon12.png"));
         heartTexture = new TextureRegion(heartTextureFile);
 
-        // Load key from undead loot icons - Icon 41
         Texture keyTextureFile = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon41.png"));
         keyTexture = new TextureRegion(keyTextureFile);
 
-        // Load potions from magic potions pack
-        // Speed booster (blue) - Icon 10
         Texture speedTextureFile = new Texture(Gdx.files.internal("48 Free Magic Potions Pixel Art Icons/PNG/Transperent/Icon10.png"));
         speedTexture = new TextureRegion(speedTextureFile);
 
-        // Power booster (purple) - Icon 12
         Texture potionTextureFile = new Texture(Gdx.files.internal("48 Free Magic Potions Pixel Art Icons/PNG/Transperent/Icon12.png"));
         potionTexture = new TextureRegion(potionTextureFile);
 
-        // Shield (green potion) - Icon 19
         Texture shieldTextureFile = new Texture(Gdx.files.internal("48 Free Magic Potions Pixel Art Icons/PNG/Transperent/Icon19.png"));
         shieldTexture = new TextureRegion(shieldTextureFile);
 
-        // Scroll - Icon 43
         Texture scrollTextureFile = new Texture(Gdx.files.internal("free-undead-loot-pixel-art-icons/PNG/Transperent/Icon43.png"));
         scrollTexture = new TextureRegion(scrollTextureFile);
     }
@@ -93,8 +82,6 @@ public class Collectibles extends GameObject {
         this.type = type;
         this.collected = false;
         this.floatTimer = 0f;
-        
-        // Assign appropriate texture based on type
         switch (type) {
             case HEALTH:
                 this.texture = heartTexture;
@@ -158,21 +145,9 @@ public class Collectibles extends GameObject {
     public boolean isCollected() {
         return collected;
     }
-
-    /**
-     * Gets the type of this collectible.
-     * 
-     * @return The collectible type
-     */
     public CollectibleType getType() {
         return type;
     }
-
-    /**
-     * Gets the point value of this collectible.
-     * 
-     * @return Point value
-     */
     public int getPoints() {
         return points;
     }
@@ -182,7 +157,6 @@ public class Collectibles extends GameObject {
      * Call this when shutting down the game or switching screens.
      */
     public static void dispose() {
-        // Dispose of all the texture files
         if (heartTexture != null && heartTexture.getTexture() != null) {
             heartTexture.getTexture().dispose();
         }

@@ -574,7 +574,6 @@ public class Player extends MovableGameObject {
      * * @return true if the damage was successfully parried, false otherwise.
      */
     public boolean takeDamage() {
-        // Check god mode first
         if (godModeEnabled) {
             return false;
         }
@@ -629,10 +628,6 @@ public class Player extends MovableGameObject {
      */
     public void addScore(int p) { this.sessionScore += p; }
 
-    /**
-     * Gets the current session score.
-     * @return The score.
-     */
     public int getScore() { return sessionScore; }
 
 
@@ -754,77 +749,30 @@ public class Player extends MovableGameObject {
         return totalDamage;
     }
 
-    /**
-     * Checks if the current attack has already registered a hit.
-     * Used to prevent a single animation frame from dealing damage multiple times.
-     * @return true if the attack has hit.
-     */
     public boolean hasAttackHit() {return attackHasHit;}
 
-    /**
-     * Sets the flag indicating the current attack has registered a hit.
-     * @param hit The new state.
-     */
     public void setAttackHasHit(boolean hit) {this.attackHasHit = hit;}
 
-    /**
-     * Gets the current number of lives.
-     * @return Lives count.
-     */
     public int getLives() { return lives; }
 
-    /**
-     * Gets the maximum possible lives for the player (determined by Vitality skill).
-     * @return Max lives.
-     */
     public int getMaxLives() { return maxLives; }
 
-    /**
-     * Gets the current number of keys collected.
-     * @return Key count.
-     */
+
     public int getKeyCount() { return keyCount; }
 
-    /**
-     * Gets the current number of scrolls collected.
-     * @return Scroll count.
-     */
+
     public int getScrollCount() { return scrollCount; }
 
-    /**
-     * Checks if the player is currently sprinting.
-     * @return true if sprinting.
-     */
     public boolean isRunning() { return isRunning; }
 
-    /**
-     * Checks if the player is currently moving.
-     * @return true if moving.
-     */
     public boolean isMoving() {return isMoving;}
 
-    /**
-     * Checks if the player is currently performing an attack animation.
-     * @return true if attacking.
-     */
     public boolean isAttacking() {return isAttacking;}
 
-    /**
-     * Checks if the player is currently in Ghost Mode.
-     * @return true if in ghost mode.
-     */
     public boolean isGhostMode() { return isGhostMode; }
 
-    /**
-     * Gets the remaining time for Ghost Mode.
-     * @return Time in seconds.
-     */
     public float getGhostModeTimer() { return ghostModeTimer; }
 
-    /**
-     * Checks if the player has already used their one-time revive for the level.
-     * @return true if revive has been used.
-     */
     public boolean hasUsedRevive() { return hasUsedRevive; }
 
     /**
@@ -854,10 +802,7 @@ public class Player extends MovableGameObject {
         lives = 1;
         invulnerabilityTimer = INVULNERABILITY_TIME;
     }
-    /**
-     * Sets god mode status (for developer console).
-     * @param enabled True to enable god mode, false to disable
-     */public void setGodMode(boolean enabled) {
+    public void setGodMode(boolean enabled) {
         this.godModeEnabled = enabled;
     }
 }

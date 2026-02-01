@@ -397,7 +397,6 @@ public class HUD {
         boldFont.draw(batch, popupText, textX, textY);
         boldFont.setColor(Color.WHITE);
     }
-
     /**
      * Releases resources managed by this HUD.
      * Should be called when the game screen is destroyed.

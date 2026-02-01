@@ -28,10 +28,6 @@ import de.tum.cit.fop.maze.MazeRunnerGame;
  *   <li>Scrollable list with custom-styled scrollbar for easy navigation</li>
  *   <li>Mouse wheel scrolling support without requiring initial click</li>
  * </ul>
- *
- * @author TUM Chair of Information Technology
- * @version 1.0
- * @since 2024
  */
 public class AchievementScreen implements Screen {
     /** The stage that contains all UI actors for this screen. */

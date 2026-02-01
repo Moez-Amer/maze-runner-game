@@ -3,10 +3,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
-
 import com.badlogic.gdx.math.Rectangle;
-
-import static de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_PATH;
 import static de.tum.cit.fop.maze.TiledToPropertiesConverter.TYPE_WALL;
 
 /**
@@ -38,11 +35,6 @@ public abstract class MovableGameObject extends GameObject {
     protected float collisionHeight;
     protected float collisionOffsetX;
     protected float collisionOffsetY;
-
-    /**
-     * The four cardinal movement directions used by {@link #move} and
-     * by subclasses to select facing animations.
-     */
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
     }
@@ -106,14 +98,12 @@ public abstract class MovableGameObject extends GameObject {
 
         float newX = x + dx * speed * delta;
         float newY = y + dy * speed * delta;
-
         if (canMoveTo(newX, y)) {
             x = newX;
         }
         if (canMoveTo(x, newY)) {
             y = newY;
         }
-
         bounds.setPosition(x, y);
     }
 
@@ -143,8 +133,6 @@ public abstract class MovableGameObject extends GameObject {
      */
     protected boolean canMoveTo(float newX, float newY) {
         if (mapData == null || tileSize == 0) return true;
-
-        // 1. Calculate the 'Scout' area for tiles
         float collisionX = newX + collisionOffsetX;
         float collisionY = newY + collisionOffsetY;
         float margin = 2f;
@@ -158,12 +146,10 @@ public abstract class MovableGameObject extends GameObject {
         int tileX2 = (int) ((checkX + checkW - 1) / tileSize);
         int tileY2 = (int) ((checkY + checkH - 1) / tileSize);
 
-        // 2. Map Boundary Check
         if (tileX1 < 0 || tileY1 < 0 || tileX2 >= mapData.length || tileY2 >= mapData[0].length) {
             return false;
         }
 
-        // 3. Wall Tile Check
         boolean isTileWalkable = mapData[tileX1][tileY1] != TYPE_WALL &&
                 mapData[tileX2][tileY1] != TYPE_WALL &&
                 mapData[tileX1][tileY2] != TYPE_WALL &&
@@ -171,21 +157,18 @@ public abstract class MovableGameObject extends GameObject {
 
         if (!isTileWalkable) return false;
 
-        // 4. Enemy-to-Enemy Collision Check (Modified to prevent nesting crash)
         if (enemies != null) {
             Rectangle futureFeet = new Rectangle(newX + collisionOffsetX, newY + collisionOffsetY, collisionWidth, collisionHeight);
 
-            // We use a standard for-loop with an index (i) instead of an Iterator
             for (int i = 0; i < enemies.size; i++) {
                 Enemy otherEnemy = enemies.get(i);
 
-                // Don't check collision against yourself
                 if (otherEnemy == this) continue;
 
                 Rectangle enemyFeet = feetBoxToRectangle(otherEnemy.getFeetCollisionBox());
 
                 if (futureFeet.overlaps(enemyFeet)) {
-                    return false; // Found a collision, cannot move here
+                    return false;
                 }
             }
         }
@@ -271,84 +254,34 @@ public abstract class MovableGameObject extends GameObject {
         this.collisionOffsetY = offsetY;
     }
 
-    // ---------------------------------------------------------------
-    // Getters and Setters
-    // ---------------------------------------------------------------
-
-    /**
-     * Returns the current movement speed in pixels per second.
-     *
-     * @return The movement speed.
-     */
     public float getSpeed(){
         return speed;
     }
 
-    /**
-     * Sets the movement speed in pixels per second.
-     *
-     * @param speed The new movement speed.
-     */
     public void setSpeed(float speed){
         this.speed = speed;
     }
 
-    /**
-     * Returns the direction this object is currently facing.
-     * Subclasses use this value to select the correct animation.
-     *
-     * @return The current {@link Direction}.
-     */
     public Direction getFacing(){
         return facing;
     }
 
-    /**
-     * Sets the direction this object is facing.
-     *
-     * @param facing The new {@link Direction}.
-     */
     public void setFacing(Direction facing){
         this.facing = facing;
     }
 
-    /**
-     * Returns the animation that is currently being played.
-     *
-     * @return The active {@link Animation}, or {@code null} if none is set.
-     */
     public Animation<TextureRegion> getCurrentAnimation(){
         return currentAnimation;
     }
 
-    /**
-     * Replaces the currently active animation.
-     * The new animation will be sampled on the next {@link #render} call
-     * using the accumulated {@link #stateTime}.
-     *
-     * @param animation The {@link Animation} to switch to.
-     */
     public void setCurrentAnimation(Animation<TextureRegion> animation){
         this.currentAnimation = animation;
     }
 
-    /**
-     * Binds the shared enemy list used for enemy-to-enemy collision in
-     * {@link #canMoveTo}.  All enemies in the game world should reference
-     * the same {@link Array} so that updates are visible immediately.
-     *
-     * @param enemies The shared array of all active enemies.
-     */
     public void setEnemies(Array<Enemy> enemies) {
         this.enemies = enemies;
     }
 
-    /**
-     * Binds the {@link Player} reference used by subclasses (e.g.
-     * {@link Enemy}) to determine chase targets or detect ghost mode.
-     *
-     * @param plyer The active {@link Player} instance.
-     */
     public void setPlayer(Player plyer){
         this.player=plyer;
     }

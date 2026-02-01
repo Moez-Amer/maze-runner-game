@@ -85,13 +85,6 @@ public class Enemy extends MovableGameObject {
         setCollisionBox(12, 12, 44, 22);
         loadAnimation(path, frameWidth, frameHeight);
     }
-
-    /**
-     * Sets the speed multiplier for this enemy.
-     * Multiplies the base speed by the given factor for difficulty scaling.
-     *
-     * @param multiplier The speed multiplier (e.g., 1.0 = normal, 1.5 = 50% faster).
-     */
     public void setSpeedMultiplier(float multiplier) {
         this.speedMultiplier = multiplier;
         this.speed = baseSpeed * multiplier;
@@ -99,32 +92,14 @@ public class Enemy extends MovableGameObject {
         System.out.println("Enemy speed set to: " + speed + " (multiplier: " + multiplier + ")");
     }
 
-    /**
-     * Sets the health multiplier for this enemy.
-     * Multiplies the base health by the given factor for difficulty scaling.
-     *
-     * @param multiplier The health multiplier (e.g., 1.0 = normal, 2.0 = double health).
-     */
     public void setHealthMultiplier(float multiplier) {
         this.healthMultiplier = multiplier;
         this.health = baseHealth * multiplier;
         System.out.println("Enemy health set to: " + health + " (multiplier: " + multiplier + ")");
     }
-
-    /**
-     * Gets the current speed multiplier.
-     *
-     * @return The speed multiplier.
-     */
     public float getSpeedMultiplier() {
         return speedMultiplier;
     }
-
-    /**
-     * Gets the current health multiplier.
-     *
-     * @return The health multiplier.
-     */
     public float getHealthMultiplier() {
         return healthMultiplier;
     }
@@ -139,7 +114,6 @@ public class Enemy extends MovableGameObject {
     @Override
     public void update(float delta) {
         super.update(delta);
-        // Update damage flash timer
         if (damageFlashTimer > 0) {
             damageFlashTimer -= delta;
         }
@@ -244,7 +218,6 @@ public class Enemy extends MovableGameObject {
         float dyToP = playerFeet[1] - enemyFeet[1];
         float distanceToPlayer = (float) Math.sqrt(dxToP * dxToP + dyToP * dyToP);
 
-        // Enemies ignore ghost players - always patrol
         if (player.isGhostMode()) {
             this.state = State.PATROL;
         }
@@ -334,14 +307,10 @@ public class Enemy extends MovableGameObject {
         }
         lastX = x;
         lastY = y;
-
-        // path refresh, recalculate if stuck or timer expires
         this.pathTimer += delta;
         if (pathTimer > 0.8f || path == null || path.isEmpty() || stuckTimer > 0.3f) {
             pathTimer = 0;
             stuckTimer = 0;
-
-            // Round to nearest tile center to prevent zigzag
             float playerCenterX = (float)(Math.round(playerFeet[0] / TILE_SIZE) * TILE_SIZE) + TILE_SIZE / 2f;
             float playerCenterY = (float)(Math.round(playerFeet[1] / TILE_SIZE) * TILE_SIZE) + TILE_SIZE / 2f;
             float enemyCenterX = enemyFeet[0] + 8;
@@ -420,7 +389,6 @@ public class Enemy extends MovableGameObject {
         float feetW = feetBox[2];
         float feetH = feetBox[3];
 
-        // Create a hitbox that is 3 tiles tall, starting from the feet box
         float damageWidth = feetW;
         float damageHeight = TILE_SIZE * 3;
         float damageX = feetX;
@@ -469,7 +437,6 @@ public class Enemy extends MovableGameObject {
         if (currentAnimation != null) {
             TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTime);
 
-            // Flash red when damaged
             if (damageFlashTimer > 0) {
                 if ((int)(damageFlashTimer * 10) % 2 == 0) {
                     batch.setColor(1f, 0f, 0f, 1f); // Red flash
@@ -559,7 +526,6 @@ public class Enemy extends MovableGameObject {
                     }
                 }
 
-                // If completely stuck, skip this waypoint
                 if (!moved) {
                     this.path.remove(0);
                 }

@@ -643,7 +643,7 @@ public class GameScreen implements Screen {
                                       ArrayList<int[]> walkablePositions,
                                       float minDistance, java.util.Random random) {
         int attempts = 0;
-        int maxAttempts = 300; // Increased attempts slightly since constraints are harder
+        int maxAttempts = 300;
         int spawnedCount = 0;
 
         while (spawnedCount < count && attempts < maxAttempts) {

@@ -56,6 +56,5 @@ public class Exit extends GameObject {
      */
     @Override
     public void render(SpriteBatch batch) {
-        // Exit rendering is handled by the map renderer
     }
 }
