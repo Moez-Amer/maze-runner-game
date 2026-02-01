@@ -4,6 +4,10 @@ A 2D maze-runner game developed using **LibGDX** for the Fundamentals of Program
 
 Navigate through dangerous dungeons, battle enemies, collect keys, avoid deadly traps, and escape through the exit before it's too late!
 
+<p align="center">
+  <img src="assets/gameScreenShot.png" alt="Wizard Hunt Gameplay" width="700">
+</p>
+
 ---
 
 ## 📁 Project Structure
@@ -174,6 +178,8 @@ java TiledToPropertiesConverter <input.tmx> <output.properties>
 | `ESC`   | Pause Game          |
 | `TAB`   | Developer Console   |
 | `U`     | Debug Visualization |
+| `+`     | Zoom In             |
+| `-`     | Zoom Out            |
 
 
 Controls are fully remappable in the Settings menu.
@@ -237,7 +243,12 @@ Press `TAB` in-game to access powerful debug commands:
 - Automates the conversion process for rapid level development
 - Supports all tile types including walls, traps, enemies, and boss spawns
 
-### 🗺️ Created 5 Unique Maps using Tiled
+### �️ Debug Visualization Mode
+- **Real-time Hitbox Overlay**: Press U to instantly toggle visible collision boxes for players, enemies, and walls.
+- **Object Tracking**: Visualize the interaction boundaries of every world object to ensure perfect mechanical precision.
+- **Developer Insight**: A custom-built tool designed to assist in testing physics and refining the gameplay experience across all five maps.
+
+### �🗺️ Created 5 Unique Maps using Tiled
 - Choose any unlocked level from the menu
 - Visual progression indicator
 - Quick restart functionality
@@ -250,10 +261,6 @@ Press `TAB` in-game to access powerful debug commands:
   - Survival high scores
   - Statistics (kills, deaths, time played)
 
-### 👁️ Debug Visualization Mode
-- **Real-time Hitbox Overlay**: Press U to instantly toggle visible collision boxes for players, enemies, and walls.
-- **Object Tracking**: Visualize the interaction boundaries of every world object to ensure perfect mechanical precision.
-- **Developer Insight**: A custom-built tool designed to assist in testing physics and refining the gameplay experience across all five maps.
 ---
 
 
