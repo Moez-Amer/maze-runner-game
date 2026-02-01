@@ -8,9 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
  * and center-point collision detection, to fulfill inheritance requirements.
  */
 public abstract class Trap extends GameObject {
-    /** The player instance used for collision detection and damage application. */
     protected Player player;
-
     /**
      * Constructs a new Trap.
      *

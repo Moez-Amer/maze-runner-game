@@ -79,7 +79,7 @@ public class MazeRunnerGame extends Game {
     }
 
     /**
-     * NEW: Plays the trailer video, then goes to profile selection.
+     * Plays the trailer video, then goes to profile selection.
      */
     private void playTrailerVideo() {
         AudioManager.stopMusic();
@@ -95,7 +95,7 @@ public class MazeRunnerGame extends Game {
     }
 
     /**
-     * NEW: Resets the trailer flag so it plays again on next launch.
+     *  Resets the trailer flag so it plays again on next launch.
      * Call this if you want to see the trailer again (e.g., from a menu button).
      */
     public void resetTrailer() {
@@ -103,7 +103,7 @@ public class MazeRunnerGame extends Game {
     }
 
     /**
-     * NEW: Play trailer from menu (for "Watch Trailer" button).
+     *  Play trailer from menu (for "Watch Trailer" button).
      */
     public void watchTrailer() {
         AudioManager.stopMusic();
@@ -222,7 +222,7 @@ public class MazeRunnerGame extends Game {
      * @param score The final score earned
      */
     public void goToVictory(int score) {
-        goToVictory(score, null); // Call enhanced version with null map path
+        goToVictory(score, null);
     }
 
     /**
@@ -258,10 +258,8 @@ public class MazeRunnerGame extends Game {
         int frameHeight = 32;
         int animationFrames = 4;
 
-        // libGDX internal Array instead of ArrayList because of performance
         Array<TextureRegion> walkFrames = new Array<>(TextureRegion.class);
 
-        // Add all frames to the animation
         for (int col = 0; col < animationFrames; col++) {
             walkFrames.add(new TextureRegion(walkSheet, col * frameWidth, 0, frameWidth, frameHeight));
         }
@@ -322,27 +320,14 @@ public class MazeRunnerGame extends Game {
         table.add(button).width(500).height(80).padBottom(18).row();
     }
 
-
-    /**
-     * Gets the UI skin for creating interface elements.
-     * @return The game's UI skin
-     */
     public Skin getSkin() {
         return skin;
     }
 
-    /**
-     * Gets the character walking down animation.
-     * @return The character animation
-     */
     public Animation<TextureRegion> getCharacterDownAnimation() {
         return characterDownAnimation;
     }
 
-    /**
-     * Gets the sprite batch for rendering.
-     * @return The sprite batch
-     */
     public SpriteBatch getSpriteBatch() {
         return spriteBatch;
     }
@@ -397,10 +382,7 @@ public class MazeRunnerGame extends Game {
             developerConsole.render();
         }
     }
-    /**
-     * Gets the developer console instance.
-     * @return The developer console
-     */
+
     public DeveloperConsole getConsole() {
         return developerConsole;
     }

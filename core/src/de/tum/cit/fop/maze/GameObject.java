@@ -45,14 +45,6 @@ public abstract class GameObject {
      */
     public abstract void render(SpriteBatch batch);
 
-    /**
-     * Returns the axis-aligned bounding rectangle of this object.
-     * The returned Rectangle is the internal instance so modifying it
-     * directly will affect collision checks. Use setPosition to move
-     * the object instead.
-     *
-     * @return The current bounding rectangle.
-     */
     public Rectangle getBounds() {
         return bounds;
     }
@@ -68,39 +60,15 @@ public abstract class GameObject {
         this.y = y;
         this.bounds.setPosition(x, y);
     }
-
-    /**
-     * Returns the current X-coordinate of this object's bottom-left corner.
-     *
-     * @return The X position in world pixels.
-     */
     public float getX() {
         return x;
     }
-
-    /**
-     * Returns the current Y-coordinate of this object's bottom-left corner.
-     *
-     * @return The Y position in world pixels.
-     */
     public float getY() {
         return y;
     }
-
-    /**
-     * Returns the rendered width of this object.
-     *
-     * @return The width in pixels.
-     */
     public float getWidth() {
         return width;
     }
-
-    /**
-     * Returns the rendered height of this object.
-     *
-     * @return The height in pixels.
-     */
     public float getHeight() {
         return height;
     }

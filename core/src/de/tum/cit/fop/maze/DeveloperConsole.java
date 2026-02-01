@@ -15,18 +15,15 @@ public class DeveloperConsole {
     private boolean isOpen;
     private ShapeRenderer shapeRenderer;
     private BitmapFont font;
-    // Command system
     private HashMap<String, Command> commands;
     private Array<String> outputHistory;
     private Array<String> inputHistory;
     private int historyIndex;
     private String currentInput;
 
-    // UI dimensions
     private float consoleHeight;
     private float consoleY;
 
-    // Input handling
     private boolean wasKeyPressed;
     private boolean justOpened;
 

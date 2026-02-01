@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
  * If the player falls in, they take damage and are teleported back to the entry point.
  */
 public class DeathPitTrap extends Trap {
-    /** The entry point used for respawning the player. */
     private final Entry entry;
 
     /**

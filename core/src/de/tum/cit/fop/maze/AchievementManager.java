@@ -32,18 +32,10 @@ public class AchievementManager {
         loadAchievements();
     }
 
-    /**
-     * Sets the listener to receive unlock notifications.
-     * @param listener The listener instance (usually defined in GameScreen).
-     */
     public void setListener(AchievementListener listener) {
         this.listener = listener;
     }
 
-    /**
-     * Retrieves the list of all defined achievements.
-     * @return A list of Achievement objects.
-     */
     public List<Achievement> getAllAchievements() {
         return achievements;
     }
@@ -54,7 +46,6 @@ public class AchievementManager {
     private void loadAchievements() {
         try {
             Json json = new Json();
-            // Load from assets/achievements.json
             achievements = json.fromJson(ArrayList.class, Achievement.class, Gdx.files.internal("achievements.json"));
             if (achievements == null) achievements = new ArrayList<>();
         } catch (Exception e) {
@@ -73,7 +64,6 @@ public class AchievementManager {
         if (achievements == null) return;
 
         for (Achievement ach : achievements) {
-            // Check if stat matches AND it's not already unlocked
             if (ach.statName.equals(statName) && !state.unlockedAchievements.contains(ach.id)) {
                 if (currentValue >= ach.targetValue) {
                     unlock(state, ach);
@@ -91,8 +81,6 @@ public class AchievementManager {
     private void unlock(GameState state, Achievement ach) {
         state.unlockedAchievements.add(ach.id);
         System.out.println("ACHIEVEMENT UNLOCKED: " + ach.name + " - " + ach.description);
-
-        // Notify the listener (UI)
         if (listener != null) {
             listener.onAchievementUnlocked(ach);
         }

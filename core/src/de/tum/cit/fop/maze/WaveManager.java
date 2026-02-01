@@ -21,31 +21,15 @@ import java.util.Random;
  * survival-mode screen can poll them every frame and act accordingly.
  * </p>
  *
- * <h3>Difficulty formulae</h3>
- * <ul>
- *   <li><b>Enemy count</b> – {@code 3 × 2^(wave-1)} (wave 1 is capped at 3).</li>
- *   <li><b>Speed multiplier</b> – {@code 1.0 + (wave-1) × 0.15} (linear ramp).</li>
- *   <li><b>Health multiplier</b> – {@code 1.2^(wave-1)} (exponential ramp).</li>
- *   <li><b>Score multiplier</b> – {@code 1.0 + (wave-1) × 0.25} (linear ramp).</li>
- * </ul>
  */
 public class WaveManager {
-    /** The 1-based index of the wave currently in progress or about to start. */
     private int currentWave;
-    /** Number of enemies that still need to be killed to complete the current wave. */
     private int enemiesRemainingInWave;
-    /** Total number of enemies that were spawned (or will be spawned) in this wave. */
     private int totalEnemiesInWave;
-    /** Accumulates time during the inter-wave transition. */
     private float waveTransitionTimer;
-    /** {@code true} while the transition delay between two waves is counting down. */
     private boolean isTransitioning;
-
-    /** Duration in seconds of the pause between waves. */
     private static final float WAVE_TRANSITION_DELAY = 2.0f;
-    /** Shared {@link Random} instance used for spawn-location selection. */
     private Random random;
-    /** Pool of world-space spawn points available for enemy placement. */
     private ArrayList<Vector2> spawnLocations;
 
     /**
@@ -187,42 +171,19 @@ public class WaveManager {
         return 1.0f + (currentWave - 1) * 0.25f;
     }
 
-    /**
-     * Returns the 1-based index of the wave currently in progress.
-     *
-     * @return The current wave number.
-     */
     public int getCurrentWave() {
         return currentWave;
     }
 
-    /**
-     * Returns the number of enemies that still need to be killed to
-     * complete the current wave.
-     *
-     * @return The remaining enemy count.
-     */
     public int getEnemiesRemaining() {
         return enemiesRemainingInWave;
     }
 
-    /**
-     * Returns the total number of enemies that were (or will be)
-     * spawned in the current wave.
-     *
-     * @return The total enemy count for this wave.
-     */
     public int getTotalEnemiesInWave() {
         return totalEnemiesInWave;
     }
 
-    /**
-     * Indicates whether the manager is currently in the inter-wave
-     * transition pause.  During this period no new enemies should be
-     * spawned by the owning screen.
-     *
-     * @return {@code true} if a transition delay is counting down.
-     */
+
     public boolean isTransitioning() {
         return isTransitioning;
     }

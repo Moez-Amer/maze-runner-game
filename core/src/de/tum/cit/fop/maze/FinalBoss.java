@@ -28,29 +28,11 @@ public class FinalBoss extends Enemy {
     private boolean isDead = false;
     private Animation<TextureRegion> deathAnim;
     private float deathTime = 0f;
-
-    /**
-     * The radius of the damaging aura surrounding the boss.
-     */
     private final float auraRadius = 70f;
-
-    /**
-     * The distance at which the boss stops moving towards the player (approximately 2-2.5 tiles).
-     */
     private final float stopDistance = 40f;
-
     private final ShapeRenderer shapeRenderer;
-
-    /**
-     * Collision shape for the aura, defined as a field to avoid object creation each frame.
-     */
     private final Circle auraBounds = new Circle();
-
-    /**
-     * Collision shape for the player's feet, defined as a field to avoid object creation each frame.
-     */
     private final Rectangle feetBounds = new Rectangle();
-
     /**
      * Constructs a new FinalBoss instance.
      *

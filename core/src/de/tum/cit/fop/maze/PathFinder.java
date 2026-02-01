@@ -218,7 +218,7 @@ public class PathFinder {
         if (path.size() <= 2) return path;
 
         ArrayList<Node> smoothed = new ArrayList<>();
-        smoothed.add(path.get(0)); // Keep the start
+        smoothed.add(path.get(0));
 
         int current = 0;
         while (current < path.size() - 1) {

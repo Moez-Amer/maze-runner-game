@@ -37,20 +37,10 @@ public class Node implements Comparable<Node>{
         this.walkable=false;
     }
 
-    /**
-     * Checks whether this node can be traversed during pathfinding.
-     *
-     * @return true if the node is walkable.
-     */
     public boolean isWalkable() {
         return walkable;
     }
 
-    /**
-     * Sets whether this node can be traversed during pathfinding.
-     *
-     * @param walkable true to mark the node as walkable, false for a wall.
-     */
     public void setWalkable(boolean walkable) {
         this.walkable = walkable;
     }
@@ -65,58 +55,26 @@ public class Node implements Comparable<Node>{
     public float getF(){
         return g+h;
     }
-
-    /**
-     * Returns the movement cost from the start node to this node.
-     *
-     * @return The g-cost value.
-     */
     public float getG() {
         return g;
     }
 
-    /**
-     * Sets the movement cost from the start node to this node.
-     *
-     * @param g The new g-cost value.
-     */
     public void setG(float g) {
         this.g = g;
     }
-
-    /**
-     * Returns the heuristic estimate from this node to the goal.
-     *
-     * @return The h-cost value.
-     */
     public float getH() {
         return h;
     }
 
-    /**
-     * Sets the heuristic estimate from this node to the goal.
-     *
-     * @param h The new h-cost value.
-     */
+
     public void setH(float h) {
         this.h = h;
     }
 
-    /**
-     * Returns the parent node in the shortest path found so far.
-     * Used to reconstruct the full path once the goal is reached.
-     *
-     * @return The connected parent Node, or null if this is the start node.
-     */
     public Node getConnection() {
         return connection;
     }
 
-    /**
-     * Sets the parent node in the shortest path found so far.
-     *
-     * @param connection The parent Node to connect to.
-     */
     public void setConnection(Node connection) {
         this.connection = connection;
     }

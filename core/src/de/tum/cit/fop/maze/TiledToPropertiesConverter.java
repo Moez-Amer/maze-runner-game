@@ -24,24 +24,14 @@ import java.util.*;
  * </p>
  */
 public class TiledToPropertiesConverter {
-
-    /** Impassable wall tile – blocks all movement. */
     public static final int TYPE_WALL = 0;
-    /** Player entry / spawn tile. */
     public static final int TYPE_ENTRY = 1;
-    /** Level exit / goal tile. */
     public static final int TYPE_EXIT = 2;
-    /** Knife-trap tile – damages the player on contact. */
     public static final int TYPE_KNIFE_TRAP = 3;
-    /** Enemy spawn tile. */
     public static final int TYPE_ENEMY = 4;
-    /** Collectible key tile. */
     public static final int TYPE_KEY = 5;
-    /** Death-trap tile – kills the player instantly. */
     public static final int TYPE_DEATHTRAP = 6;
-    /** Open walkable path – the default tile type. */
     public static final int TYPE_PATH = 7;
-    /** Boss spawn tile. */
     public static final int TYPE_BOSS = 8;
 
     /**
@@ -61,18 +51,13 @@ public class TiledToPropertiesConverter {
      *                               output file cannot be written.
      */
     public static void convert(String tmxFilePath, String outputPropertiesPath) throws Exception {
-        // Parse the TMX file
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(new File(tmxFilePath));
-
         Element mapElement = doc.getDocumentElement();
         int width = Integer.parseInt(mapElement.getAttribute("width"));
         int height = Integer.parseInt(mapElement.getAttribute("height"));
-
         System.out.println("Map dimensions: " + width + "x" + height);
-
-        // Initialize the game map - default everything to PATH
         int[][] gameMap = new int[width][height];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -80,7 +65,6 @@ public class TiledToPropertiesConverter {
             }
         }
 
-        // Get all layers
         NodeList layers = doc.getElementsByTagName("layer");
         System.out.println("Found " + layers.getLength() + " layers");
 
@@ -91,10 +75,7 @@ public class TiledToPropertiesConverter {
 
             int[] tiles = parseLayerData(layer, width, height);
 
-            // Process based on layer name
-            // Note: Check for decoration first to avoid treating "DecorationOnWalls" as walls
             if (layerName.contains("decoration")) {
-                // Skip decoration layers - they don't affect collision
                 System.out.println("Skipping decoration layer (no collision)");
             } else if (layerName.contains("wall")) {
                 processWallLayer(tiles, gameMap, width, height);
@@ -116,16 +97,12 @@ public class TiledToPropertiesConverter {
                 processKeyLayer(tiles, gameMap, width, height);
             }
         }
-
-        // Create properties file
         Properties props = new Properties();
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 props.setProperty(x + "," + y, String.valueOf(gameMap[x][y]));
             }
         }
-
-        // Write to properties file
         try (FileOutputStream fos = new FileOutputStream(outputPropertiesPath)) {
             props.store(fos, "Maze generated from " + tmxFilePath + " | Width: " + width + " | Height: " + height);
         }
@@ -164,8 +141,6 @@ public class TiledToPropertiesConverter {
         String[] tileStrings = csvData.split(",");
         int[] tiles = new int[tileStrings.length];
 
-        // Tiled uses flip flags in high bits for rotated/flipped tiles
-        // We need to mask them out to get the actual tile ID
         final long FLIPPED_HORIZONTALLY_FLAG = 0x80000000L;
         final long FLIPPED_VERTICALLY_FLAG   = 0x40000000L;
         final long FLIPPED_DIAGONALLY_FLAG   = 0x20000000L;
@@ -193,7 +168,7 @@ public class TiledToPropertiesConverter {
     private static void processWallLayer(int[] tiles, int[][] gameMap, int width, int height) {
         for (int i = 0; i < tiles.length; i++) {
             int x = i % width;
-            int y = height - 1 - (i / width); // Flip Y-axis
+            int y = height - 1 - (i / width);
 
             if (tiles[i] != 0) {
                 gameMap[x][y] = TYPE_WALL;
@@ -217,7 +192,7 @@ public class TiledToPropertiesConverter {
             int y = height - 1 - (i / width);
 
             if (tiles[i] != 0) {
-                gameMap[x][y] = TYPE_ENTRY; // Entry is just a path with spawn point
+                gameMap[x][y] = TYPE_ENTRY;
                 System.out.println("Entry point found at: " + x + "," + y);
             }
         }
@@ -241,7 +216,7 @@ public class TiledToPropertiesConverter {
             int y = height - 1 - (i / width);
 
             if (tiles[i] != 0) {
-                gameMap[x][y] = TYPE_ENTRY; // Player spawns on a path
+                gameMap[x][y] = TYPE_ENTRY;
                 System.out.println("=== PLAYER START POSITION FOUND: " + x + "," + y + " ===");
             }
         }
