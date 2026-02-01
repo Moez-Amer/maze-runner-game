@@ -199,6 +199,11 @@ Controls are fully remappable in the Settings menu.
 - **Multi-phase Combat**: Requires strategy to defeat
 - Unique animations and death sequence
 
+### 📜 Scroll Collectibles (Additional Exit Requirement)
+- **Magic Scrolls**: Ancient scrolls containing passage spells required alongside keys to unlock the exit
+- Adds an extra layer of exploration and collection to complete each level
+- Thematically enhances the wizard-hunting narrative
+
 ### 🎖️ Achievement System with Emblems
 - **15+ Achievements with unique Emblems**: Track player progress that have Emblems that appear in gameplay
 - **Observer Pattern**: Real-time unlock notifications
@@ -209,15 +214,7 @@ Controls are fully remappable in the Settings menu.
 - Story-driven narrative elements
 - Skippable for returning players
 
-### 💾 Extensive Multi-Profile Save System
-- **Multiple Player Profiles**: Each player has their own save
-  - Completed levels
-  - Unlocked achievements
-  - Skill points and upgrades
-  - Survival high scores
-  - Statistics (kills, deaths, time played)
-
-### 🔧 Extensive Developer Console
+###  Extensive Developer Console
 Press `TAB` in-game to access powerful debug commands:
 - `help` - List all commands
 - `give_item <item>` - Add items to inventory
@@ -243,6 +240,14 @@ Press `TAB` in-game to access powerful debug commands:
 - Choose any unlocked level from the menu
 - Visual progression indicator
 - Quick restart functionality
+
+### 💾 Extensive Multi-Profile Save System
+- **Multiple Player Profiles**: Each player has their own save
+  - Completed levels
+  - Unlocked achievements
+  - Skill points and upgrades
+  - Survival high scores
+  - Statistics (kills, deaths, time played)
 
 ---
 
