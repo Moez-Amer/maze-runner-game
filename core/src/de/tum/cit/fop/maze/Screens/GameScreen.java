@@ -1217,7 +1217,7 @@ public class GameScreen implements Screen {
                             game.getGameState().recordPerfectMaze();
                         }
 
-                        game.goToVictory(player.getScore());
+                        game.goToVictory(player.getScore(),mapPath);
                         return;
                     }
                 }

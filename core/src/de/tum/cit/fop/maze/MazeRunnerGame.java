@@ -212,10 +212,29 @@ public class MazeRunnerGame extends Game {
         this.setScreen(new SettingsScreen(this, previousScreen));
     }
 
-    /** Switches to the victory screen and passes the final score. */
+    /**
+     * Switches to the victory screen and passes the final score.
+     * Used when player completes a regular maze level.
+     *
+     * @param score The final score earned
+     */
     public void goToVictory(int score) {
-        if (gameScreen != null) { gameScreen.dispose(); gameScreen = null; }
-        this.setScreen(new VictoryScreen(this, score));
+        goToVictory(score, null); // Call enhanced version with null map path
+    }
+
+    /**
+     * Switches to the victory screen with level tracking.
+     * Enhanced version that tracks which level was completed.
+     *
+     * @param score The final score earned
+     * @param completedMapPath The path of the map that was just completed
+     */
+    public void goToVictory(int score, String completedMapPath) {
+        if (gameScreen != null) {
+            gameScreen.dispose();
+            gameScreen = null;
+        }
+        this.setScreen(new VictoryScreen(this, score, completedMapPath));
     }
 
     /** Switches to the game over screen and passes the final score. */
