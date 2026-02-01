@@ -20,33 +20,63 @@ import de.tum.cit.fop.maze.MazeRunnerGame;
 import java.util.List;
 
 /**
- * Victory screen displayed when the player successfully escapes the maze.
- * Shows congratulatory message, score, and any unlocked achievements.
+ * Congratulatory screen shown when the player successfully reaches
+ * the exit tile and completes a story-mode level.
+ * <p>
+ * The screen displays the player's final score and, when present, a
+ * list of achievements that were unlocked during the run.  A
+ * "Next Level" button appears automatically when a subsequent level
+ * exists in the progression sequence; on the final level it is omitted.
+ * Additional buttons let the player visit the marketplace or return to
+ * the main menu.  Pressing ESC at any time navigates back to the menu.
+ * </p>
+ * <p>
+ * The victory sound effect is started in {@link #show} after the
+ * previous music track is stopped via {@link AudioManager}.
+ * </p>
  */
 public class VictoryScreen implements Screen {
     private final MazeRunnerGame game;
     private final Stage stage;
     private final OrthographicCamera camera;
     private final Texture background;
+    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.0f;
+    /** The map path of the level that was just completed; used to derive the next level. */
     private final String currentMapPath;
 
     /**
-     * Constructs the victory screen with UI elements.
+     * Constructs the VictoryScreen without map-path tracking.
+     * The "Next Level" button will not appear because the current map
+     * is unknown.  Use the three-argument constructor when the caller
+     * can supply the completed map path.
      *
-     * @param game Reference to the main game instance
-     * @param score The final score achieved by the player
+     * @param game  The main {@link MazeRunnerGame} instance.
+     * @param score The final score achieved by the player.
      */
     public VictoryScreen(MazeRunnerGame game, int score) {
         this(game, score, null);
     }
 
     /**
-     * Enhanced constructor that tracks the current map path.
+     * Constructs the VictoryScreen with full level-progression support.
+     * <p>
+     * The UI layout is assembled top-to-bottom: title, score, congratulations
+     * message, an optional achievement list (rendered only when the
+     * {@link de.tum.cit.fop.maze.GameState} contains unlocked
+     * achievements), an optional "Next Level" button (rendered only when
+     * {@link #getNextLevelPath} returns a non-null value), a marketplace
+     * button, and a main-menu button.
+     * </p>
      *
-     * @param game Reference to the main game instance
-     * @param score The final score achieved by the player
-     * @param currentMapPath The path of the map that was just completed (e.g., "maps/level-1.properties")
+     * @param game           The main {@link MazeRunnerGame} instance, used
+     *                       for navigation and the shared UI skin.
+     * @param score          The total points the player accumulated before
+     *                       reaching the exit.
+     * @param currentMapPath The internal asset path of the map that was
+     *                       just completed (e.g.
+     *                       {@code "maps/level-1.properties"}), or
+     *                       {@code null} if unknown.
      */
     public VictoryScreen(MazeRunnerGame game, int score, String currentMapPath) {
         this.game = game;
@@ -80,7 +110,7 @@ public class VictoryScreen implements Screen {
                 displayName = displayName.substring(0, 1).toUpperCase() + displayName.substring(1);
 
                 Label achLabel = new Label("★ " + displayName, game.getSkin());
-                achLabel.setColor(Color.GOLD); // Distinctive color for rewards
+                achLabel.setColor(Color.GOLD);
                 achTable.add(achLabel).padBottom(5).row();
             }
             table.add(achTable).padBottom(30).row();
@@ -120,17 +150,25 @@ public class VictoryScreen implements Screen {
     }
 
     /**
-     * Determines the next level based on the current map path.
+     * Derives the next level's map path from the current level's path
+     * using a hard-coded five-level progression sequence.
+     * <p>
+     * The mapping is linear: level <em>N</em> leads to level
+     * <em>N+1</em> for N &isin; {1, 2, 3, 4}.  Level 5 is the final
+     * level and returns {@code null} so that no "Next Level" button is
+     * shown.  A {@code null} input also returns {@code null}.
+     * </p>
      *
-     * @param currentPath The path of the current/completed level
-     * @return The path to the next level, or null if there is no next level
+     * @param currentPath The internal asset path of the level that was
+     *                    just completed, or {@code null}.
+     * @return The asset path of the next level, or {@code null} if there
+     *         is no subsequent level or the input was {@code null}.
      */
     private String getNextLevelPath(String currentPath) {
         if (currentPath == null) {
             return null;
         }
 
-        // Level progression mapping
         if (currentPath.equals("maps/level-1.properties")) {
             return "maps/level-2.properties";
         } else if (currentPath.equals("maps/level-2.properties")) {
@@ -145,6 +183,12 @@ public class VictoryScreen implements Screen {
         return null;
     }
 
+    /**
+     * Stops any currently playing music and starts the victory sound
+     * effect.  Also (re-)registers the {@link Stage} as the active
+     * input processor so that buttons receive events even if the screen
+     * was shown programmatically after another processor was active.
+     */
     @Override
     public void show() {
         AudioManager.stopMusic();
@@ -152,6 +196,16 @@ public class VictoryScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
     }
 
+    /**
+     * Renders one frame of the victory screen.
+     * <p>
+     * The background is drawn centred at the configured zoom and the
+     * Scene2D stage is rendered on top.  An ESC key press at any point
+     * navigates back to the main menu.
+     * </p>
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     @Override
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -172,22 +226,40 @@ public class VictoryScreen implements Screen {
         stage.draw();
     }
 
+    /**
+     * Updates the stage viewport when the window is resized so that
+     * the centred table layout remains correct.
+     *
+     * @param width  The new window width in pixels.
+     * @param height The new window height in pixels.
+     */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
+    /** No-op; no per-frame state needs to be suspended. */
     @Override
     public void pause() {}
 
+    /** No-op; no per-frame state needs to be resumed. */
     @Override
     public void resume() {}
 
+    /**
+     * Called when this screen is replaced by another.  Delegates
+     * immediately to {@link #dispose} to free resources as soon as
+     * the screen is no longer visible.
+     */
     @Override
     public void hide() {
         dispose();
     }
 
+    /**
+     * Releases the Scene2D {@link Stage} and the background
+     * {@link Texture}.
+     */
     @Override
     public void dispose() {
         stage.dispose();

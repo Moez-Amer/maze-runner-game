@@ -16,20 +16,21 @@ import de.tum.cit.fop.maze.MazeRunnerGame;
 import de.tum.cit.fop.maze.SaveManager;
 
 /**
- * Screen for the Skill Tree/Marketplace where players can upgrade their character stats.
+ * Marketplace screen where players spend earned skill points to
+ * upgrade character stats across three independent branches.
  * <p>
- * This screen provides three upgrade branches:
+ * Each branch upgrades a single attribute via a consumable ring item:
  * <ul>
- * <li><b>COMBAT</b> - Upgrades the Power Ring for increased damage</li>
- * <li><b>AGILITY</b> - Upgrades Swift Boots for increased movement speed</li>
- * <li><b>SURVIVAL</b> - Upgrades Tank Armor for increased health</li>
+ *   <li><b>COMBAT (Warrior)</b> – Power Ring, grants +50 % damage per
+ *       level.</li>
+ *   <li><b>AGILITY (Swiftness)</b> – Swiftness Ring, grants +25 % speed
+ *       per level.</li>
+ *   <li><b>SURVIVAL (Vitality)</b> – Health Ring, grants +1 heart per
+ *       level.</li>
  * </ul>
- * Each upgrade requires spending skill points earned through gameplay.
- * Upgrade costs increase exponentially with each level (cost = 2 * 2^level).
- *
- * @author TUM Chair of Information Technology
- * @version 1.0
- * @since 2024
+ * Each branch draws from its own dedicated point pool (Warrior,
+ * Swiftness, or Vitality points) rather than from a shared currency
+ * </p>
  */
 public class SkillTreeScreen implements Screen {
     /** The stage that contains all UI actors for this screen. */
@@ -48,12 +49,17 @@ public class SkillTreeScreen implements Screen {
     private final float bgZoom = 1.5f;
 
     /**
-     * Constructs a new SkillTreeScreen.
+     * Constructs the SkillTreeScreen, creates shared textures, and
+     * performs the initial UI build.
      * <p>
-     * Initializes the stage with a screen viewport and builds the UI
-     * displaying all available skill upgrades.
+     * A 1×1 {@link com.badlogic.gdx.graphics.Pixmap} is generated and
+     * uploaded to a {@link Texture} to serve as the semi-transparent
+     * panel background used behind each upgrade branch and each
+     * point-balance badge.
+     * </p>
      *
-     * @param game the main game instance used to access game state and UI skin
+     * @param game The main {@link MazeRunnerGame} instance, used to access
+     *             the current {@link GameState} and the shared UI skin.
      */
     public SkillTreeScreen(MazeRunnerGame game) {
         this.game = game;
@@ -72,7 +78,16 @@ public class SkillTreeScreen implements Screen {
     }
 
     /**
-     * Rebuilds the complete UI for the skill tree screen.
+     * Clears the stage and reconstructs every UI element from the
+     * current {@link GameState}.
+     * <p>
+     * This method is called once at construction and again after every
+     * successful upgrade purchase so that skill levels, remaining
+     * points, next-upgrade costs, and button enabled-states are all
+     * refreshed atomically.  It also re-registers the stage as the
+     * active input processor so that the freshly created actors receive
+     * events immediately.
+     * </p>
      */
     private void rebuildUI() {
         stage.clear();
@@ -131,7 +146,40 @@ public class SkillTreeScreen implements Screen {
     }
 
     /**
-     * Creates a vertical UI branch for a specific skill upgrade type.
+     * Builds the UI panel for a single upgrade branch.
+     * <p>
+     * The panel contains, from top to bottom: an icon image loaded from
+     * {@code iconPath} (silently skipped if the file is missing), a
+     * coloured branch title, the item name with its current level, a
+     * description of the per-level benefit, and an Upgrade button whose
+     * label shows the next cost.  The button is disabled and greyed when
+     * the player lacks sufficient points.
+     * </p>
+     * <p>
+     * When the Upgrade button is clicked the method deducts the cost
+     * from the appropriate point pool, increments the skill level in
+     * {@link GameState}, persists the change via {@link SaveManager},
+     * and calls {@link #rebuildUI} to refresh the entire screen.
+     * </p>
+     *
+     * @param state       The current {@link GameState}, read for levels
+     *                    and point balances.
+     * @param title       The branch heading displayed at the top of the
+     *                    panel (e.g. {@code "COMBAT"}).
+     * @param skillKey    The key used to look up and store the skill level
+     *                    in {@link GameState#skillLevels} (e.g.
+     *                    {@code "Warrior"}).
+     * @param name        The item name shown below the title (e.g.
+     *                    {@code "Power Ring"}).
+     * @param description A short description of the per-level benefit.
+     * @param type        The point-pool identifier: {@code "warrior"},
+     *                    {@code "swiftness"}, or {@code "vitality"}.
+     * @param color       The {@link com.badlogic.gdx.graphics.Color} used
+     *                    to tint the title label and the enabled Upgrade
+     *                    button.
+     * @param iconPath    Internal asset path for the branch icon image,
+     *                    or {@code null} / empty to skip the icon.
+     * @return A fully populated {@link Table} representing the branch panel.
      */
     private Table createContinuousBranch(GameState state, String title, final String skillKey, String name, String description, final String type, com.badlogic.gdx.graphics.Color color, String iconPath) {
         Table branch = new Table();
@@ -197,6 +245,13 @@ public class SkillTreeScreen implements Screen {
         return branch;
     }
 
+    /**
+     * Renders one frame of the marketplace screen.
+     * The background is drawn centred at the configured zoom and the
+     * Scene2D stage is rendered on top.
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -212,16 +267,34 @@ public class SkillTreeScreen implements Screen {
         stage.draw();
     }
 
+    /**
+     * Registers the {@link Stage} as the active input processor.
+     */
     @Override public void show() { Gdx.input.setInputProcessor(stage); }
 
+    /**
+     * Updates the stage viewport when the window is resized.
+     *
+     * @param width  The new window width in pixels.
+     * @param height The new window height in pixels.
+     */
     @Override public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
+    /** No-op; no per-frame state needs to be suspended. */
     @Override public void pause() {}
+
+    /** No-op; no per-frame state needs to be resumed. */
     @Override public void resume() {}
+
+    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override public void hide() {}
 
+    /**
+     * Releases the Scene2D {@link Stage}, the background {@link Texture},
+     * and the panel {@link Texture}.
+     */
     @Override public void dispose() {
         stage.dispose();
         background.dispose();

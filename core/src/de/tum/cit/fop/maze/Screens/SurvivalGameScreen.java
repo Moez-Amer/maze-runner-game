@@ -9,21 +9,45 @@ import java.util.Random;
 import static de.tum.cit.fop.maze.TiledToPropertiesConverter.*;
 
 /**
- * Survival Mode Game Screen
- * Extends GameScreen and uses identical update/render logic.
- * Only difference: enemies spawn from waves instead of being pre-placed.
+ * Survival-mode variant of the main game screen.
+ * <p>
+ * All per-frame update and rendering logic is inherited from
+ * {@link GameScreen}.  The only behavioural difference is <em>how</em>
+ * enemies enter the world: instead of being pre-placed on the map at
+ * load time, enemies are spawned in discrete waves managed by a
+ * {@link WaveManager}.  Between waves a short transition pause gives
+ * the player a brief respite before the next, harder group arrives.
+ * </p>
+ * <p>
+ * <b>Lose condition</b> – the player is allowed one "ghost mode"
+ * revival per run.  If they die a second time (or after the ghost
+ * timer expires) the final score, wave, and elapsed time are recorded
+ * </p>
  */
 public class SurvivalGameScreen extends GameScreen {
 
     private WaveManager waveManager;
+    /** Total seconds the player has survived; paused while in ghost mode. */
     private float timeAlive;
+    /** {@code true} once the current wave's enemies have all been spawned. */
     private boolean hasSpawnedCurrentWave;
+    /** Number of enemies to spawn for the wave that was most recently started. */
     private int totalEnemiesSpawnedThisWave;
     private Random random;
 
+    /** Tracks world-space positions already occupied by enemies this wave. */
     private ArrayList<Vector2> occupiedPositions;
-    private static final float MIN_SPAWN_DISTANCE = TILE_SIZE * 5; // 5 tiles minimum spacing
+    /** Minimum pixel distance between any two enemies at spawn time (5 tiles). */
+    private static final float MIN_SPAWN_DISTANCE = TILE_SIZE * 5;
 
+    /**
+     * Constructs the SurvivalGameScreen by loading the map via the
+     * parent {@link GameScreen} constructor and then initialising
+     * wave-specific state.
+     * @param game    The main {@link MazeRunnerGame} instance.
+     * @param mapPath Internal asset path to the map properties file.
+     * @param seed    Random seed for reproducible enemy placement.
+     */
     public SurvivalGameScreen(MazeRunnerGame game, String mapPath, long seed) {
         super(game, mapPath);
 
@@ -48,11 +72,18 @@ public class SurvivalGameScreen extends GameScreen {
     }
 
     /**
-     * Extracts all safe spawn locations from map.
-     * Uses LARGE buffer from walls to prevent spawning near boundaries.
-     *
-     * Map is 50x36, walls are at boundaries (x=0, x=49, y=0, y=35)
-     * We use a 5-tile buffer from ALL walls for maximum safety.
+     * Scans the loaded map and returns every tile position that is safe
+     * for enemy spawning.
+     * <p>
+     * A tile qualifies only when it is {@code TYPE_PATH}, all eight of
+     * its neighbours are walkable ({@code TYPE_PATH} or
+     * {@code TYPE_ENTRY}), it lies at least {@code WALL_BUFFER} (5)
+     * tiles from every map edge, and it is more than 10 tiles (Euclidean)
+     * from the player's spawn point.  Each qualifying tile is converted
+     * to world-pixel coordinates and added to the returned list.
+     * </p>
+     * @return A list of {@link Vector2} positions in world pixels that
+     *         are safe for enemy placement.
      */
     private ArrayList<Vector2> extractSpawnLocations() {
         ArrayList<Vector2> locations = new ArrayList<>();
@@ -136,8 +167,15 @@ public class SurvivalGameScreen extends GameScreen {
     }
 
     /**
-     * Gets a spawn position that is guaranteed not to overlap with existing enemies
-     * or be too close to walls.
+     * Selects a spawn position that maintains at least
+     * {@link #MIN_SPAWN_DISTANCE} pixels of clearance from every
+     * already-occupied position.
+     * @param availableLocations The pool of pre-validated spawn tiles
+     *                           in world-pixel coordinates.
+     * @return A {@link Vector2} position guaranteed to be at least
+     *         {@link #MIN_SPAWN_DISTANCE} from all other enemies, or
+     *         the best available alternative if perfect spacing cannot
+     *         be achieved.
      */
     private Vector2 getSpacedSpawnPosition(ArrayList<Vector2> availableLocations) {
         if (availableLocations.isEmpty()) {
@@ -221,7 +259,7 @@ public class SurvivalGameScreen extends GameScreen {
     }
 
     /**
-     * Spawns all enemies for the current wave with guaranteed spacing.
+     * Spawns all enemies required by the current wave.
      */
     private void spawnWaveEnemies() {
         occupiedPositions.clear();
@@ -294,6 +332,11 @@ public class SurvivalGameScreen extends GameScreen {
         System.out.println("=== Wave Spawn Complete ===\n");
     }
 
+    /**
+     * Advances one frame of survival-mode logic before delegating to
+     * the parent {@link GameScreen#render}.
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     @Override
     public void render(float delta) {
         if (!player.isGhostMode()) {
@@ -314,8 +357,17 @@ public class SurvivalGameScreen extends GameScreen {
     }
 
     /**
-     * Override checkPlayerAttackHits to apply wave score multiplier.
-     * Same logic as parent, but scales score by wave difficulty.
+     * Checks whether the player's current sword swing has hit any enemy
+     * and, if so, applies damage scaled by the player's damage
+     * multiplier.
+     * <p>
+     * This override adds wave-aware score awarding: when an enemy dies
+     * the base kill score (100) is multiplied by the
+     * {@link WaveManager#getScoreMultiplier} for the current wave before
+     * being credited to the player.  All other logic (hitbox overlap,
+     * attack-hit flag, kill-streak tracking, and state persistence) is
+     * identical to the parent implementation.
+     * </p>
      */
     @Override
     protected void checkPlayerAttackHits() {
@@ -362,14 +414,24 @@ public class SurvivalGameScreen extends GameScreen {
     }
 
     /**
-     * No win condition in survival mode.
+     * No-op override: survival mode has no exit tile to reach, so the
+     * parent's win-condition check is deliberately suppressed.
      */
     @Override
     protected void checkWinCondition() {
     }
 
     /**
-     * Lose condition: Player dies twice (once + ghost mode expiration).
+     * Checks whether the player has been permanently defeated.
+     * <p>
+     * On the first death the player enters ghost mode and a
+     * {@link VoodooDoll} is spawned at the death location as a revive
+     * anchor.  If the player dies again — or if the ghost timer
+     * expires without collecting the doll — the run ends.  The final
+     * score, wave reached, and total time survived are recorded in the
+     * {@link GameState} and persisted before transitioning to the
+     * {@link GameOverScreen}.
+     * </p>
      */
     @Override
     protected void checkLoseCondition() {
@@ -401,10 +463,23 @@ public class SurvivalGameScreen extends GameScreen {
         }
     }
 
+    /**
+     * Returns the {@link WaveManager} so that the HUD or other
+     * external systems can query the current wave number and enemy
+     * counts.
+     *
+     * @return The active {@link WaveManager}.
+     */
     public WaveManager getWaveManager() {
         return waveManager;
     }
 
+    /**
+     * Returns the total seconds the player has survived in this run.
+     * The timer is paused while the player is in ghost mode.
+     *
+     * @return Elapsed survival time in seconds.
+     */
     public float getGameScreenTime() {
         return timeAlive;
     }

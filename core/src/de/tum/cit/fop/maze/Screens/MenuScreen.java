@@ -21,28 +21,45 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 
 /**
- * The MenuScreen class is responsible for displaying the main menu of the game.
- * It extends the LibGDX Screen class and sets up the UI components for the menu.
+ * The primary entry point screen presented to the player when the game starts.
+ * <p>
+ * All top-level navigation is offered here through a vertical stack of
+ * animated buttons: starting a new game, selecting a level, entering
+ * Survival Mode, visiting the marketplace, viewing the leaderboard,
+ * checking achievements, watching the trailer, adjusting settings, and
+ * exiting the application.
+ * </p>
+
  */
 public class MenuScreen implements Screen {
 
     private final Stage stage;
     private final MazeRunnerGame game;
     private final Texture background;
+    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.5f;
 
     /**
-     * Constructor for MenuScreen. Sets up the camera, viewport, stage, and UI elements.
+     * Constructs the MenuScreen and assembles the full button layout.
+     * <p>
+     * An {@link OrthographicCamera} and {@link ScreenViewport} are created
+     * and passed to the {@link Stage}.  A centred {@link Table} is then
+     * populated with a title label followed by one button per navigation
+     * destination.  Each button is registered with a staggered delay so
+     * that the entrance animations cascade down the list.
+     * </p>
      *
-     * @param game The main game class, used to access global resources and methods.
+     * @param game The main {@link MazeRunnerGame} instance, used to access
+     *             the shared skin, {@link com.badlogic.gdx.graphics.g2d.SpriteBatch},
+     *             and all navigation helper methods.
      */
     public MenuScreen(MazeRunnerGame game) {
         this.game = game;
         var camera = new OrthographicCamera();
         camera.zoom = 1.5f;
 
-        Viewport viewport = new ScreenViewport(camera); // Create a viewport with the camera
-        stage = new Stage(viewport, game.getSpriteBatch()); // Create a stage for UI elements
+        Viewport viewport = new ScreenViewport(camera);
+        stage = new Stage(viewport, game.getSpriteBatch());
 
         background = new Texture(Gdx.files.internal("BG.png"));
 
@@ -90,10 +107,22 @@ public class MenuScreen implements Screen {
 
     }
 
+    /**
+     * Renders one frame of the main menu.
+     * <p>
+     * The background is drawn first at the configured zoom, centred on
+     * the window.  The Scene2D stage is then acted and drawn on top so
+     * that button animations and hover effects are processed every frame.
+     * The stage delta is capped at {@code 1/30} seconds to prevent
+     * large jumps after focus loss from distorting entrance animations.
+     * </p>
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Clear the screen
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         game.getSpriteBatch().begin();
         float width = Gdx.graphics.getWidth() * bgZoom;
         float height = Gdx.graphics.getHeight() * bgZoom;
@@ -101,39 +130,72 @@ public class MenuScreen implements Screen {
         float y = (Gdx.graphics.getHeight() - height) / 2;
         game.getSpriteBatch().draw(background, x, y, width, height);
         game.getSpriteBatch().end();
-        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f)); // Update the stage
+        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
     }
 
+    /**
+     * Updates the stage viewport when the window is resized so that the
+     * centred table layout remains correct at any resolution.
+     *
+     * @param width  The new window width in pixels.
+     * @param height The new window height in pixels.
+     */
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true); // Update the stage viewport on resize
+        stage.getViewport().update(width, height, true);
     }
 
+    /**
+     * Releases the {@link Stage} and the background {@link Texture}.
+     */
     @Override
     public void dispose() {
         stage.dispose();
         background.dispose();
     }
 
+    /**
+     * Registers the {@link Stage} as the active input processor so that
+     * button clicks and hover events are received.
+     */
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
     }
 
+    /** No-op; no per-frame state needs to be suspended. */
     @Override
     public void pause() {
     }
 
+    /** No-op; no per-frame state needs to be resumed. */
     @Override
     public void resume() {
     }
 
+    /** No-op; cleanup is handled by {@link #dispose}. */
     @Override
     public void hide() {
     }
 
-
+    /**
+     * Creates a menu button with hover-scale and staggered entrance
+     * animations and adds it to the supplied table.
+     * <p>
+     * The button starts fully transparent and offset 20 pixels below its
+     * final position.  After {@code delay} seconds a parallel action fades
+     * it in and slides it upward using a quadratic-ease-out interpolation.
+     * While the mouse (or touch) is over the button it scales to 110 %
+     * around its centre; leaving the button returns it to 100 %.
+     * </p>
+     *
+     * @param table  The {@link Table} to which the button row is appended.
+     * @param text   The label displayed on the button.
+     * @param action The {@link Runnable} executed when the button is clicked.
+     * @param delay  Seconds to wait before the entrance animation begins,
+     *               used to stagger multiple buttons.
+     */
     private void addButton(Table table, String text, Runnable action, float delay) {
         TextButton button = new TextButton(text, game.getSkin());
 

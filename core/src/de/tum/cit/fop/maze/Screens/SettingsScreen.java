@@ -26,28 +26,48 @@ import de.tum.cit.fop.maze.KeyBindings;
 import de.tum.cit.fop.maze.MazeRunnerGame;
 
 /**
- * Manages the settings menu for configuring key bindings and audio volumes.
- * Handles user input for key rebinding, conflict resolution, and saving preferences.
+ * Settings screen that presents two side-by-side panels: one for
+ * keyboard control bindings and one for audio-volume sliders.
+ * <p>
+ * <b>Key-binding workflow</b> – each action row displays the current
+ * key name inside a semi-transparent panel and a "Change" button.
+ * Clicking "Change" enters <em>listening mode</em>: the global
+ * {@link InputProcessor} is replaced with a minimal one that captures
+ * the very next {@code keyDown} event.  If the captured key is already
+ * bound to a different action a {@link Dialog} is shown offering to
+ * swap the two bindings.  Pressing ESC while listening cancels the
+ * operation and restores normal input.  A "Reset" button returns all
+ * bindings to their defaults and rebuilds the entire UI.
+ * </p>
  */
 public class SettingsScreen implements Screen {
 
     private final MazeRunnerGame game;
     private final Stage stage;
+    /** The screen that was active before Settings was opened; Back returns here. */
     private final Screen previousScreen;
     private final KeyBindings keys;
     private final Texture background;
+    /** A 1×1 semi-transparent black texture used as the background for key-name panels. */
     private final Texture panelTexture;
+    /** Uniform scale applied to the background texture relative to the window size. */
     private final float bgZoom = 1.5f;
 
+    /** {@code true} while the screen is waiting for a key press to complete a rebind. */
     private boolean isListening = false;
+    /** The action name being rebound during listening mode, or {@code null} otherwise. */
     private String listeningAction = null;
+    /** The "Change" button that triggered listening mode; its label is toggled during the capture. */
     private TextButton listeningButton = null;
 
     /**
-     * Initializes the settings screen, camera, and stage.
+     * Constructs the SettingsScreen, creates all shared textures, and
+     * builds the initial UI layout.
      *
-     * @param game The main game instance for asset access.
-     * @param previousScreen The screen to return to when exiting settings.
+     * @param game           The main {@link MazeRunnerGame} instance, used
+     *                       for the shared skin and {@link com.badlogic.gdx.graphics.g2d.SpriteBatch}.
+     * @param previousScreen The {@link Screen} to return to when the
+     *                       player clicks Back or presses ESC.
      */
     public SettingsScreen(MazeRunnerGame game, Screen previousScreen) {
         this.game = game;
@@ -65,8 +85,12 @@ public class SettingsScreen implements Screen {
 
         buildUI();
     }
+
     /**
-     * Builds the main UI layout including controls, audio, and navigation buttons.
+     * Constructs the root {@link Table} and populates it with the
+     * controls panel, audio panel, and navigation buttons.  This method
+     * is also called after a successful key rebind or a reset so that
+     * the UI always reflects the current bindings and volumes.
      */
     private void buildUI() {
         Table root = new Table();
@@ -94,9 +118,15 @@ public class SettingsScreen implements Screen {
     }
 
     /**
-     * Creates the table containing all key binding rows and the reset button.
+     * Creates the Controls panel containing one row per rebindable
+     * action and a Reset button at the bottom.
+     * <p>
+     * Each row is built by {@link #addKeyRow}.  The Reset button
+     * calls {@link KeyBindings#setDefaultBindings} and then invokes
+     * {@link #buildUI} to refresh the entire screen.
+     * </p>
      *
-     * @return The table with control settings.
+     * @return A {@link Table} ready to be inserted into the root layout.
      */
     private Table buildKeyBindings() {
         Table table = new Table();
@@ -127,11 +157,21 @@ public class SettingsScreen implements Screen {
 
         return table;
     }
+
     /**
-     * Adds a configuration row for a specific game action to the table.
+     * Appends a single key-binding row to the Controls table.
+     * <p>
+     * The row contains three cells: the action name on the left, a
+     * {@link Table} panel showing the current key name in royal-blue
+     * text over the semi-transparent {@link #panelTexture} in the
+     * centre, and a "Change" {@link TextButton} on the right.
+     * Clicking "Change" delegates to {@link #startListening}.
+     * </p>
      *
-     * @param table The target table.
-     * @param action The name of the action to bind.
+     * @param table  The Controls {@link Table} to which the row is appended.
+     * @param action The human-readable action name (e.g. {@code "Move Up"}).
+     *               This string is also the key used to look up and set
+     *               the binding in {@link KeyBindings}.
      */
     private void addKeyRow(Table table, String action) {
         table.add(new Label(action, game.getSkin())).left().padBottom(10);
@@ -152,11 +192,22 @@ public class SettingsScreen implements Screen {
         });
         table.add(button).width(200).padBottom(10).row();
     }
+
     /**
-     * Activates listening mode to capture the next key press for an action.
+     * Enters listening mode for a key rebind.
+     * <p>
+     * The button label is changed to "Press key" and coloured black to
+     * signal the active capture state.  The global {@link InputProcessor}
+     * is replaced with a minimal implementation that intercepts the next
+     * {@code keyDown} event.  If the key is already bound to another
+     * action {@link #showConflict} is invoked; otherwise the binding is
+     * applied immediately, listening mode is exited, and the UI is
+     * rebuilt.  ESC during capture cancels via {@link #stopListening}.
+     * </p>
      *
-     * @param action The action being rebound.
-     * @param buttons The button that triggered the listening mode.
+     * @param action  The action name being rebound.
+     * @param buttons The "Change" {@link TextButton} that was clicked;
+     *                its label is toggled to indicate the capture state.
      */
     private void startListening(String action, TextButton buttons) {
         isListening = true;
@@ -195,8 +246,11 @@ public class SettingsScreen implements Screen {
             public boolean touchCancelled(int x, int y, int p, int b) { return false; }
         });
     }
+
     /**
-     * Deactivates listening mode and restores normal UI interaction.
+     * Exits listening mode and restores normal Stage-based input.
+     * The "Change" button label and colour are reset to their default
+     * appearance, and all listening-state fields are cleared.
      */
     private void stopListening() {
         if (listeningButton != null) {
@@ -208,11 +262,20 @@ public class SettingsScreen implements Screen {
         listeningButton = null;
         Gdx.input.setInputProcessor(stage);
     }
+
     /**
-     * Displays a dialog to resolve duplicate key bindings.
+     * Shows a modal {@link Dialog} asking the player whether to swap
+     * two conflicting key bindings.
+     * <p>
+     * If the player confirms, the key currently bound to {@code conflict}
+     * is reassigned to the action that previously held it (i.e. the two
+     * bindings are swapped).  In either case listening mode is exited
+     * and, on confirmation, the UI is rebuilt to reflect the new state.
+     * </p>
      *
-     * @param keycode The key that caused the conflict.
-     * @param conflict The name of the action currently using the key.
+     * @param keycode  The key code that caused the conflict.
+     * @param conflict The name of the action that is currently using
+     *                 {@code keycode}.
      */
     private void showConflict(int keycode, String conflict) {
         String keyName = keys.getKeyDisplayName(keycode);
@@ -235,10 +298,17 @@ public class SettingsScreen implements Screen {
         dialog.button("No", false);
         dialog.show(stage);
     }
+
     /**
-     * Creates the table containing sliders for Main, Music, and SFX volumes.
+     * Creates the Audio panel containing sliders for Main, Music, and
+     * SFX volumes.
+     * <p>
+     * Each slider is built by {@link #addSlider}, which reads the current
+     * value from {@link AudioManager} and wires a {@link ChangeListener}
+     * back to the corresponding setter.
+     * </p>
      *
-     * @return The table with audio settings.
+     * @return A {@link Table} ready to be inserted into the root layout.
      */
     private Table buildAudio() {
         Table table = new Table();
@@ -258,13 +328,24 @@ public class SettingsScreen implements Screen {
 
         return table;
     }
+
     /**
-     * Adds a volume slider with a label and change listener to the table.
+     * Appends a labelled volume slider row to the Audio table.
+     * <p>
+     * The slider range is 0 – 100 (integer steps).  The {@code current}
+     * value (0.0 – 1.0) is scaled to this range on initialisation.  A
+     * percentage {@link Label} beside the slider is updated live via a
+     * {@link ChangeListener} that also forwards the normalised value to
+     * the {@link VolumeChange} callback.
+     * </p>
      *
-     * @param table The target table.
-     * @param label The text label for the slider.
-     * @param current The current volume value (0.0 to 1.0).
-     * @param onChange The callback to execute when value changes.
+     * @param table    The Audio {@link Table} to which the row is appended.
+     * @param label    The text displayed to the left of the slider
+     *                 (e.g. {@code "Main Volume:"}).
+     * @param current  The current normalised volume (0.0 – 1.0), used to
+     *                 set the slider's initial position.
+     * @param onChange A {@link VolumeChange} callback that receives the
+     *                 new normalised volume every time the slider moves.
      */
     private void addSlider(Table table, String label, float current, VolumeChange onChange) {
         table.add(new Label(label, game.getSkin())).left().padRight(10);
@@ -286,16 +367,35 @@ public class SettingsScreen implements Screen {
         table.add(percent).width(50).left().padBottom(15).row();
     }
 
+    /**
+     * Functional interface used to forward slider values to the
+     * appropriate {@link AudioManager} volume setter without a concrete
+     * anonymous class.
+     */
     private interface VolumeChange {
+        /**
+         * Called whenever the associated slider value changes.
+         *
+         * @param volume The new normalised volume in the range 0.0 – 1.0.
+         */
         void set(float volume);
     }
+
     /**
-     * Creates and adds an animated button with hover effects to the table.
+     * Creates a settings-panel button with hover-scale and staggered
+     * entrance animations and adds it to the supplied table.
+     * <p>
+     * The animation sequence mirrors that of {@link MenuScreen}: the
+     * button starts invisible and 20 pixels below its target, waits
+     * {@code delay} seconds, then fades in while sliding upward with a
+     * quadratic ease-out.  A {@link ClickListener} scales the button to
+     * 110 % on hover and back to 100 % on exit.
+     * </p>
      *
-     * @param table The target table.
-     * @param text The button text.
-     * @param action The code to run when clicked.
-     * @param delay The delay before the entrance animation plays.
+     * @param table  The {@link Table} to which the button row is appended.
+     * @param text   The label displayed on the button.
+     * @param action The {@link Runnable} executed when the button is clicked.
+     * @param delay  Seconds to wait before the entrance animation begins.
      */
     private void addButton(Table table, String text, Runnable action, float delay) {
         TextButton button = new TextButton(text, game.getSkin());
@@ -335,11 +435,25 @@ public class SettingsScreen implements Screen {
         table.add(button).width(300).padTop(20).row();
     }
 
+    /**
+     * Registers the {@link Stage} as the active input processor so that
+     * buttons and sliders receive events.
+     */
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
     }
 
+    /**
+     * Renders one frame of the settings screen.
+     * <p>
+     * The background is drawn centred at the configured zoom and the
+     * Scene2D stage is rendered on top.  When not in listening mode an
+     * ESC key press navigates back to {@link #previousScreen}.
+     * </p>
+     *
+     * @param delta Time elapsed since the previous frame in seconds.
+     */
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
@@ -359,22 +473,39 @@ public class SettingsScreen implements Screen {
         }
     }
 
+    /**
+     * Updates the stage viewport when the window is resized.
+     *
+     * @param width  The new window width in pixels.
+     * @param height The new window height in pixels.
+     */
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
+    /** No-op; no per-frame state needs to be suspended. */
     @Override
     public void pause() {}
 
+    /** No-op; no per-frame state needs to be resumed. */
     @Override
     public void resume() {}
 
+    /**
+     * Cancels any in-progress key capture when the screen is hidden so
+     * that the custom {@link InputProcessor} does not linger.
+     */
     @Override
     public void hide() {
         if (isListening) stopListening();
     }
 
+    /**
+     * Releases the Scene2D {@link Stage} and the 1×1 panel
+     * {@link Texture}.  The background texture is also disposed here
+     * because it is owned exclusively by this screen.
+     */
     @Override
     public void dispose() {
         stage.dispose();
