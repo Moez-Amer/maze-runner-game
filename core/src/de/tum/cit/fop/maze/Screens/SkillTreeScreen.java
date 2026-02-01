@@ -84,6 +84,8 @@ public class SkillTreeScreen implements Screen {
         stage.addActor(root);
         root.add(new Label("SKILL MARKETPLACE", game.getSkin(), "title")).colspan(3).padBottom(15).row();
 
+        TextureRegionDrawable panelDrawable = new TextureRegionDrawable(new com.badlogic.gdx.graphics.g2d.TextureRegion(panelTexture));
+
         Label warLabel = new Label("Warrior Pts: " + state.warriorPoints, game.getSkin());
         warLabel.setColor(com.badlogic.gdx.graphics.Color.PURPLE);
 
@@ -93,10 +95,23 @@ public class SkillTreeScreen implements Screen {
         Label vitLabel = new Label("Vitality Pts: " + state.vitalityPoints, game.getSkin());
         vitLabel.setColor(com.badlogic.gdx.graphics.Color.GREEN);
 
-        root.add(warLabel).padBottom(10).expandX();
-        root.add(swiftLabel).padBottom(10).expandX();
-        root.add(vitLabel).padBottom(10).expandX();
+        Table warPanel = new Table();
+        warPanel.setBackground(panelDrawable);
+        warPanel.add(warLabel).pad(8, 16, 8, 16);
+
+        Table swiftPanel = new Table();
+        swiftPanel.setBackground(panelDrawable);
+        swiftPanel.add(swiftLabel).pad(8, 16, 8, 16);
+
+        Table vitPanel = new Table();
+        vitPanel.setBackground(panelDrawable);
+        vitPanel.add(vitLabel).pad(8, 16, 8, 16);
+
+        root.add(warPanel).padBottom(10).expandX();
+        root.add(swiftPanel).padBottom(10).expandX();
+        root.add(vitPanel).padBottom(10).expandX();
         root.row();
+
         Table combatBranch = createContinuousBranch(state, "COMBAT", "Warrior", "Power Ring", "+50% Dmg per Lvl", "warrior", com.badlogic.gdx.graphics.Color.PURPLE, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon19.png");
         Table agilityBranch = createContinuousBranch(state, "AGILITY", "Swiftness", "Swiftness Ring", "+25% Speed per Lvl", "swiftness", new com.badlogic.gdx.graphics.Color(0f, 0f, 0.5f, 1f), "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon18.png");
         Table survivalBranch = createContinuousBranch(state, "SURVIVAL", "Vitality", "Health Ring", "+1 Heart per Lvl", "vitality", com.badlogic.gdx.graphics.Color.GREEN, "free-undead-loot-pixel-art-icons/PNG/Transperent/Icon17.png");

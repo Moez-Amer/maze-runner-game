@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -33,7 +34,7 @@ public class LeaderboardScreen implements Screen {
      */
     public LeaderboardScreen(MazeRunnerGame game) {
         this.game = game;
-        background = new Texture(Gdx.files.internal("LeadershipBG.png"));
+        background = new Texture(Gdx.files.internal("Leadership2.png"));
         // Reuse game's SpriteBatch for rendering efficiency
         this.stage = new Stage(new ScreenViewport(), game.getSpriteBatch());
         rebuildUI();
@@ -49,9 +50,11 @@ public class LeaderboardScreen implements Screen {
         Table table = new Table();
         table.setFillParent(true);
         stage.addActor(table);
+        table.getColor().a = 0;
+        table.addAction(Actions.fadeIn(1.0f));
 
         // Title Row
-        table.add(new Label("SURVIVAL HALL OF FAME", game.getSkin(), "title")).colspan(4).padBottom(20).row();
+        table.add(new Label("HALL OF FAME", game.getSkin(), "title")).colspan(4).padBottom(20).row();
 
         // Data Loading and Sorting
         List<PlayerScore> scores = new ArrayList<>();

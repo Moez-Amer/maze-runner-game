@@ -7,7 +7,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -16,11 +18,13 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import de.tum.cit.fop.maze.AudioManager;
 import de.tum.cit.fop.maze.KeyBindings;
 import de.tum.cit.fop.maze.MazeRunnerGame;
+
 /**
  * Manages the settings menu for configuring key bindings and audio volumes.
  * Handles user input for key rebinding, conflict resolution, and saving preferences.
@@ -32,6 +36,7 @@ public class SettingsScreen implements Screen {
     private final Screen previousScreen;
     private final KeyBindings keys;
     private final Texture background;
+    private final Texture panelTexture;
     private final float bgZoom = 1.5f;
 
     private boolean isListening = false;
@@ -52,6 +57,12 @@ public class SettingsScreen implements Screen {
         background = new Texture(Gdx.files.internal("SettingsBG.png"));
         camera.zoom = 1.5f;
         stage = new Stage(new ScreenViewport(camera), game.getSpriteBatch());
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(0f, 0f, 0f, 0.6f);
+        pixmap.fill();
+        panelTexture = new Texture(pixmap);
+        pixmap.dispose();
+
         buildUI();
     }
     /**
@@ -75,9 +86,9 @@ public class SettingsScreen implements Screen {
 
         addButton(buttons, "Save",
                 () -> {
-            keys.saveBindings();
-            AudioManager.saveSettings();
-        }, 0.6f);
+                    keys.saveBindings();
+                    AudioManager.saveSettings();
+                }, 0.6f);
 
         root.add(buttons).colspan(10).padTop(20);
     }
@@ -128,7 +139,10 @@ public class SettingsScreen implements Screen {
         int keyCode = keys.getKey(action);
         Label keyLabel = new Label(keys.getKeyDisplayName(keyCode), game.getSkin());
         keyLabel.setColor(Color.ROYAL);
-        table.add(keyLabel).center().padBottom(10);
+        Table keyPanel = new Table();
+        keyPanel.setBackground(new TextureRegionDrawable(new TextureRegion(panelTexture)));
+        keyPanel.add(keyLabel).pad(4, 12, 4, 12);
+        table.add(keyPanel).center().padBottom(10);
 
         TextButton button = new TextButton("Change", game.getSkin());
         button.addListener(new ChangeListener() {
@@ -364,5 +378,6 @@ public class SettingsScreen implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
+        panelTexture.dispose();
     }
 }

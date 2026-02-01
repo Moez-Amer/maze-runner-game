@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
@@ -132,6 +133,8 @@ public class AchievementScreen implements Screen {
         Table root = new Table();
         root.setFillParent(true);
         stage.addActor(root);
+        root.getColor().a = 0;
+        root.addAction(Actions.fadeIn(1.0f));
 
         root.add(new Label("ACHIEVEMENTS", game.getSkin(), "title")).padBottom(40).row();
 
