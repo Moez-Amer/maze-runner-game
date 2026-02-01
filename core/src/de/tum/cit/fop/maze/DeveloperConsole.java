@@ -8,6 +8,13 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
 import de.tum.cit.fop.maze.Screens.GameScreen;
 import java.util.HashMap;
+/**
+ * Provides an in-game developer console for debugging and testing purposes.
+ * <p>
+ * The console allows for real-time manipulation of game variables (e.g., teleportation,
+ * granting items, god mode) through a command-based system. It handles its own
+ * input processing, command history, and visual overlay rendering.
+ */
 public class DeveloperConsole {
     private MazeRunnerGame game;
     private GameScreen gameScreen;
